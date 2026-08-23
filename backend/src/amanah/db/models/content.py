@@ -13,6 +13,7 @@ from sqlalchemy import (
     CheckConstraint,
     ForeignKey,
     Index,
+    Integer,
     LargeBinary,
     String,
     Text,
@@ -30,6 +31,7 @@ from amanah.domain.enums import CollectionMode, ContentKind, JobState, ReviewSta
 
 if TYPE_CHECKING:
     from amanah.db.models.analysis import Prediction
+    from amanah.db.models.jobs import BackgroundJob
 
 
 class CollectionRun(Base):
@@ -48,9 +50,29 @@ class CollectionRun(Base):
         # A run identifies itself by what it was asked to do, so redelivering the
         # same dispatch cannot start a second run.
         UniqueConstraint("idempotency_key", name="collection_runs_idempotency_key_unique"),
+        CheckConstraint("attempt >= 0", name="attempt_non_negative"),
+        CheckConstraint("max_attempts > 0", name="max_attempts_positive"),
+        CheckConstraint("item_cap IS NULL OR item_cap > 0", name="item_cap_positive"),
+        CheckConstraint(
+            "(lease_owner IS NULL) = (lease_expires_at IS NULL)",
+            name="lease_complete",
+        ),
+        CheckConstraint(
+            "status <> 'running' OR lease_owner IS NOT NULL",
+            name="running_requires_lease",
+        ),
+        CheckConstraint(
+            "NOT is_dead_lettered OR status = 'failed'",
+            name="dead_letter_requires_failure",
+        ),
         Index("collection_runs_source_id_started_at_idx", "source_id", text("started_at DESC")),
         Index("collection_runs_status_idx", "status"),
         Index("collection_runs_source_seed_entry_id_idx", "source_seed_entry_id"),
+        Index(
+            "collection_runs_lease_expires_at_idx",
+            "lease_expires_at",
+            postgresql_where=text("status = 'running'"),
+        ),
     )
 
     id: Mapped[UuidPrimaryKey]
@@ -79,11 +101,28 @@ class CollectionRun(Base):
         doc="Safe, publishable gap descriptions. Never a provider error body.",
     )
     safe_error_code: Mapped[str | None] = mapped_column(String(100))
+    item_cap: Mapped[int | None] = mapped_column(
+        Integer, doc="Upper bound on items this run may canonicalize. Never unbounded in prod."
+    )
+    requested_by: Mapped[UuidColumn | None] = mapped_column(
+        doc="The administrator who dispatched a manual or backfill run."
+    )
+    attempt: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("0"))
+    max_attempts: Mapped[int] = mapped_column(Integer, nullable=False, server_default=text("3"))
+    next_run_at: Mapped[Timestamp | None] = mapped_column(
+        doc="When a run in `retry_wait` becomes eligible again."
+    )
+    lease_owner: Mapped[str | None] = mapped_column(
+        String(200), doc="Opaque worker identifier. Never a host name or a credential."
+    )
+    lease_expires_at: Mapped[Timestamp | None]
+    is_dead_lettered: Mapped[bool] = mapped_column(nullable=False, server_default=text("false"))
     started_at: Mapped[CreatedAt]
     completed_at: Mapped[Timestamp | None]
 
     source: Mapped[Source] = relationship()
     source_seed_entry: Mapped[SourceSeedEntry | None] = relationship()
+    jobs: Mapped[list[BackgroundJob]] = relationship(back_populates="collection_run")
 
 
 class ContentItem(Base):
@@ -122,6 +161,27 @@ class ContentItem(Base):
             name="canonical_url_scheme",
         ),
         CheckConstraint("content_hash ~ '^[0-9a-f]{64}$'", name="content_hash_format"),
+        # NULL means "not determined". A two-letter code is the only other
+        # permitted value, so a detector that failed can never leave behind a
+        # plausible-looking default.
+        CheckConstraint("language IS NULL OR language ~ '^[a-z]{2}$'", name="language_format"),
+        # One article, one row. News arriving from two feeds of the same outlet
+        # links to the row that already exists instead of doubling the
+        # denominator of every rate computed over it.
+        Index(
+            "content_items_canonical_url_key_idx",
+            "canonical_url_key",
+            unique=True,
+            postgresql_where=text(
+                "canonical_url_key IS NOT NULL AND content_kind = 'news_article'"
+            ),
+        ),
+        Index(
+            "content_items_headline_key_idx",
+            "headline_key",
+            unique=True,
+            postgresql_where=text("headline_key IS NOT NULL AND content_kind = 'news_article'"),
+        ),
         # Sort keys for the item list. Each pairs the sort column with `id` so a
         # cursor page cannot drift when two rows share a timestamp.
         Index("content_items_observed_at_id_idx", text("observed_at DESC"), text("id DESC")),
@@ -189,6 +249,30 @@ class ContentItem(Base):
         Text, doc="Model input. Never projected to a reader."
     )
     normalization_version: Mapped[str | None] = mapped_column(String(50))
+    normalized_context: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        doc=(
+            "Bounded source-aware context (title, parent, root, caption) assembled "
+            "for the classifier. Model input; never projected to a reader."
+        ),
+    )
+    canonical_url_key: Mapped[str | None] = mapped_column(
+        Text, doc="Canonical URL reduced to its dedupe form: no tracking parameters, no fragment."
+    )
+    headline_key: Mapped[str | None] = mapped_column(
+        Text, doc="Normalized publisher and headline, the second news dedupe key."
+    )
+    dataset_annotations: Mapped[dict[str, Any]] = mapped_column(
+        JSONB,
+        nullable=False,
+        server_default=text("'{}'::jsonb"),
+        doc=(
+            "Labels the original open dataset shipped with this row. Provenance only: "
+            "never an Amanah prediction and never a human-review decision."
+        ),
+    )
     raw_object_key: Mapped[str | None] = mapped_column(
         Text, doc="Private storage key. Never projected to a reader."
     )

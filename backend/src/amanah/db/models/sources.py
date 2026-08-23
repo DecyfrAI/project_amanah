@@ -71,6 +71,9 @@ class Source(Base):
     )
     name: Mapped[str] = mapped_column(Text, nullable=False)
     policy_url: Mapped[str | None] = mapped_column(Text)
+    homepage_url: Mapped[str | None] = mapped_column(
+        Text, doc="Publisher home page shown beside a news item so attribution is visible."
+    )
     is_enabled: Mapped[bool] = mapped_column(nullable=False, server_default=text("false"))
     status: Mapped[ConnectorStatus] = mapped_column(
         enum_column(ConnectorStatus),

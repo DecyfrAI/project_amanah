@@ -772,8 +772,15 @@ dataset_import_run(
 
 collection_run(
   id, source_id, source_seed_entry_id, mode, window_start, window_end, cursor,
-  status, counts, coverage_warnings, safe_error_code,
-  started_at, completed_at
+  status, counts, coverage_warnings, safe_error_code, item_cap, requested_by,
+  attempt, max_attempts, next_run_at, lease_owner, lease_expires_at,
+  is_dead_lettered, started_at, completed_at
+)
+
+background_job(
+  id, collection_run_id, stage, idempotency_key, state, attempt, max_attempts,
+  available_at, lease_owner, lease_expires_at, payload, checkpoint,
+  safe_error_code, is_dead_lettered, created_at, updated_at, completed_at
 )
 
 content_item(
@@ -894,6 +901,8 @@ research_report(
 ### 14.6 Required constraints
 
 - Unique content: `(source_id, source_item_id)`.
+- Unique background job: `idempotency_key`, derived from the run, the stage, and the partition of work — never from a delivery identifier.
+- Unique news article: normalized `canonical_url_key`, and normalized `(publisher, headline)`, each enforced for `content_kind = news_article`.
 - Unique approved seed configuration: `(registry_key, config_version)`; Markdown headings or list positions are not identifiers.
 - Open-datapack records MUST use the single controlled `source.kind=open_datapack`, `source.name=N/A` record for platform/source display.
 - Unique datapack row: `(dataset_package_id, dataset_row_id)` when dataset provenance is present.
@@ -967,7 +976,7 @@ This boundary is recorded in [ADR 0001: Require authentication for application a
 
 - Errors are classified as user-correctable, retryable dependency failures, permanent policy/unsupported states, or internal failures.
 - APIs return stable safe error codes and a request ID.
-- Background jobs record stage, attempt count, next retry time, and safe failure reason.
+- Background jobs record stage, attempt count, next retry time, and safe failure reason. A running job holds a lease; an expired lease returns the job to the queue with its attempt count intact, or dead-letters it once the retry budget is spent.
 - A failure in one item or connector MUST NOT fail unrelated sources or the whole run.
 - Retryable provider failures use bounded exponential backoff with jitter.
 - Authentication, invalid credentials, policy denials, and unsupported URLs fail immediately without blind retries.

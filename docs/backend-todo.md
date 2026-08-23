@@ -77,89 +77,89 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
 
 ### Milestone 3 — Collection and canonical processing
 
-- [ ] **B-S7 — Implement collection-run and background-job state machines**
-  - [ ] **B-S7.1** Implement valid transitions for queued, running, retry_wait, succeeded, failed, policy_blocked, and cancelled.
-  - [ ] **B-S7.2** Persist idempotency/natural keys for runs and jobs.
-  - [ ] **B-S7.3** Claim jobs transactionally with leases and recover expired claims safely.
-  - [ ] **B-S7.4** Checkpoint stage output before enqueueing the next stage.
-  - [ ] **B-S7.5** Store bounded retry metadata, next-run time, dead-letter state, and safe errors.
-  - [ ] **B-S7.6** Add admin run create/read endpoints with source/window/item-cap validation.
-  - [ ] **B-S7.7** Test duplicate delivery, concurrency, invalid transitions, lease loss, retry, and partial failure.
+- [x] **B-S7 — Implement collection-run and background-job state machines**
+  - [x] **B-S7.1** Implement valid transitions for queued, running, retry_wait, succeeded, failed, policy_blocked, and cancelled.
+  - [x] **B-S7.2** Persist idempotency/natural keys for runs and jobs.
+  - [x] **B-S7.3** Claim jobs transactionally with leases and recover expired claims safely.
+  - [x] **B-S7.4** Checkpoint stage output before enqueueing the next stage.
+  - [x] **B-S7.5** Store bounded retry metadata, next-run time, dead-letter state, and safe errors.
+  - [x] **B-S7.6** Add admin run create/read endpoints with source/window/item-cap validation.
+  - [x] **B-S7.7** Test duplicate delivery, concurrency, invalid transitions, lease loss, retry, and partial failure.
 
-- [ ] **B-S8 — Implement the canonical adapter contract and fixture adapter**
-  - [ ] **B-S8.1** Define discover, fetch, canonicalize, checkpoint, and health-check responsibilities.
-  - [ ] **B-S8.2** Define one canonical `ContentItem` for news, social, and user-submitted sources.
-  - [ ] **B-S8.3** Implement deterministic synthetic/redacted fixture discovery and processing.
-  - [ ] **B-S8.4** Mark fixture records and runs explicitly through storage/API projections.
-  - [ ] **B-S8.5** Persist adapter/config versions, cursors, and coverage counts.
-  - [ ] **B-S8.6** Add a reusable adapter contract test suite.
-  - [ ] **B-S8.7** Add an end-to-end fixture run that proves idempotent re-execution.
-  - [ ] **B-S8.8** Extend canonical content for open datapacks with source/platform `N/A` and separate package/import/row provenance.
-  - [ ] **B-S8.9** Define approved seed configuration with stable registry key, query family/purpose, sampling stratum, language, item cap, approval, and config version.
-  - [ ] **B-S8.10** Keep `PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md` as human reference input; never parse it or auto-activate its entries at runtime.
+- [x] **B-S8 — Implement the canonical adapter contract and fixture adapter**
+  - [x] **B-S8.1** Define discover, fetch, canonicalize, checkpoint, and health-check responsibilities.
+  - [x] **B-S8.2** Define one canonical `ContentItem` for news, social, and user-submitted sources.
+  - [x] **B-S8.3** Implement deterministic synthetic/redacted fixture discovery and processing.
+  - [x] **B-S8.4** Mark fixture records and runs explicitly through storage/API projections.
+  - [x] **B-S8.5** Persist adapter/config versions, cursors, and coverage counts.
+  - [x] **B-S8.6** Add a reusable adapter contract test suite.
+  - [x] **B-S8.7** Add an end-to-end fixture run that proves idempotent re-execution.
+  - [x] **B-S8.8** Extend canonical content for open datapacks with source/platform `N/A` and separate package/import/row provenance.
+  - [x] **B-S8.9** Define approved seed configuration with stable registry key, query family/purpose, sampling stratum, language, item cap, approval, and config version.
+  - [x] **B-S8.10** Keep `PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md` as human reference input; never parse it or auto-activate its entries at runtime.
 
-- [ ] **B-S9 — Implement bounded news ingestion**
-  - [ ] **B-S9.1** Select/configure GDELT and/or reviewed RSS without embedding credentials.
-  - [ ] **B-S9.2** Store headline, publisher, canonical URL, permitted excerpt, publication/retrieval time, language, scope, and explicit location only.
-  - [ ] **B-S9.3** Avoid full-article storage, paywall bypass, and unauthorized scraping.
-  - [ ] **B-S9.4** Deduplicate by canonical URL and normalized provider/headline, checking the database before insert; a duplicate links to the existing row instead of writing a new one.
-  - [ ] **B-S9.5** Add timeouts, result/byte limits, rate handling, checkpoints, and coverage warnings.
-  - [ ] **B-S9.6** Test malformed, partial, duplicate, paginated, rate-limited, and outage responses at the HTTP boundary.
-  - [ ] **B-S9.7** Use [`news-rss-sources.md`](./news-rss-sources.md) as the reviewed RSS/Atom allowlist and apply its per-feed topical relevance filters (keep religion/hate-crime/public-affairs coverage; drop sport/celebrity) through configuration, never treating Muslim-related vocabulary as a harm signal. Do not add feeds it rejected or invent replacements.
-  - [ ] **B-S9.8** Serve `GET /v1/news` as the context news stream contract from that hand-off (`window`, `applied`, `coverage`, `data_mode`, `next_cursor`, publisher-metadata items with no hate label, score, or review state), reworking the Milestone 2 items-shaped route with OpenAPI and contract tests updated together (reconciliation G5).
-  - [ ] **B-S9.9** Keep English-only for P0, scope to Canada/US/UK plus clearly global religion or hate-crime reporting, and never attach a classification to an ingested article.
+- [x] **B-S9 — Implement bounded news ingestion**
+  - [x] **B-S9.1** Select/configure GDELT and/or reviewed RSS without embedding credentials.
+  - [x] **B-S9.2** Store headline, publisher, canonical URL, permitted excerpt, publication/retrieval time, language, scope, and explicit location only.
+  - [x] **B-S9.3** Avoid full-article storage, paywall bypass, and unauthorized scraping.
+  - [x] **B-S9.4** Deduplicate by canonical URL and normalized provider/headline, checking the database before insert; a duplicate links to the existing row instead of writing a new one.
+  - [x] **B-S9.5** Add timeouts, result/byte limits, rate handling, checkpoints, and coverage warnings.
+  - [x] **B-S9.6** Test malformed, partial, duplicate, paginated, rate-limited, and outage responses at the HTTP boundary.
+  - [x] **B-S9.7** Use [`news-rss-sources.md`](./news-rss-sources.md) as the reviewed RSS/Atom allowlist and apply its per-feed topical relevance filters (keep religion/hate-crime/public-affairs coverage; drop sport/celebrity) through configuration, never treating Muslim-related vocabulary as a harm signal. Do not add feeds it rejected or invent replacements.
+  - [x] **B-S9.8** Serve `GET /v1/news` as the context news stream contract from that hand-off (`window`, `applied`, `coverage`, `data_mode`, `next_cursor`, publisher-metadata items with no hate label, score, or review state), reworking the Milestone 2 items-shaped route with OpenAPI and contract tests updated together (reconciliation G5).
+  - [x] **B-S9.9** Keep English-only for P0, scope to Canada/US/UK plus clearly global religion or hate-crime reporting, and never attach a classification to an ingested article.
 
-- [ ] **B-S9A — Implement reviewed open-datapack ingestion**
-  - [ ] **B-S9A.1** Define a reviewed manifest for provider, dataset name/version, landing page, license, permitted uses, retrieval time, file hash, schema mapping, and approval.
-  - [ ] **B-S9A.2** Import reviewed UTF-8 CSV and JSONL files without adding an ungoverned download crawler.
-  - [ ] **B-S9A.3** Validate manifest, approval, license, SHA-256, encoding, required columns, schema mapping, and stable row identity before content writes.
-  - [ ] **B-S9A.4** Map every row to source kind `open_datapack` and public source/platform `N/A`.
-  - [ ] **B-S9A.5** Persist provider/name/version/license/file/import/row provenance separately.
-  - [ ] **B-S9A.6** Store original dataset labels as dataset annotations only, never as Amanah predictions/reviews.
-  - [ ] **B-S9A.7** Enforce `(dataset_package_id, dataset_row_id)` idempotency and cross-package collision safety.
-  - [ ] **B-S9A.8** Stream/batch within configured limits and record imported/skipped/error counts without harmful raw text in logs.
-  - [ ] **B-S9A.9** Test valid CSV/JSONL, duplicate/cross-package rows, malformed rows, wrong hash, bad encoding, unapproved license, retry, and `N/A` projection.
+- [x] **B-S9A — Implement reviewed open-datapack ingestion**
+  - [x] **B-S9A.1** Define a reviewed manifest for provider, dataset name/version, landing page, license, permitted uses, retrieval time, file hash, schema mapping, and approval.
+  - [x] **B-S9A.2** Import reviewed UTF-8 CSV and JSONL files without adding an ungoverned download crawler.
+  - [x] **B-S9A.3** Validate manifest, approval, license, SHA-256, encoding, required columns, schema mapping, and stable row identity before content writes.
+  - [x] **B-S9A.4** Map every row to source kind `open_datapack` and public source/platform `N/A`.
+  - [x] **B-S9A.5** Persist provider/name/version/license/file/import/row provenance separately.
+  - [x] **B-S9A.6** Store original dataset labels as dataset annotations only, never as Amanah predictions/reviews.
+  - [x] **B-S9A.7** Enforce `(dataset_package_id, dataset_row_id)` idempotency and cross-package collision safety.
+  - [x] **B-S9A.8** Stream/batch within configured limits and record imported/skipped/error counts without harmful raw text in logs.
+  - [x] **B-S9A.9** Test valid CSV/JSONL, duplicate/cross-package rows, malformed rows, wrong hash, bad encoding, unapproved license, retry, and `N/A` projection.
 
-- [ ] **B-S10 — Implement bounded YouTube ingestion**
-  - [ ] **B-S10.1** Enable the adapter only when an API key and approved configuration are present.
-  - [ ] **B-S10.2** Implement official query and seed-video discovery modes.
-  - [ ] **B-S10.3** Retrieve bounded video metadata, top-level comments, and replies through official APIs.
-  - [ ] **B-S10.4** Persist source IDs, query purpose, window, timestamps, and adapter/config version.
-  - [ ] **B-S10.5** Record disabled comments, deleted/omitted replies, quota deferral, and coverage gaps.
-  - [ ] **B-S10.6** Checkpoint pagination and enforce query/video/comment caps.
-  - [ ] **B-S10.7** Prohibit scraping or unsupported transcript retrieval.
-  - [ ] **B-S10.8** Test pagination, quota, disabled comments, partial replies, deletion, retry, and missing key.
-  - [ ] **B-S10.9** Project only approved registry seed/query entries into runtime configuration and persist their stable provenance.
-  - [ ] **B-S10.10** Keep enriched, boundary/control, and ordinary-monitoring strata separate and enforce the English-only MVP language gate.
-  - [ ] **B-S10.11** Test unknown/unapproved registry keys, unavailable seeds as coverage gaps, cap enforcement, and stratum provenance.
+- [x] **B-S10 — Implement bounded YouTube ingestion**
+  - [x] **B-S10.1** Enable the adapter only when an API key and approved configuration are present.
+  - [x] **B-S10.2** Implement official query and seed-video discovery modes.
+  - [x] **B-S10.3** Retrieve bounded video metadata, top-level comments, and replies through official APIs.
+  - [x] **B-S10.4** Persist source IDs, query purpose, window, timestamps, and adapter/config version.
+  - [x] **B-S10.5** Record disabled comments, deleted/omitted replies, quota deferral, and coverage gaps.
+  - [x] **B-S10.6** Checkpoint pagination and enforce query/video/comment caps.
+  - [x] **B-S10.7** Prohibit scraping or unsupported transcript retrieval.
+  - [x] **B-S10.8** Test pagination, quota, disabled comments, partial replies, deletion, retry, and missing key.
+  - [x] **B-S10.9** Project only approved registry seed/query entries into runtime configuration and persist their stable provenance.
+  - [x] **B-S10.10** Keep enriched, boundary/control, and ordinary-monitoring strata separate and enforce the English-only MVP language gate.
+  - [x] **B-S10.11** Test unknown/unapproved registry keys, unavailable seeds as coverage gaps, cap enforcement, and stratum provenance.
 
-- [ ] **B-S11 — Implement safe user-URL retrieval**
-  - [ ] **B-S11.1** Accept and normalize only public HTTP(S) URLs.
-  - [ ] **B-S11.2** Reject credentials, unsafe ports, private/reserved/link-local targets, and prohibited schemes before network access.
-  - [ ] **B-S11.3** Resolve DNS safely, revalidate every redirect, and prevent DNS-rebinding/private-destination access.
-  - [ ] **B-S11.4** Enforce connect/read/total timeouts, redirect limits, byte limits, and content-type allowlists.
-  - [ ] **B-S11.5** Extract metadata/permitted excerpts only and never invoke a shell or general browser.
-  - [ ] **B-S11.6** Return explicit duplicate, unsupported, inaccessible, rejected, and failed states.
-  - [ ] **B-S11.7** Test localhost/IP encodings, redirects, oversized bodies, malformed content, paywalls, duplicates, and timeout behavior.
+- [x] **B-S11 — Implement safe user-URL retrieval**
+  - [x] **B-S11.1** Accept and normalize only public HTTP(S) URLs.
+  - [x] **B-S11.2** Reject credentials, unsafe ports, private/reserved/link-local targets, and prohibited schemes before network access.
+  - [x] **B-S11.3** Resolve DNS safely, revalidate every redirect, and prevent DNS-rebinding/private-destination access.
+  - [x] **B-S11.4** Enforce connect/read/total timeouts, redirect limits, byte limits, and content-type allowlists.
+  - [x] **B-S11.5** Extract metadata/permitted excerpts only and never invoke a shell or general browser.
+  - [x] **B-S11.6** Return explicit duplicate, unsupported, inaccessible, rejected, and failed states.
+  - [x] **B-S11.7** Test localhost/IP encodings, redirects, oversized bodies, malformed content, paywalls, duplicates, and timeout behavior.
 
-- [ ] **B-S12 — Implement normalization and deduplication**
-  - [ ] **B-S12.1** Preserve permitted original/encrypted text separately from normalized/model text.
-  - [ ] **B-S12.2** Normalize Unicode and whitespace without destroying punctuation, emoji, quotes, identity terms, or stance context.
-  - [ ] **B-S12.3** Assemble bounded source-aware title/parent/root/caption context.
-  - [ ] **B-S12.4** Record language and explicit null/unavailable semantics.
-  - [ ] **B-S12.5** Implement canonical source/URL keys and exact content hashes.
-  - [ ] **B-S12.6** Version normalization and make content upserts retry-idempotent.
-  - [ ] **B-S12.7** Test Unicode, counterspeech, quotation, missing context, duplicate source IDs, canonical URLs, and repeat execution.
-  - [ ] **B-S12.8** Deduplicate datapack rows by dataset package/row identity without collapsing the same row ID across different packages.
-  - [ ] **B-S12.9** Never mask, censor, or profanity-filter stored original or normalized text: researchers need the exact wording. Redaction and blurring are display-layer (frontend) and report-snapshot (B-S20.3) concerns only.
+- [x] **B-S12 — Implement normalization and deduplication**
+  - [x] **B-S12.1** Preserve permitted original/encrypted text separately from normalized/model text.
+  - [x] **B-S12.2** Normalize Unicode and whitespace without destroying punctuation, emoji, quotes, identity terms, or stance context.
+  - [x] **B-S12.3** Assemble bounded source-aware title/parent/root/caption context.
+  - [x] **B-S12.4** Record language and explicit null/unavailable semantics.
+  - [x] **B-S12.5** Implement canonical source/URL keys and exact content hashes.
+  - [x] **B-S12.6** Version normalization and make content upserts retry-idempotent.
+  - [x] **B-S12.7** Test Unicode, counterspeech, quotation, missing context, duplicate source IDs, canonical URLs, and repeat execution.
+  - [x] **B-S12.8** Deduplicate datapack rows by dataset package/row identity without collapsing the same row ID across different packages.
+  - [x] **B-S12.9** Never mask, censor, or profanity-filter stored original or normalized text: researchers need the exact wording. Redaction and blurring are display-layer (frontend) and report-snapshot (B-S20.3) concerns only.
 
-- [ ] **B-S24 — Implement bounded historical backfill (~5 years)**
-  - [ ] **B-S24.1** Backfill exclusively through the existing canonical pipeline and adapters; no new scraping path and no source outside approved configuration.
-  - [ ] **B-S24.2** Use reviewed open datapacks (B-S9A) as the primary historical source, with GDELT/RSS historical windows for news where provider terms permit.
-  - [ ] **B-S24.3** Use official-API YouTube seed/query discovery with explicit date windows and per-window item caps for historical social content.
-  - [ ] **B-S24.4** Run backfill as resumable windowed runs with checkpoints, distinct run provenance (`backfill` vs incremental), and the same strata/registry rules as live collection.
-  - [ ] **B-S24.5** Carry per-bucket coverage so sparse historical windows render as gaps or low-coverage, never as a real zero or a prevalence claim.
-  - [ ] **B-S24.6** Test window slicing, resume after interruption, dedupe against already-ingested content, cap enforcement, and coverage bucket provenance.
+- [x] **B-S24 — Implement bounded historical backfill (~5 years)**
+  - [x] **B-S24.1** Backfill exclusively through the existing canonical pipeline and adapters; no new scraping path and no source outside approved configuration.
+  - [x] **B-S24.2** Use reviewed open datapacks (B-S9A) as the primary historical source, with GDELT/RSS historical windows for news where provider terms permit.
+  - [x] **B-S24.3** Use official-API YouTube seed/query discovery with explicit date windows and per-window item caps for historical social content.
+  - [x] **B-S24.4** Run backfill as resumable windowed runs with checkpoints, distinct run provenance (`backfill` vs incremental), and the same strata/registry rules as live collection.
+  - [x] **B-S24.5** Carry per-bucket coverage so sparse historical windows render as gaps or low-coverage, never as a real zero or a prevalence claim.
+  - [x] **B-S24.6** Test window slicing, resume after interruption, dedupe against already-ingested content, cap enforcement, and coverage bucket provenance.
 
 ### Milestone 5 — Authenticated contributions and human review
 

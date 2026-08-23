@@ -13,6 +13,7 @@ that connector and nothing else.
 from __future__ import annotations
 
 from functools import cached_property
+from pathlib import Path
 from typing import Self
 from urllib.parse import urlparse
 
@@ -89,6 +90,27 @@ class Settings(BaseSettings):
     database_statement_timeout_ms: int = Field(default=5000, ge=100, le=60_000)
     database_pool_size: int = Field(default=5, ge=1, le=50)
 
+    # Reviewed source and seed configuration. A directory rather than two paths,
+    # because the two files are one reviewed artifact and must not drift apart.
+    source_config_directory: Path | None = Field(
+        default=None,
+        description="Directory holding the reviewed sources and source-seeds YAML.",
+    )
+
+    # Bounds every outbound provider call shares. They are configuration rather
+    # than constants so a slow provider can be accommodated without a release,
+    # but none of them may be disabled: there is no "no timeout" value.
+    http_connect_timeout_seconds: float = Field(default=5.0, gt=0, le=60)
+    http_read_timeout_seconds: float = Field(default=10.0, gt=0, le=120)
+    http_total_timeout_seconds: float = Field(default=20.0, gt=0, le=180)
+    http_max_response_bytes: int = Field(default=2_000_000, ge=1024, le=50_000_000)
+    http_max_redirects: int = Field(default=3, ge=0, le=10)
+
+    # Encrypts permitted original text at rest. Absent means original text is not
+    # retained at all; it is never written as plaintext into the ciphertext
+    # column. Base64 of exactly 32 bytes.
+    content_encryption_key: SecretStr | None = Field(default=None)
+
     gemini_api_key: SecretStr | None = Field(default=None)
     gemini_model: str | None = Field(default=None)
     youtube_api_key: SecretStr | None = Field(default=None)
@@ -98,6 +120,7 @@ class Settings(BaseSettings):
 
     @field_validator(
         "database_url",
+        "content_encryption_key",
         "gemini_api_key",
         "gemini_model",
         "youtube_api_key",

@@ -16,12 +16,12 @@ from __future__ import annotations
 
 import json
 import logging
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from contextlib import contextmanager
 
-from sqlalchemy import Engine, create_engine, text
+from sqlalchemy import Connection, Engine, create_engine, event, text
 from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session, sessionmaker
+from sqlalchemy.orm import Session, SessionTransaction, sessionmaker
 
 from amanah.auth.principal import AuthenticatedUser
 from amanah.settings import Settings
@@ -100,21 +100,31 @@ class Database:
 
     @contextmanager
     def session_for(self, user: AuthenticatedUser | None) -> Iterator[Session]:
-        """Yield a session inside one transaction, scoped to the caller.
+        """Yield a session whose every transaction is scoped to the caller.
 
-        Publishing the identity opens the transaction, which is what gives
-        `SET LOCAL` something to be local to. Anything uncommitted is rolled back
-        on the way out, so a read never holds a transaction past the response and
-        a failed write can never leave half of itself behind.
+        The identity is published from an `after_begin` hook rather than once up
+        front. `SET LOCAL` lasts exactly as long as its transaction, so a service
+        that commits mid-request — a run dispatch, a job transition — would
+        otherwise continue on an anonymous connection and read nothing. Binding
+        it to the start of each transaction means the scoping cannot be lost by
+        committing.
+
+        Anything uncommitted is rolled back on the way out, so a read never holds
+        a transaction past the response and a failed write can never leave half
+        of itself behind.
         """
         session = self._session_factory()
+        publish = _identity_publisher(user)
+        if publish is not None:
+            event.listen(session, "after_begin", publish)
         try:
-            _publish_identity(session, user)
             yield session
         except SQLAlchemyError as exc:
             logger.error("database operation failed", exc_info=exc)
             raise DatabaseUnavailableError from exc
         finally:
+            if publish is not None:
+                event.remove(session, "after_begin", publish)
             session.rollback()
             session.close()
 
@@ -122,18 +132,28 @@ class Database:
         self._engine.dispose()
 
 
-def _publish_identity(session: Session, user: AuthenticatedUser | None) -> None:
-    """Set the verified caller for the life of this transaction.
+type _AfterBegin = Callable[[Session, SessionTransaction, Connection], None]
 
-    `SET LOCAL` scopes the value to the transaction, so a pooled connection can
+
+def _identity_publisher(user: AuthenticatedUser | None) -> _AfterBegin | None:
+    """Build the hook that names the verified caller to each new transaction.
+
+    `SET LOCAL` scopes the value to its transaction, so a pooled connection can
     never carry one request's identity into the next. The value is a JSON
     document built from typed fields, never from raw request text.
+
+    Returns `None` for an unauthenticated session: nothing is published, so every
+    owner-scoped predicate evaluates false, which is the safe direction to fail.
     """
     if user is None:
-        # Nothing is published, so every owner-scoped predicate evaluates false.
-        return
+        return None
     claims = json.dumps({"sub": str(user.user_id), "app_metadata": {"role": user.role.value}})
-    session.execute(
-        text(f"SELECT set_config('{JWT_CLAIMS_SETTING}', :claims, true)"),
-        {"claims": claims},
-    )
+
+    def publish(session: Session, transaction: SessionTransaction, connection: Connection) -> None:
+        del session, transaction
+        connection.execute(
+            text(f"SELECT set_config('{JWT_CLAIMS_SETTING}', :claims, true)"),
+            {"claims": claims},
+        )
+
+    return publish

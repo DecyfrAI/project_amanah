@@ -57,6 +57,10 @@ checkout.
 | Format write | `uv run --project backend ruff format backend/src backend/tests backend/migrations` |
 | Type check | `uv run --project backend mypy backend/src backend/tests` |
 | Import/startup check | `uv run --project backend python -c "from amanah.main import create_app; create_app()"` |
+| Sync reviewed configuration | `uv run --project backend --env-file backend/.env amanah-etl sync-config` |
+| ETL fixture run (no network) | `uv run --project backend --env-file backend/.env amanah-etl run --source fixtures --mode fixture` |
+| ETL dry run | the same command with `--dry-run` |
+| Historical backfill | `uv run --project backend --env-file backend/.env amanah-etl backfill --source fixtures --from 2021-08-23 --to 2026-08-23` |
 
 The import/startup check reads the environment, so give it configuration:
 `uv run --project backend --env-file backend/.env python -c ...`.
@@ -94,6 +98,10 @@ application. Every variable is documented in
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | no | Enables the Gemini connector when both are set |
 | `YOUTUBE_API_KEY`, `NEWS_API_KEY` | no | Enable their connectors |
 | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | no | Reserved; Reddit stays disabled pending approval |
+| `CONTENT_ENCRYPTION_KEY` | no | Base64 of 32 bytes. Encrypts permitted original text at rest; absent means the original is not retained at all, never stored as plaintext |
+| `SOURCE_CONFIG_DIRECTORY` | no | Reviewed source and seed YAML; defaults to `config/` in the repository |
+| `HTTP_CONNECT_TIMEOUT_SECONDS`, `HTTP_READ_TIMEOUT_SECONDS`, `HTTP_TOTAL_TIMEOUT_SECONDS` | no | Explicit bounds on every outbound provider call |
+| `HTTP_MAX_RESPONSE_BYTES`, `HTTP_MAX_REDIRECTS` | no | Byte budget and redirect limit for provider and user-URL retrieval |
 
 Missing core configuration fails startup with a message that names the offending
 variables and never their values. A missing optional connector credential
@@ -119,11 +127,19 @@ curl http://127.0.0.1:8000/openapi.json -o openapi.json
 | `GET /v1/dashboard` | bearer | Coverage, deterministic metrics, trend, headlines |
 | `GET /v1/items` | bearer | Filtered, sorted, cursor-paginated items |
 | `GET /v1/items/{id}` | bearer | One item with its model disclosure and limitations |
-| `GET /v1/news` | bearer | The same collection restricted to news articles |
+| `GET /v1/news` | bearer | Context news stream: publisher metadata only, never a classification |
+| `GET /v1/admin/runs` | bearer, admin | Collection runs, newest dispatch first |
+| `POST /v1/admin/runs` | bearer, admin | Dispatch one bounded run; `200` on a redelivered key |
+| `GET /v1/admin/runs/{id}` | bearer, admin | One run and the stages beneath it |
 | `GET /v1/filters` | bearer | Filter values present in the data, plus query bounds |
 | `GET /v1/resources` | bearer | Reviewed, published education resources |
 | `GET /v1/methodology` | bearer | Sampling, taxonomy, model, coverage, and limitations |
 | `GET /v1/connections` | bearer | Safe connector state; never a key or a provider error |
+
+`/v1/news` is deliberately not an item projection. An ingested article coincides
+with the monitoring window; it is not an Amanah finding, so the response carries
+no hate label, score, severity, or review state, and the projection behind it has
+no column for one. Classified news *item cards* are served from `/v1/items`.
 
 Every rate carries its numerator, denominator, window, source scope, coverage,
 and data mode. A window with no computed bucket is returned as a gap with null
@@ -156,12 +172,21 @@ src/amanah/
 │   ├── views.py    # read handles for the authenticated-safe projections
 │   └── session.py  # engine, and the per-request transaction that scopes reads
 ├── domain/         # controlled enums shared across API, storage, and ingestion
+├── jobs/           # run and job state machines, leases, retry schedule
+├── ingestion/      # adapter contract, reviewed configuration, sources, pipeline, CLI
+│   ├── fixtures/   # the deterministic corpus that needs no network
+│   ├── news/       # reviewed RSS and Atom allowlist
+│   ├── youtube/    # official Data API only
+│   ├── datapacks/  # manifest-validated importer, never a crawler
+│   └── urls/       # SSRF-safe retrieval of user-submitted URLs
+├── canonical/      # normalization, context, hashing, dedupe, encrypted storage
 ├── metrics/        # deterministic aggregates, coverage, and their disclosures
 ├── resources/      # curated resources and the published methodology
 ├── observability/  # request correlation and structured logging
 ├── settings.py     # validated configuration
 └── main.py         # application factory
 migrations/         # Alembic revisions; a separate one-off process
+config/             # reviewed source and seed catalogue (repository root)
 tests/{unit,integration,contract,db}/
 ```
 

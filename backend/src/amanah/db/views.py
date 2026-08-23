@@ -133,6 +133,66 @@ authenticated_resources = Table(
     Column("last_reviewed_at", DateTime(timezone=True)),
 )
 
+authenticated_news = Table(
+    "authenticated_news",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("source_name", Text),
+    Column("source_homepage", Text),
+    Column("title", Text),
+    Column("summary", Text),
+    Column("url", Text),
+    Column("published_at", DateTime(timezone=True)),
+    Column("retrieved_at", DateTime(timezone=True)),
+    Column("language", Text),
+    _text_column("scope"),
+    Column("country_code", Text),
+    Column("is_fixture", Boolean),
+    _text_column("source_status"),
+)
+
+authenticated_collection_runs = Table(
+    "authenticated_collection_runs",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("source_id", UUID(as_uuid=True)),
+    Column("source_key", Text),
+    Column("source_name", Text),
+    Column("source_seed_entry_id", UUID(as_uuid=True)),
+    Column("idempotency_key", Text),
+    _text_column("mode"),
+    Column("adapter_version", Text),
+    Column("window_start", DateTime(timezone=True)),
+    Column("window_end", DateTime(timezone=True)),
+    _text_column("status"),
+    Column("counts", JSONB),
+    Column("coverage_warnings", JSONB),
+    Column("safe_error_code", Text),
+    Column("item_cap", Integer),
+    Column("attempt", Integer),
+    Column("max_attempts", Integer),
+    Column("next_run_at", DateTime(timezone=True)),
+    Column("is_dead_lettered", Boolean),
+    Column("started_at", DateTime(timezone=True)),
+    Column("completed_at", DateTime(timezone=True)),
+)
+
+authenticated_background_jobs = Table(
+    "authenticated_background_jobs",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("collection_run_id", UUID(as_uuid=True)),
+    _text_column("stage"),
+    _text_column("state"),
+    Column("attempt", Integer),
+    Column("max_attempts", Integer),
+    Column("available_at", DateTime(timezone=True)),
+    Column("safe_error_code", Text),
+    Column("is_dead_lettered", Boolean),
+    Column("created_at", DateTime(timezone=True)),
+    Column("completed_at", DateTime(timezone=True)),
+)
+
 #: Columns that must never appear in any authenticated projection: raw or
 #: encrypted source text, private storage keys, opaque provider payloads, and
 #: provider-side identifiers that could re-identify an author.
@@ -145,5 +205,14 @@ FORBIDDEN_PROJECTION_COLUMNS = frozenset(
         "source_item_id",
         "submitted_origin",
         "text_ciphertext",
+        # Queue internals. A checkpoint can carry a provider cursor and a lease
+        # owner names a worker; neither belongs in an API response.
+        "checkpoint",
+        "lease_owner",
+        "lease_expires_at",
+        "payload",
+        "normalized_context",
+        "canonical_url_key",
+        "headline_key",
     }
 )

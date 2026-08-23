@@ -9,13 +9,17 @@ disagree about what an item is.
 from __future__ import annotations
 
 from typing import Any
+from urllib.parse import urlsplit
 
 from sqlalchemy import Row
 
 from amanah.api.schemas.connections import ConnectionState
 from amanah.api.schemas.dashboard import HeadlineCard
 from amanah.api.schemas.items import DatasetProvenance, ItemDetail, ItemSummary
+from amanah.api.schemas.news import NewsItem
 from amanah.api.schemas.resources import ResourceEntry
+from amanah.api.schemas.runs import BackgroundJobSummary, CollectionRunSummary
+from amanah.domain.enums import NewsScope
 
 #: Shown on the item page beside any classification, so a reader meets the
 #: limitation at the same moment as the label.
@@ -143,3 +147,103 @@ def to_connection_state(row: Row[Any]) -> ConnectionState:
         last_checked_at=row.last_checked_at,
         warning=row.safe_warning,
     )
+
+
+def to_collection_run(row: Row[Any]) -> CollectionRunSummary:
+    """Build the administrator view of one run.
+
+    `counts` and `coverage_warnings` are stored as JSON, so they are rebuilt into
+    typed values here rather than passed through: a malformed count would
+    otherwise reach an operator's screen as whatever the writer happened to put
+    there.
+    """
+    return CollectionRunSummary(
+        id=row.id,
+        source_id=row.source_id,
+        source_key=row.source_key,
+        source_name=row.source_name,
+        source_seed_entry_id=row.source_seed_entry_id,
+        idempotency_key=row.idempotency_key,
+        mode=row.mode,
+        adapter_version=row.adapter_version,
+        window_start=row.window_start,
+        window_end=row.window_end,
+        status=row.status,
+        counts={str(key): int(value) for key, value in (row.counts or {}).items()},
+        coverage_warnings=[str(warning) for warning in (row.coverage_warnings or [])],
+        safe_error_code=row.safe_error_code,
+        item_cap=row.item_cap,
+        attempt=row.attempt,
+        max_attempts=row.max_attempts,
+        next_run_at=row.next_run_at,
+        is_dead_lettered=row.is_dead_lettered,
+        started_at=row.started_at,
+        completed_at=row.completed_at,
+    )
+
+
+def to_background_job(row: Row[Any]) -> BackgroundJobSummary:
+    """Build the administrator view of one pipeline stage."""
+    return BackgroundJobSummary(
+        id=row.id,
+        collection_run_id=row.collection_run_id,
+        stage=row.stage,
+        state=row.state,
+        attempt=row.attempt,
+        max_attempts=row.max_attempts,
+        available_at=row.available_at,
+        safe_error_code=row.safe_error_code,
+        is_dead_lettered=row.is_dead_lettered,
+        created_at=row.created_at,
+        completed_at=row.completed_at,
+    )
+
+
+def to_news_item(row: Row[Any]) -> NewsItem:
+    """Build one context-news entry.
+
+    Two fields are filled in rather than left blank, and both are truthful
+    substitutions rather than guesses. `source_homepage` falls back to the
+    article's own origin, which is the publisher's home page by definition.
+    `summary` falls back to the headline, because the frontend contract requires
+    a string and an empty one would render as a blank line under the title.
+
+    `published_at` is deliberately *not* substituted. When a feed gave no
+    publication date it stays null: claiming an article was published at the
+    moment we retrieved it would be a fact the product invented.
+    """
+    return NewsItem(
+        id=row.id,
+        source_name=row.source_name,
+        source_homepage=row.source_homepage or _origin(row.url),
+        title=row.title or "",
+        summary=row.summary or row.title or "",
+        url=row.url,
+        published_at=row.published_at,
+        retrieved_at=row.retrieved_at,
+        language=row.language or "en",
+        scope=_news_scope(row.scope),
+        location=row.country_code,
+    )
+
+
+def _news_scope(stored: str | None) -> NewsScope | None:
+    """Read the stored scope, or report it absent.
+
+    `geographic_scope` is free text shared with other content kinds. A value
+    outside the two the news contract defines becomes `None`, because rounding an
+    unknown scope to whichever looks closer would publish a claim about reach
+    that no source made.
+    """
+    try:
+        return NewsScope(stored) if stored else None
+    except ValueError:
+        return None
+
+
+def _origin(url: str | None) -> str:
+    """The scheme and host of a URL, used as a publisher home page."""
+    if not url:
+        return ""
+    parts = urlsplit(url)
+    return f"{parts.scheme}://{parts.netloc}" if parts.netloc else ""
