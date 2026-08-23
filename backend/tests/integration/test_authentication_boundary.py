@@ -1,6 +1,8 @@
-"""Default-deny behaviour of the `/v1` product router (B-S4.4, B-S4.7)."""
+"""Default-deny behaviour of the `/v1` product router (B-S4.4, B-S4.6, B-S4.7)."""
 
+import logging
 import re
+from collections.abc import Iterator
 from datetime import timedelta
 from uuid import uuid4
 
@@ -8,8 +10,11 @@ import pytest
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 
-from amanah.api.errors import AUTHENTICATION_REQUIRED_MESSAGE
+from amanah.api.dependencies import ensure_resource_owner
+from amanah.api.errors import AUTHENTICATION_REQUIRED_MESSAGE, PermissionDeniedError
+from amanah.auth.principal import AuthenticatedUser
 from amanah.domain.enums import Role
+from amanah.observability.logging import JsonLogFormatter
 from amanah.settings import Settings
 from tests.conftest import make_access_token
 
@@ -141,3 +146,81 @@ def test_request_ids_do_not_leak_between_requests(client: TestClient) -> None:
     assert first.headers["X-Request-Id"] == "req_first-caller"
     assert second.headers["X-Request-Id"] != "req_first-caller"
     assert second.headers["X-Request-Id"].startswith("req_")
+
+
+class RecordingHandler(logging.Handler):
+    """Capture rendered log lines exactly as the service would emit them."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.setFormatter(JsonLogFormatter())
+        self.lines: list[str] = []
+
+    def emit(self, record: logging.LogRecord) -> None:
+        self.lines.append(self.format(record))
+
+
+@pytest.fixture
+def captured_logs() -> Iterator[RecordingHandler]:
+    """Attach after the application factory has configured logging, since the
+    factory replaces the root handlers."""
+    handler = RecordingHandler()
+    root = logging.getLogger()
+    root.addHandler(handler)
+    previous_level = root.level
+    root.setLevel(logging.INFO)
+    try:
+        yield handler
+    finally:
+        root.removeHandler(handler)
+        root.setLevel(previous_level)
+
+
+def test_successful_authentication_is_logged_without_the_token(
+    client: TestClient, settings: Settings, captured_logs: RecordingHandler
+) -> None:
+    user_id = uuid4()
+    token = make_access_token(settings, user_id=user_id, role=Role.reviewer)
+
+    response = client.get(PRODUCT_ROUTE, headers={"Authorization": f"Bearer {token}"})
+    logged = "\n".join(captured_logs.lines)
+
+    assert response.status_code == 200
+    # The outcome is recorded, so removing the log line fails this test.
+    assert "authentication succeeded" in logged
+    assert str(user_id) in logged
+    assert "reviewer" in logged
+    # ...but never the credential that produced it.
+    assert token not in logged
+    assert settings.supabase_jwt_secret.get_secret_value() not in logged
+
+
+def test_failed_authentication_is_logged_without_the_rejected_token(
+    client: TestClient, settings: Settings, captured_logs: RecordingHandler
+) -> None:
+    forged = make_access_token(settings, secret="attacker-controlled-secret-01234567")
+
+    response = client.get(PRODUCT_ROUTE, headers={"Authorization": f"Bearer {forged}"})
+    logged = "\n".join(captured_logs.lines)
+
+    assert response.status_code == 401
+    assert "authentication failed" in logged
+    # The precise reason stays in the logs even though the caller never sees it.
+    assert '"reason": "invalid"' in logged
+    assert forged not in logged
+
+
+def test_authorization_denial_is_logged_without_the_token(
+    settings: Settings, captured_logs: RecordingHandler
+) -> None:
+    """Role denial happens on a route mounted only for the error-envelope tests,
+    so it is exercised here through the same dependency."""
+    user = AuthenticatedUser(user_id=uuid4(), role=Role.registered_user)
+
+    with pytest.raises(PermissionDeniedError):
+        ensure_resource_owner(user, uuid4())
+
+    logged = "\n".join(captured_logs.lines)
+    assert "ownership check denied" in logged
+    assert str(user.user_id) in logged
+    assert settings.supabase_jwt_secret.get_secret_value() not in logged

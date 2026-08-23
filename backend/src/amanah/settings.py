@@ -31,6 +31,12 @@ MINIMUM_JWT_SECRET_LENGTH = 32
 
 _ALLOWED_ORIGIN_SCHEMES = frozenset({"http", "https"})
 
+#: `.env.example` ships this marker wherever a real secret belongs, and copying
+#: that file is the documented way to bootstrap an environment. A value still
+#: carrying the marker was never filled in, so it is treated as absent rather
+#: than handed to a provider as if it were a credential.
+SECRET_PLACEHOLDER = "<REDACTED>"  # noqa: S105 - the marker for an absent value, not a secret
+
 
 class ConfigurationError(RuntimeError):
     """Raised at startup when required configuration is missing or invalid.
@@ -82,6 +88,27 @@ class Settings(BaseSettings):
     news_api_key: SecretStr | None = Field(default=None)
     reddit_client_id: str | None = Field(default=None)
     reddit_client_secret: SecretStr | None = Field(default=None)
+
+    @field_validator(
+        "database_url",
+        "gemini_api_key",
+        "gemini_model",
+        "youtube_api_key",
+        "news_api_key",
+        "reddit_client_id",
+        "reddit_client_secret",
+        mode="before",
+    )
+    @classmethod
+    def _unset_placeholder(cls, value: object) -> object:
+        """Treat a blank or never-filled-in optional value as absent.
+
+        Only optional values pass through here. A placeholder left in a required
+        variable still fails startup, which is the correct outcome.
+        """
+        if isinstance(value, str) and (not value.strip() or SECRET_PLACEHOLDER in value):
+            return None
+        return value
 
     @field_validator("supabase_url")
     @classmethod

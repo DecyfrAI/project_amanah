@@ -4,7 +4,12 @@ import pytest
 from pydantic import ValidationError
 
 from amanah.domain.enums import DataMode
-from amanah.settings import ConfigurationError, Settings, load_settings
+from amanah.settings import (
+    SECRET_PLACEHOLDER,
+    ConfigurationError,
+    Settings,
+    load_settings,
+)
 from tests.conftest import TEST_JWT_SECRET, make_settings
 
 
@@ -98,3 +103,41 @@ def test_secrets_are_not_exposed_by_string_conversion() -> None:
 def test_short_jwt_secret_is_rejected() -> None:
     with pytest.raises(ValidationError):
         make_settings(supabase_jwt_secret="too-short")
+
+
+@pytest.mark.parametrize("placeholder", [SECRET_PLACEHOLDER, "", "   "])
+def test_placeholder_connector_credential_leaves_the_connector_disabled(
+    placeholder: str,
+) -> None:
+    """Copying `.env.example` is the documented bootstrap path, so an unfilled
+    value must not be mistaken for a real credential."""
+    settings = make_settings(youtube_api_key=placeholder, news_api_key=placeholder)
+
+    connectors = {connector.name: connector for connector in settings.connectors}
+    assert connectors["youtube"].is_configured is False
+    assert connectors["news"].is_configured is False
+
+
+def test_placeholder_database_url_reports_as_unconfigured() -> None:
+    settings = make_settings(
+        database_url=f"postgresql://postgres:{SECRET_PLACEHOLDER}@localhost:5432/postgres"
+    )
+
+    assert settings.database_url is None
+
+
+def test_a_real_credential_is_still_accepted() -> None:
+    settings = make_settings(youtube_api_key="a-real-looking-synthetic-key")
+
+    assert next(c for c in settings.connectors if c.name == "youtube").is_configured is True
+
+
+def test_placeholder_in_a_required_variable_still_fails_startup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setenv("APP_ORIGIN", "http://localhost:5173")
+    monkeypatch.setenv("SUPABASE_URL", "https://project.supabase.co")
+    monkeypatch.setenv("SUPABASE_JWT_SECRET", SECRET_PLACEHOLDER)
+
+    with pytest.raises(ConfigurationError):
+        load_settings()

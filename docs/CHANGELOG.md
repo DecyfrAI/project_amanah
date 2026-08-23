@@ -14,7 +14,7 @@ All notable project changes are documented here using the Keep a Changelog struc
 - Server-side Supabase access-token verification with reusable authenticated-user, reviewer, administrator, and resource-ownership checks. Authentication is attached to the `/v1` router, so a new product endpoint cannot be anonymous by omission.
 - Request correlation via `X-Request-Id` and structured JSON logs that carry it, with tokens, secrets, tracebacks, and raw source content excluded.
 - Baseline response security headers and CORS restricted to the configured origins.
-- `backend/README.md` and `backend/.env.example` documenting every variable the service reads, with no real values.
+- `backend/README.md` and `backend/.env.example` documenting every variable the service reads, with no real values. An optional variable left at its `<REDACTED>` placeholder is treated as unset, so a connector bootstrapped from the template stays disabled rather than being called with a placeholder credential.
 
 ### Changed
 
