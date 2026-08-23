@@ -78,10 +78,15 @@ def order_by(table: Table, sort: ItemSort) -> list[ColumnElement[Any]]:
     return [key.asc(), identifier.asc()]
 
 
-def encode_cursor(sort: ItemSort, key_value: SortKey, row_id: UUID) -> str:
-    """Serialize the last row of a page into an opaque cursor."""
+def encode_keyset_cursor(order_key: str, key_value: SortKey, row_id: UUID) -> str:
+    """Serialize a page boundary under a named ordering into an opaque cursor.
+
+    `order_key` names the ordering the cursor belongs to. Every collection that
+    paginates — the item list's five sorts, the admin run list's single one —
+    shares this format so there is one place where a cursor is validated.
+    """
     payload = {
-        "sort": sort.value,
+        "sort": order_key,
         "key": _encode_key(key_value),
         "id": str(row_id),
     }
@@ -89,12 +94,12 @@ def encode_cursor(sort: ItemSort, key_value: SortKey, row_id: UUID) -> str:
     return base64.urlsafe_b64encode(raw).decode().rstrip("=")
 
 
-def decode_cursor(cursor: str, sort: ItemSort) -> tuple[SortKey, UUID]:
+def decode_keyset_cursor(cursor: str, order_key: str) -> tuple[SortKey, UUID]:
     """Recover the page boundary, or reject the cursor.
 
-    A cursor carries the sort it was issued for. Reusing one after changing the
-    sort would silently produce a page from the wrong ordering, so it is refused
-    instead.
+    A cursor carries the ordering it was issued for. Reusing one after changing
+    the sort would silently produce a page from the wrong ordering, so it is
+    refused instead.
     """
     try:
         padding = "=" * (-len(cursor) % 4)
@@ -102,7 +107,7 @@ def decode_cursor(cursor: str, sort: ItemSort) -> tuple[SortKey, UUID]:
     except (ValueError, binascii.Error) as exc:
         raise InvalidCursorError("cursor is not readable") from exc
 
-    if not isinstance(payload, dict) or payload.get("sort") != sort.value:
+    if not isinstance(payload, dict) or payload.get("sort") != order_key:
         raise InvalidCursorError("cursor was issued for a different sort order")
     try:
         row_id = UUID(str(payload["id"]))
@@ -110,6 +115,16 @@ def decode_cursor(cursor: str, sort: ItemSort) -> tuple[SortKey, UUID]:
     except (KeyError, TypeError, ValueError) as exc:
         raise InvalidCursorError("cursor is incomplete") from exc
     return key_value, row_id
+
+
+def encode_cursor(sort: ItemSort, key_value: SortKey, row_id: UUID) -> str:
+    """Serialize the last row of an item page into an opaque cursor."""
+    return encode_keyset_cursor(sort.value, key_value, row_id)
+
+
+def decode_cursor(cursor: str, sort: ItemSort) -> tuple[SortKey, UUID]:
+    """Recover an item-list page boundary, or reject the cursor."""
+    return decode_keyset_cursor(cursor, sort.value)
 
 
 def keyset_predicate(

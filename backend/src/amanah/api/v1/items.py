@@ -1,8 +1,13 @@
-"""`/v1/items` and `/v1/news` — the authenticated-safe item collections.
+"""`/v1/items` — the authenticated-safe item collection.
 
-Both routes read the same projection and share one filter, sort, and pagination
-path; `/v1/news` differs only in restricting the content kind. Authentication is
-attached to the router, so neither operation can become anonymous by omission.
+One filter, sort, and pagination path over the item projection. Authentication is
+attached to the router, so no operation here can become anonymous by omission.
+
+`/v1/news` used to live here as the same projection with the content kind pinned
+to news. It moved to `amanah.api.v1.news` in B-S9: an ingested article is not a
+classified item, and serving it through a model that carries a hate label, a
+score, and a review state invited precisely the reading `spec.md` section 3.3
+forbids. Classified news *item cards* are still served from here.
 """
 
 from __future__ import annotations
@@ -21,13 +26,9 @@ from amanah.api.schemas.items import ItemDetailResponse, ItemSummary
 from amanah.api.v1.mappers import to_item_detail, to_item_summary
 from amanah.db.pagination import InvalidCursorError
 from amanah.db.repositories.items import ItemRepository
-from amanah.domain.enums import ContentKind
 from amanah.settings import Settings
 
 router = APIRouter(tags=["items"])
-
-#: `/v1/news` is the current-events view of the same store.
-NEWS_CONTENT_KINDS = (ContentKind.news_article,)
 
 
 def _invalid_cursor() -> ApiError:
@@ -45,10 +46,7 @@ def _invalid_cursor() -> ApiError:
 
 
 def _read_page(
-    session: DatabaseSession,
-    settings: Settings,
-    query: ItemListQuery,
-    content_kinds: tuple[ContentKind, ...] | None,
+    session: DatabaseSession, settings: Settings, query: ItemListQuery
 ) -> CursorPage[ItemSummary]:
     repository = ItemRepository(session)
     try:
@@ -57,7 +55,7 @@ def _read_page(
             sort=query.sort,
             limit=query.limit,
             cursor=query.cursor,
-            content_kinds=content_kinds,
+            content_kinds=None,
         )
     except InvalidCursorError as exc:
         raise _invalid_cursor() from exc
@@ -76,17 +74,7 @@ def list_items(
     query: Annotated[ItemListQuery, Query()],
 ) -> CursorPage[ItemSummary]:
     """Return one page of items matching the validated filters."""
-    return _read_page(session, settings, query, content_kinds=None)
-
-
-@router.get("/news", summary="List authenticated-safe news items")
-def list_news(
-    session: DatabaseSession,
-    settings: Annotated[Settings, Depends(get_settings)],
-    query: Annotated[ItemListQuery, Query()],
-) -> CursorPage[ItemSummary]:
-    """Return one page of news articles matching the validated filters."""
-    return _read_page(session, settings, query, content_kinds=NEWS_CONTENT_KINDS)
+    return _read_page(session, settings, query)
 
 
 @router.get("/items/{item_id}", summary="Read one authenticated-safe item")

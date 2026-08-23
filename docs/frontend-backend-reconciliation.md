@@ -86,6 +86,16 @@ route has no consumer; rework it in B-S9 with OpenAPI and contract tests
 updated together. Classified news *item cards* (F-S7.1/F-S8.2) remain a
 different surface served by `/v1/items`.
 
+**Status (backend, Milestone 3):** done. `/v1/news` now returns `window`,
+`applied`, `coverage`, `data_mode`, `next_cursor`, and publisher-metadata items
+with no hate label, score, severity, or review state; the projection behind it
+has no column for one. Two deltas the frontend contract should absorb in F-S21:
+`published_at` is nullable (a feed that states no publication date must not have
+the retrieval time substituted for it), and `scope` is nullable (a stored
+`geographic_scope` outside `local`/`global` is reported absent rather than
+rounded to whichever looks closer). The response also carries the standard
+`meta` envelope; `z.object` ignores it.
+
 ### G6 — Insights, discussion, captures, viewer posts: no backend (blocking for `/app/insights`)
 
 The frontend ships `/app/insights` (snapshot insights, invite-only

@@ -1,0 +1,235 @@
+# Reviewed source catalogue (B-S8.9).
+#
+# This file is configuration, not documentation. Nothing collects from a source
+# that is absent here, and no seed runs while its source is disabled. It holds no
+# secrets: provider credentials stay in the environment, and a connector with no
+# key disables itself whatever this file says.
+#
+# The news outlets below are exactly the feeds reviewed in
+# docs/news-rss-sources.md on 23 August 2026. Feeds that document checked and
+# rejected -- Reuters, AP, the old CTV path -- are deliberately absent, and
+# replacing them with a guess is prohibited.
+
+config_version: "2026.08.23"
+
+sources:
+  - source_key: fixtures
+    kind: social
+    platform: youtube
+    name: "Deterministic fixtures"
+    purpose: "Synthetic and redacted records that prove the pipeline end to end without contacting any provider."
+    retention_policy: indefinite_permitted
+    is_enabled: true
+    homepage_url: null
+    policy_url: null
+
+  - source_key: youtube
+    kind: social
+    platform: youtube
+    name: "YouTube"
+    purpose: "Bounded video and comment collection from approved seeds and queries through the official Data API."
+    retention_policy: limited_by_terms
+    is_enabled: false
+    homepage_url: https://www.youtube.com
+    policy_url: https://www.youtube.com/t/terms
+
+  - source_key: user_submission
+    kind: user_submission
+    platform: user_submitted
+    name: "User-submitted URLs"
+    purpose: "Public URLs an authenticated user asked the product to analyse."
+    retention_policy: delete_on_request
+    is_enabled: true
+    homepage_url: null
+    policy_url: null
+
+  - source_key: open_datapack
+    kind: open_datapack
+    platform: not_applicable
+    name: "N/A"
+    purpose: "Reviewed open datasets imported under a recorded licence. Public source and platform display as N/A while dataset lineage is kept in its own fields."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: null
+    policy_url: null
+
+  - source_key: rss_bbc_news
+    kind: news
+    platform: news_web
+    name: "BBC News"
+    purpose: "Reviewed public RSS or Atom feeds from BBC News. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.bbc.co.uk/news
+    policy_url: null
+
+  - source_key: rss_guardian
+    kind: news
+    platform: news_web
+    name: "The Guardian"
+    purpose: "Reviewed public RSS or Atom feeds from The Guardian. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.theguardian.com
+    policy_url: null
+
+  - source_key: rss_cbc
+    kind: news
+    platform: news_web
+    name: "CBC News"
+    purpose: "Reviewed public RSS or Atom feeds from CBC News. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.cbc.ca/news
+    policy_url: null
+
+  - source_key: rss_npr
+    kind: news
+    platform: news_web
+    name: "NPR News"
+    purpose: "Reviewed public RSS or Atom feeds from NPR News. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.npr.org
+    policy_url: null
+
+  - source_key: rss_pbs_newshour
+    kind: news
+    platform: news_web
+    name: "PBS NewsHour"
+    purpose: "Reviewed public RSS or Atom feeds from PBS NewsHour. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.pbs.org/newshour/
+    policy_url: null
+
+  - source_key: rss_nyt
+    kind: news
+    platform: news_web
+    name: "The New York Times"
+    purpose: "Reviewed public RSS or Atom feeds from The New York Times. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.nytimes.com
+    policy_url: null
+
+  - source_key: rss_al_jazeera
+    kind: news
+    platform: news_web
+    name: "Al Jazeera English"
+    purpose: "Reviewed public RSS or Atom feeds from Al Jazeera English. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.aljazeera.com
+    policy_url: null
+
+  - source_key: rss_globe_and_mail
+    kind: news
+    platform: news_web
+    name: "The Globe and Mail"
+    purpose: "Reviewed public RSS or Atom feeds from The Globe and Mail. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.theglobeandmail.com
+    policy_url: null
+
+  - source_key: rss_global_news
+    kind: news
+    platform: news_web
+    name: "Global News"
+    purpose: "Reviewed public RSS or Atom feeds from Global News. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://globalnews.ca
+    policy_url: null
+
+  - source_key: rss_sky_news
+    kind: news
+    platform: news_web
+    name: "Sky News"
+    purpose: "Reviewed public RSS or Atom feeds from Sky News. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://news.sky.com
+    policy_url: null
+
+  - source_key: rss_independent
+    kind: news
+    platform: news_web
+    name: "The Independent UK"
+    purpose: "Reviewed public RSS or Atom feeds from The Independent UK. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.independent.co.uk
+    policy_url: null
+
+  - source_key: rss_bridge_initiative
+    kind: news
+    platform: news_web
+    name: "Bridge Initiative"
+    purpose: "Reviewed public RSS or Atom feeds from Bridge Initiative. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://bridge.georgetown.edu
+    policy_url: null
+
+  - source_key: rss_tell_mama
+    kind: news
+    platform: news_web
+    name: "Tell MAMA"
+    purpose: "Reviewed public RSS or Atom feeds from Tell MAMA. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://tellmamauk.org
+    policy_url: null
+
+  - source_key: rss_cair
+    kind: news
+    platform: news_web
+    name: "CAIR"
+    purpose: "Reviewed public RSS or Atom feeds from CAIR. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.cair.com
+    policy_url: null
+
+  - source_key: rss_cair_california
+    kind: news
+    platform: news_web
+    name: "CAIR California"
+    purpose: "Reviewed public RSS or Atom feeds from CAIR California. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://ca.cair.com
+    policy_url: null
+
+  - source_key: rss_nccm
+    kind: news
+    platform: news_web
+    name: "NCCM"
+    purpose: "Reviewed public RSS or Atom feeds from NCCM. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://nccm.ca
+    policy_url: null
+
+  - source_key: rss_the_conversation
+    kind: news
+    platform: news_web
+    name: "The Conversation"
+    purpose: "Reviewed public RSS or Atom feeds from The Conversation. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://theconversation.com
+    policy_url: null
+
+  - source_key: rss_pew_research
+    kind: news
+    platform: news_web
+    name: "Pew Research Center"
+    purpose: "Reviewed public RSS or Atom feeds from Pew Research Center. Stored as headline metadata and a short permitted excerpt with a link back, never as full article text."
+    retention_policy: limited_by_terms
+    is_enabled: true
+    homepage_url: https://www.pewresearch.org
+    policy_url: null
+

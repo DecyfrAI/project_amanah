@@ -48,6 +48,7 @@ ENUM_TYPES: tuple[tuple[type[StrEnum], str], ...] = (
     (domain.ApprovalStatus, "approval_status"),
     (domain.CollectionMode, "collection_mode"),
     (domain.JobState, "job_state"),
+    (domain.JobStage, "job_stage"),
     (domain.Relevance, "relevance"),
     (domain.Stance, "stance"),
     (domain.HateType, "hate_type"),

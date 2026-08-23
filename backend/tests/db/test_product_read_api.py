@@ -315,11 +315,21 @@ def test_an_unclassified_item_reports_no_labels(client: TestClient, seeded: dict
     assert item["severity"] is None
 
 
-def test_news_returns_articles_only(client: TestClient, seeded: dict[str, Any]) -> None:
+def test_news_is_no_longer_an_item_projection(client: TestClient, seeded: dict[str, Any]) -> None:
+    """B-S9 moved `/v1/news` to the context news stream (reconciliation G5).
+
+    It used to be this file's concern: the same item projection with the content
+    kind pinned to news, which gave every article a hate label and a review
+    state. That shape is gone, and this asserts it stays gone. The stream's own
+    contract — window, applied, coverage, publisher metadata, no classification —
+    is covered in `test_news_api.py`.
+    """
+    del seeded
     body = client.get("/v1/news").json()
 
-    kinds = {item["content_kind"] for item in body["items"]}
-    assert kinds == {"news_article"}
+    assert "page" not in body
+    assert {"window", "applied", "coverage", "data_mode", "next_cursor"} <= set(body)
+    assert all("content_kind" not in item for item in body["items"])
 
 
 def test_item_detail_carries_the_model_disclosure_and_its_limitations(

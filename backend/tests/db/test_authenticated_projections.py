@@ -15,11 +15,15 @@ from sqlalchemy import Connection, Table, text
 
 from amanah.db.views import (
     FORBIDDEN_PROJECTION_COLUMNS,
+    authenticated_background_jobs,
+    authenticated_collection_runs,
     authenticated_items,
     authenticated_metric_buckets,
+    authenticated_news,
     authenticated_resources,
     authenticated_source_status,
 )
+from amanah.domain.enums import Role
 from tests.db import factories
 from tests.db.conftest import act_as, claims_for
 
@@ -28,6 +32,9 @@ DECLARED_PROJECTIONS: tuple[Table, ...] = (
     authenticated_metric_buckets,
     authenticated_source_status,
     authenticated_resources,
+    authenticated_news,
+    authenticated_collection_runs,
+    authenticated_background_jobs,
 )
 
 
@@ -172,3 +179,49 @@ def test_a_failed_inference_does_not_become_the_item_label(connection: Connectio
 
     assert row["prediction_id"] is None
     assert row["relevance"] is None
+
+
+def test_the_news_projection_cannot_carry_a_classification(connection: Connection) -> None:
+    """Reconciliation G5. An ingested article coincides with a window; it is not
+    an Amanah finding, and the projection has nowhere to say otherwise."""
+    columns = _view_columns(connection, "authenticated_news")
+
+    classification = {
+        "relevance",
+        "stance",
+        "hate_types",
+        "severity",
+        "score",
+        "confidence_tier",
+        "review_state",
+        "requires_review",
+        "rationale",
+        "prediction_id",
+    }
+    assert not columns & classification
+
+
+def test_the_run_projection_hides_the_queue_from_a_non_administrator(
+    connection: Connection,
+) -> None:
+    """Operational state is administrator-only, enforced by the view itself and
+    not only by the route that reads it."""
+    source_id = factories.insert_source(connection)
+    factories.insert_collection_run(connection, source_id=source_id)
+
+    act_as(connection, "authenticated", claims_for(uuid4(), Role.registered_user))
+    rows = connection.execute(text("SELECT id FROM public.authenticated_collection_runs")).all()
+
+    assert rows == []
+
+
+def test_the_run_projection_shows_an_administrator_its_runs(connection: Connection) -> None:
+    source_id = factories.insert_source(connection)
+    factories.insert_collection_run(connection, source_id=source_id)
+
+    act_as(connection, "authenticated", claims_for(uuid4(), Role.administrator))
+    rows = connection.execute(
+        text("SELECT id, status FROM public.authenticated_collection_runs")
+    ).all()
+
+    assert len(rows) == 1

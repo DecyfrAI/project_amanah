@@ -54,7 +54,9 @@ Run commands from the repository root unless noted otherwise. The repository is 
   `uv run --project backend --env-file backend/.env alembic -c backend/alembic.ini upgrade head`
 - Review the SQL first without connecting: the same command with `upgrade head --sql`
 - End-to-end tests: `pnpm --dir apps/web e2e`
-- ETL fixture run: `uv run --project backend amanah-etl run --source fixtures --dry-run`
+- ETL fixture run: `uv run --project backend --env-file backend/.env amanah-etl run --source fixtures --mode fixture --dry-run`
+- Sync reviewed source/seed configuration: `uv run --project backend --env-file backend/.env amanah-etl sync-config`
+- Historical backfill: `uv run --project backend --env-file backend/.env amanah-etl backfill --source <key> --from YYYY-MM-DD --to YYYY-MM-DD`
 
 If a listed command is not implemented yet, add or reconcile the smallest appropriate script as part of the relevant scaffold step. Do not replace the selected package managers or create parallel commands without explicit instruction.
 

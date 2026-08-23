@@ -15,12 +15,14 @@ from amanah.db.models.community import (
 )
 from amanah.db.models.content import CollectionRun, ContentItem
 from amanah.db.models.datasets import DatasetImportRun, DatasetPackage
+from amanah.db.models.jobs import BackgroundJob
 from amanah.db.models.metrics import InsightSnapshot, MetricBucket, NewsEventLink
 from amanah.db.models.reporting import PlatformPolicy, PolicyMatch, PreparedPlatformReport
 from amanah.db.models.resources import ResearchReport, ResourceEntry
 from amanah.db.models.sources import Source, SourceSeedEntry
 
 __all__ = [
+    "BackgroundJob",
     "Base",
     "ClassificationDispute",
     "CollectionRun",

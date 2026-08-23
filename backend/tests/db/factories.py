@@ -228,7 +228,8 @@ def insert_content_item(
             "observed_at": observed_at,
             "language": language,
             "country_code": country_code,
-            "geographic_scope": "national",
+            # One of the two values the news contract defines.
+            "geographic_scope": "local",
             "source_status": source_status.value,
             "is_fixture": is_fixture,
             "submitted_origin": submitted_origin,

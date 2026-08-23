@@ -146,6 +146,37 @@ class JobState(StrEnum):
     cancelled = "cancelled"
 
 
+class JobStage(StrEnum):
+    """One checkpointed stage of the canonical collection pipeline.
+
+    A stage writes its output before the next one is enqueued, so a retry re-runs
+    one stage against stored input rather than restarting the run.
+
+    `spec.md` section 12.3 draws the pipeline as discover/fetch, canonicalize,
+    then normalize and deduplicate. Canonicalization has no stage of its own here
+    because it is a pure in-memory translation with no external call: giving it
+    one would mean checkpointing a raw provider payload into the job queue
+    between the two, which is a payload the product has no reason to persist
+    outside the one column documented to hold it. It runs at the end of `fetch`
+    instead, so what crosses the boundary is already the canonical shape.
+    """
+
+    discover = "discover"
+    fetch = "fetch"
+    normalize = "normalize"
+
+
+class NewsScope(StrEnum):
+    """Geographic reach of an ingested news article.
+
+    `local` is reporting tied to one of the monitored countries; `global` is
+    religion or hate-crime reporting with no single national frame.
+    """
+
+    local = "local"
+    globally = "global"
+
+
 class DataMode(StrEnum):
     """Whether a response is backed by live collection, fixtures, or cached fallback."""
 
