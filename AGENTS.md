@@ -11,6 +11,9 @@ Run commands from the repository root unless noted otherwise. The repository is 
 
 - Frontend tests: `pnpm --dir apps/web test --run`
 - Backend tests: `uv run --project backend pytest backend/tests`
+- Backend database tests: the same command with `AMANAH_TEST_DATABASE_URL` set to a Postgres
+  server the suite may create and drop scratch databases on. Without it, `backend/tests/db`
+  skips rather than passing silently.
 - Full safe test suite: run both commands above; do not call live providers from tests.
 
 ## Run a single test
@@ -23,7 +26,7 @@ Run commands from the repository root unless noted otherwise. The repository is 
 ## Lint
 
 - Frontend: `pnpm --dir apps/web lint`
-- Backend: `uv run --project backend ruff check backend/src backend/tests`
+- Backend: `uv run --project backend ruff check backend/src backend/tests backend/migrations`
 
 ## Type check
 
@@ -34,8 +37,8 @@ Run commands from the repository root unless noted otherwise. The repository is 
 
 - Frontend check: `pnpm --dir apps/web format:check`
 - Frontend write: `pnpm --dir apps/web format`
-- Backend check: `uv run --project backend ruff format --check backend/src backend/tests`
-- Backend write: `uv run --project backend ruff format backend/src backend/tests`
+- Backend check: `uv run --project backend ruff format --check backend/src backend/tests backend/migrations`
+- Backend write: `uv run --project backend ruff format backend/src backend/tests backend/migrations`
 
 ## Dev server
 
@@ -47,6 +50,9 @@ Run commands from the repository root unless noted otherwise. The repository is 
 
 - Frontend production build: `pnpm --dir apps/web build`
 - Backend import/startup check: `uv run --project backend python -c "from amanah.main import create_app; create_app()"`
+- Database migrations (a separate one-off process, never run from application startup):
+  `uv run --project backend --env-file backend/.env alembic -c backend/alembic.ini upgrade head`
+- Review the SQL first without connecting: the same command with `upgrade head --sql`
 - End-to-end tests: `pnpm --dir apps/web e2e`
 - ETL fixture run: `uv run --project backend amanah-etl run --source fixtures --dry-run`
 

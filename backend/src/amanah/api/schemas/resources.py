@@ -9,6 +9,7 @@ from uuid import UUID
 from pydantic import Field
 
 from amanah.api.schemas.base import ResponseModel, UtcDatetime
+from amanah.api.schemas.common import ResponseMeta
 from amanah.domain.enums import ResourceCategory
 
 
@@ -25,3 +26,16 @@ class ResourceEntry(ResponseModel):
     category: ResourceCategory
     summary: str = Field(min_length=1)
     last_reviewed_at: UtcDatetime
+
+
+class ResourceListResponse(ResponseModel):
+    """`GET /v1/resources` payload.
+
+    The catalogue is small and curated, so it is returned whole rather than
+    paginated; `rules/api.md` requires cursor pagination for collections that
+    change, and this one changes only through reviewer action.
+    """
+
+    resources: list[ResourceEntry] = Field(default_factory=list)
+    categories: list[ResourceCategory] = Field(default_factory=list)
+    meta: ResponseMeta

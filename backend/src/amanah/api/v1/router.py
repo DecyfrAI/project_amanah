@@ -10,7 +10,7 @@ from fastapi import APIRouter, Depends
 
 from amanah.api.dependencies import bearer_scheme, require_authenticated_user
 from amanah.api.schemas.errors import ErrorEnvelope
-from amanah.api.v1 import me
+from amanah.api.v1 import catalogue, dashboard, items, me
 
 v1_router = APIRouter(
     prefix="/v1",
@@ -22,3 +22,6 @@ v1_router = APIRouter(
 )
 
 v1_router.include_router(me.router)
+v1_router.include_router(dashboard.router)
+v1_router.include_router(items.router)
+v1_router.include_router(catalogue.router)

@@ -8,6 +8,7 @@ from pydantic import Field, model_validator
 from amanah.api.schemas.base import ResponseModel, UtcDatetime
 from amanah.api.schemas.common import CoverageSummary, MetricRate, ResponseMeta
 from amanah.api.schemas.filters import CountryCode, NarrativeTag
+from amanah.domain.enums import MetricInterval
 
 
 class HeadlineCard(ResponseModel):
@@ -52,6 +53,37 @@ class DashboardMetrics(ResponseModel):
         return self
 
 
+class TrendPoint(ResponseModel):
+    """One position in the trend series.
+
+    A bucket that was never computed is returned with `is_gap` set and every
+    count `null`. It is never returned as zero: "we did not collect" and "we
+    collected and found none" are different claims.
+    """
+
+    bucket_start: UtcDatetime
+    is_gap: bool
+    observed_count: int | None = Field(default=None, ge=0)
+    muslim_related_count: int | None = Field(default=None, ge=0)
+    likely_anti_muslim_count: int | None = Field(default=None, ge=0)
+    coverage_score: float | None = Field(default=None, ge=0.0, le=1.0)
+
+    @model_validator(mode="after")
+    def _check_gap_carries_no_counts(self) -> Self:
+        if self.is_gap and self.observed_count is not None:
+            raise ValueError("a gap must not carry counts")
+        if not self.is_gap and self.observed_count is None:
+            raise ValueError("a non-gap bucket must carry counts")
+        return self
+
+
+class DashboardTrend(ResponseModel):
+    """The trend series and the bucket width it was computed at."""
+
+    interval: MetricInterval
+    points: list[TrendPoint] = Field(default_factory=list)
+
+
 class DashboardResponse(ResponseModel):
     """`GET /v1/dashboard` payload.
 
@@ -61,6 +93,7 @@ class DashboardResponse(ResponseModel):
 
     coverage: CoverageSummary
     metrics: DashboardMetrics
+    trend: DashboardTrend
     headlines: list[HeadlineCard] = Field(default_factory=list)
     sampling_disclosure: str
     meta: ResponseMeta

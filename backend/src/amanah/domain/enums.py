@@ -172,3 +172,214 @@ class ResourceCategory(StrEnum):
     support_for_affected_people = "support_for_affected_people"
     getting_involved = "getting_involved"
     country_specific = "country_specific"
+
+
+class ApprovalStatus(StrEnum):
+    """Governance state of a reviewed configuration or dataset manifest.
+
+    Nothing collects, imports, or runs while this is anything but `approved`.
+    """
+
+    pending = "pending"
+    approved = "approved"
+    rejected = "rejected"
+
+
+class SeedEntryKind(StrEnum):
+    """Shape of an approved source-seed entry."""
+
+    search_query = "search_query"
+    seed_video = "seed_video"
+    channel = "channel"
+    subreddit = "subreddit"
+    feed = "feed"
+
+
+class SamplingStratum(StrEnum):
+    """Why an entry was sampled.
+
+    Inclusion means sampling relevance, never a hate label, and the enriched
+    stratum must never be read as population prevalence.
+    """
+
+    enriched = "enriched"
+    boundary_control = "boundary_control"
+    ordinary_monitoring = "ordinary_monitoring"
+
+
+class RetentionPolicy(StrEnum):
+    """What the source's terms permit us to keep."""
+
+    indefinite_permitted = "indefinite_permitted"
+    limited_by_terms = "limited_by_terms"
+    delete_on_request = "delete_on_request"
+
+
+class ConnectorStatus(StrEnum):
+    """Safe, publishable state of a configured source connector.
+
+    Deliberately coarse: it never carries a provider error body, a host name, or
+    anything that would distinguish a bad key from a network failure.
+    """
+
+    ok = "ok"
+    degraded = "degraded"
+    disabled = "disabled"
+    not_configured = "not_configured"
+    access_required = "access_required"
+
+
+class CollectionMode(StrEnum):
+    """How a collection run was dispatched."""
+
+    scheduled = "scheduled"
+    manual = "manual"
+    backfill = "backfill"
+    fixture = "fixture"
+
+
+class InferenceStatus(StrEnum):
+    """Typed outcome of one classification attempt."""
+
+    succeeded = "succeeded"
+    deferred = "deferred"
+    policy_blocked = "policy_blocked"
+    invalid_output = "invalid_output"
+    provider_failure = "provider_failure"
+
+
+class ReviewTaskType(StrEnum):
+    """Why an item entered the human-review queue."""
+
+    dispute = "dispute"
+    low_confidence = "low_confidence"
+    severity_escalation = "severity_escalation"
+    model_disagreement = "model_disagreement"
+    uncertain_relevance = "uncertain_relevance"
+    invalid_output = "invalid_output"
+
+
+class ReviewTaskStatus(StrEnum):
+    """Lifecycle of a review task."""
+
+    open = "open"
+    claimed = "claimed"
+    completed = "completed"
+    cancelled = "cancelled"
+
+
+class ReviewDecision(StrEnum):
+    """An appended reviewer decision. Decisions never overwrite a prediction."""
+
+    confirmed = "confirmed"
+    corrected = "corrected"
+    needs_context = "needs_context"
+    rejected = "rejected"
+
+
+class DisputeStatus(StrEnum):
+    """Lifecycle of a user's classification dispute."""
+
+    open = "open"
+    in_review = "in_review"
+    resolved_upheld = "resolved_upheld"
+    resolved_corrected = "resolved_corrected"
+    withdrawn = "withdrawn"
+
+
+class ContributionEventType(StrEnum):
+    """User-safe transition recorded on a contribution timeline."""
+
+    created = "created"
+    status_changed = "status_changed"
+    resolved = "resolved"
+
+
+class OnboardingStatus(StrEnum):
+    """How far the signed-in user has progressed through onboarding."""
+
+    not_started = "not_started"
+    in_progress = "in_progress"
+    completed = "completed"
+
+
+class MetricInterval(StrEnum):
+    """Bucket width of a stored deterministic metric."""
+
+    hourly = "hourly"
+    daily = "daily"
+    weekly = "weekly"
+
+
+class RelationBasis(StrEnum):
+    """How a news item was associated with a metric movement.
+
+    Association is never causation; the basis is stored so a reader can judge it.
+    """
+
+    shared_narrative = "shared_narrative"
+    temporal_proximity = "temporal_proximity"
+    manual_link = "manual_link"
+
+
+class RelationReviewState(StrEnum):
+    """Whether a human has checked a proposed news/metric association."""
+
+    unreviewed = "unreviewed"
+    confirmed = "confirmed"
+    rejected = "rejected"
+
+
+class ValidationStatus(StrEnum):
+    """Whether generated narrative output passed citation validation."""
+
+    pending = "pending"
+    validated = "validated"
+    rejected = "rejected"
+
+
+class PublicationStatus(StrEnum):
+    """Editorial lifecycle of a curated catalog entry.
+
+    Only `published` entries reach an authenticated base-role reader.
+    """
+
+    draft = "draft"
+    published = "published"
+    archived = "archived"
+
+
+class PreparedReportStatus(StrEnum):
+    """State of a report the user prepared for a platform.
+
+    The product never submits a report, so no state here claims platform receipt.
+    """
+
+    prepared = "prepared"
+    submitted = "submitted"
+    closed = "closed"
+
+
+class PreparedReportOutcome(StrEnum):
+    """Outcome the user recorded after reporting to the platform themselves."""
+
+    no_response = "no_response"
+    content_removed = "content_removed"
+    content_restricted = "content_restricted"
+    no_violation = "no_violation"
+    other = "other"
+
+
+class ResearchReportStatus(StrEnum):
+    """Lifecycle of a research-report snapshot. `ready` snapshots are immutable."""
+
+    pending = "pending"
+    ready = "ready"
+    failed = "failed"
+
+
+class RedactionMode(StrEnum):
+    """How much of the underlying evidence a report snapshot may carry."""
+
+    default_redacted = "default_redacted"
+    aggregate_only = "aggregate_only"

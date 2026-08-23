@@ -40,37 +40,39 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
 
 ### Milestone 2 — Relational storage and authenticated read API
 
-- [ ] **B-S3 — Create the core database schema and RLS foundation**
-  - [ ] **B-S3.1** Read the database plan/rules and confirm explicit authorization before changing migration files.
-  - [ ] **B-S3.2** Add core source, run, content, prediction, metric, user, contribution, dispute, review, policy, resource, and report tables.
-  - [ ] **B-S3.3** Use UUID keys, UTC timestamps, explicit enums, foreign keys, and documented check/unique constraints.
-  - [ ] **B-S3.4** Add only query-driven indexes and verify expected access paths.
-  - [ ] **B-S3.5** Make review/contribution decisions append-only and ready report snapshots immutable.
-  - [ ] **B-S3.6** Add authenticated-safe projections that exclude encrypted/raw content and author identifiers.
-  - [ ] **B-S3.7** Deny anonymous access to every product table/view/function/storage object and add authenticated base-role, owner, reviewer, and admin RLS boundaries.
-  - [ ] **B-S3.8** Test empty-database migrations, constraints, negative RLS cases, and supported migration compatibility.
-  - [ ] **B-S3.9** Add dataset package and import-run tables plus package/version/license/file-hash/schema-mapping/row provenance.
-  - [ ] **B-S3.10** Map datapack items to the controlled `N/A` source row while preserving separate dataset provenance.
-  - [ ] **B-S3.11** Add source-seed configuration storage constrained by stable registry key/config version with approval, language, cap, query purpose, and sampling stratum.
+- [x] **B-S3 — Create the core database schema and RLS foundation**
+  - [x] **B-S3.1** Read the database plan/rules and confirm explicit authorization before changing migration files.
+  - [x] **B-S3.2** Add core source, run, content, prediction, metric, user, contribution, dispute, review, policy, resource, and report tables.
+  - [x] **B-S3.3** Use UUID keys, UTC timestamps, explicit enums, foreign keys, and documented check/unique constraints.
+  - [x] **B-S3.4** Add only query-driven indexes and verify expected access paths.
+  - [x] **B-S3.5** Make review/contribution decisions append-only and ready report snapshots immutable.
+  - [x] **B-S3.6** Add authenticated-safe projections that exclude encrypted/raw content and author identifiers.
+  - [x] **B-S3.7** Deny anonymous access to every product table/view/function/storage object and add authenticated base-role, owner, reviewer, and admin RLS boundaries.
+  - [x] **B-S3.8** Test empty-database migrations, constraints, negative RLS cases, and supported migration compatibility.
+  - [x] **B-S3.9** Add dataset package and import-run tables plus package/version/license/file-hash/schema-mapping/row provenance.
+  - [x] **B-S3.10** Map datapack items to the controlled `N/A` source row while preserving separate dataset provenance.
+  - [x] **B-S3.11** Add source-seed configuration storage constrained by stable registry key/config version with approval, language, cap, query purpose, and sampling stratum.
 
-- [ ] **B-S5 — Implement authenticated dashboard and item read APIs**
-  - [ ] **B-S5.1** Implement parameterized repositories for dashboard metrics, headlines, news, item lists, and item detail.
-  - [ ] **B-S5.2** Support all validated authenticated filters and stable documented sorts.
-  - [ ] **B-S5.3** Implement cursor pagination with stable secondary ordering.
-  - [ ] **B-S5.4** Return numerator, denominator, scope, window, coverage, and data mode for every rate.
-  - [ ] **B-S5.5** Preserve missing buckets as gaps and expose stale/partial warnings.
-  - [ ] **B-S5.6** Exclude raw fields, author identifiers, and unauthorized evidence.
-  - [ ] **B-S5.7** Test filters, cursors, unsupported inputs, empty data, redaction, representative query plans, and anonymous denial for every read route.
-  - [ ] **B-S5.8** Add a distinct Dataset filter and return dataset provider/name/version separately from source/platform `N/A`.
+- [x] **B-S5 — Implement authenticated dashboard and item read APIs**
+  - [x] **B-S5.1** Implement parameterized repositories for dashboard metrics, headlines, news, item lists, and item detail.
+  - [x] **B-S5.2** Support all validated authenticated filters and stable documented sorts.
+  - [x] **B-S5.3** Implement cursor pagination with stable secondary ordering.
+  - [x] **B-S5.4** Return numerator, denominator, scope, window, coverage, and data mode for every rate.
+  - [x] **B-S5.5** Preserve missing buckets as gaps and expose stale/partial warnings.
+  - [x] **B-S5.6** Exclude raw fields, author identifiers, and unauthorized evidence.
+  - [x] **B-S5.7** Test filters, cursors, unsupported inputs, empty data, redaction, representative query plans, and anonymous denial for every read route.
+  - [x] **B-S5.8** Add a distinct Dataset filter and return dataset provider/name/version separately from source/platform `N/A`.
 
-- [ ] **B-S6 — Implement authenticated methodology, resources, and connection-status reads**
-  - [ ] **B-S6.1** Implement authenticated methodology disclosures for sampling, taxonomy, models, coverage, and limitations.
-  - [ ] **B-S6.2** Implement authenticated base-role reads for published resource entries only.
-  - [ ] **B-S6.3** Return resource organization, country/scope, category, summary, URL, and last-reviewed date.
-  - [ ] **B-S6.4** Implement safe connector state with purpose, status, last success/check, and safe warnings.
-  - [ ] **B-S6.5** Ensure connector responses never include keys, connection strings, or raw provider failures.
-  - [ ] **B-S6.6** Add caching and invalidation only where justified.
-  - [ ] **B-S6.7** Test anonymous denial, unpublished-resource denial, and secret-free methodology/connector serialization.
+- [x] **B-S6 — Implement authenticated methodology, resources, and connection-status reads**
+  - [x] **B-S6.1** Implement authenticated methodology disclosures for sampling, taxonomy, models, coverage, and limitations.
+  - [x] **B-S6.2** Implement authenticated base-role reads for published resource entries only.
+  - [x] **B-S6.3** Return resource organization, country/scope, category, summary, URL, and last-reviewed date.
+  - [x] **B-S6.4** Implement safe connector state with purpose, status, last success/check, and safe warnings.
+  - [x] **B-S6.5** Ensure connector responses never include keys, connection strings, or raw provider failures.
+  - [x] **B-S6.6** Add caching and invalidation only where justified. *(None added: the four
+    reads are single indexed queries or static prose, and a cache would introduce staleness
+    the coverage disclosure would then have to describe. Revisit if a read shows up hot.)*
+  - [x] **B-S6.7** Test anonymous denial, unpublished-resource denial, and secret-free methodology/connector serialization.
 
 ### Milestone 3 — Collection and canonical processing
 
