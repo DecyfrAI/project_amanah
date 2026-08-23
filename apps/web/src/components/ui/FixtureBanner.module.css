@@ -1,0 +1,11 @@
+.banner {
+  flex: none;
+  margin: 0;
+  padding: var(--space-2) var(--space-5);
+  background-color: var(--color-status-review-surface);
+  color: var(--color-status-review);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-align: center;
+}

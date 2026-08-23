@@ -1,0 +1,48 @@
+{
+  "threads": [
+    {
+      "insightId": "ins_collective_blame",
+      "threadId": "thr_collective_blame",
+      "posts": [
+        {
+          "id": "post_amina_rate",
+          "author": {
+            "id": "user_amina",
+            "displayName": "Amina R."
+          },
+          "body": "The rise sits in the last four days of the window. Opening the figure with the same filters shows the gap days as gaps, not zeros, so the slope is not an artefact of a missed run.",
+          "createdAt": "2026-08-16T15:10:00Z",
+          "retractedAt": null,
+          "capture": {
+            "id": "cap_daily_rate",
+            "altText": "Line chart of the daily likely-hate rate in the fixture YouTube sample from 1 to 16 August 2026. Missing collection days appear as gaps.",
+            "imageSrc": "/media/captures/daily-rate.svg",
+            "filterHash": "yt|2026-08-01|2026-08-16|narrative:collective_blame",
+            "explorerHref": "/app/explorer?from=2026-08-01&to=2026-08-16&narrative=collective_blame"
+          },
+          "reactions": {
+            "useful": 2,
+            "needs_context": 0,
+            "viewer": null
+          }
+        },
+        {
+          "id": "post_demo_window",
+          "author": {
+            "id": "user_demo",
+            "displayName": "Demo reviewer"
+          },
+          "body": "I am keeping this window open so we can compare the last four days against the earlier fortnight without treating the gap on 7 August as a quiet day.",
+          "createdAt": "2026-08-16T16:40:00Z",
+          "retractedAt": null,
+          "capture": null,
+          "reactions": {
+            "useful": 1,
+            "needs_context": 0,
+            "viewer": "useful"
+          }
+        }
+      ]
+    }
+  ]
+}

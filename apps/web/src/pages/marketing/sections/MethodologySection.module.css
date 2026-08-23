@@ -1,0 +1,102 @@
+.groups {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-7);
+}
+
+.group {
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--marketing-rule);
+}
+
+.groupHeading {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+  margin-bottom: var(--space-4);
+}
+
+.entries {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+}
+
+.term {
+  font-family: var(--font-editorial);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--marketing-heading);
+}
+
+.definition {
+  margin: var(--space-1) 0 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+  max-width: 62ch;
+}
+
+/*
+ * Limitations are given the same visual weight as capabilities rather than
+ * being tucked into small print. If the caveats are hard to read, the numbers
+ * above them are being oversold.
+ */
+.limitations {
+  margin-top: var(--space-7);
+  padding: var(--space-5);
+  background-color: var(--marketing-card);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-lg);
+}
+
+.limitationsHeading {
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--marketing-heading);
+  margin-bottom: var(--space-3);
+}
+
+.limitationList {
+  display: grid;
+  gap: var(--space-3);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.limitation {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+}
+
+.limitationMark {
+  color: var(--marketing-label);
+  flex-shrink: 0;
+}
+
+.contact {
+  margin-top: var(--space-6);
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+}
+
+@media (min-width: 64em) {
+  .groups {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-6) var(--space-8);
+  }
+
+  .limitationList {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3) var(--space-6);
+  }
+}

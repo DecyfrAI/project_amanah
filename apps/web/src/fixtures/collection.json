@@ -1,0 +1,3169 @@
+{
+  "generatedBy": "scripts/build_fixture_collection.py",
+  "available": {
+    "from": "2026-06-18",
+    "to": "2026-08-16",
+    "timezone": "UTC"
+  },
+  "defaultWindowDays": 30,
+  "lastSuccessfulRun": "2026-08-16T23:41:00+00:00",
+  "platforms": [
+    {
+      "platform": "youtube",
+      "containerLabel": "videos",
+      "containers": 22
+    },
+    {
+      "platform": "reddit",
+      "containerLabel": "threads",
+      "containers": 14
+    }
+  ],
+  "hateTypes": ["animosity", "derogation", "dehumanisation", "exclusion", "threat"],
+  "severityBands": ["0", "1", "2", "3"],
+  "gapDays": ["2026-07-04", "2026-08-07"],
+  "days": [
+    {
+      "date": "2026-06-18",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 145,
+          "relevant": 27,
+          "nonRelevant": 118,
+          "likelyHate": 5,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 77,
+          "relevant": 17,
+          "nonRelevant": 60,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-19",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 146,
+          "relevant": 30,
+          "nonRelevant": 116,
+          "likelyHate": 5,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 58,
+          "relevant": 16,
+          "nonRelevant": 42,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-20",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 149,
+          "relevant": 34,
+          "nonRelevant": 115,
+          "likelyHate": 8,
+          "reviewConfirmed": 7,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 3,
+            "derogation": 3,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 3,
+            "2": 1,
+            "3": 1
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 59,
+          "relevant": 19,
+          "nonRelevant": 40,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-21",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 92,
+          "relevant": 24,
+          "nonRelevant": 68,
+          "likelyHate": 4,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 59,
+          "relevant": 20,
+          "nonRelevant": 39,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-22",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 97,
+          "relevant": 18,
+          "nonRelevant": 79,
+          "likelyHate": 4,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 75,
+          "relevant": 20,
+          "nonRelevant": 55,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-23",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 111,
+          "relevant": 29,
+          "nonRelevant": 82,
+          "likelyHate": 6,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 2,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 37,
+          "relevant": 12,
+          "nonRelevant": 25,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-24",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 153,
+          "relevant": 39,
+          "nonRelevant": 114,
+          "likelyHate": 8,
+          "reviewConfirmed": 7,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 3,
+            "derogation": 3,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 3,
+            "2": 2,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 85,
+          "relevant": 23,
+          "nonRelevant": 62,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-25",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 151,
+          "relevant": 38,
+          "nonRelevant": 113,
+          "likelyHate": 8,
+          "reviewConfirmed": 7,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 3,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 2,
+            "threat": 0
+          },
+          "severity": {
+            "0": 4,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 57,
+          "relevant": 18,
+          "nonRelevant": 39,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-26",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 112,
+          "relevant": 28,
+          "nonRelevant": 84,
+          "likelyHate": 6,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 3,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 55,
+          "relevant": 17,
+          "nonRelevant": 38,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-27",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 114,
+          "relevant": 26,
+          "nonRelevant": 88,
+          "likelyHate": 6,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 2,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 80,
+          "relevant": 26,
+          "nonRelevant": 54,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-28",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 116,
+          "relevant": 23,
+          "nonRelevant": 93,
+          "likelyHate": 5,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 64,
+          "relevant": 20,
+          "nonRelevant": 44,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-29",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 95,
+          "relevant": 18,
+          "nonRelevant": 77,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 60,
+          "relevant": 19,
+          "nonRelevant": 41,
+          "likelyHate": 4,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-06-30",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 146,
+          "relevant": 33,
+          "nonRelevant": 113,
+          "likelyHate": 6,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 73,
+          "relevant": 17,
+          "nonRelevant": 56,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-01",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 160,
+          "relevant": 41,
+          "nonRelevant": 119,
+          "likelyHate": 9,
+          "reviewConfirmed": 8,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 4,
+            "derogation": 3,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 4,
+            "1": 4,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 48,
+          "relevant": 14,
+          "nonRelevant": 34,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-02",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 145,
+          "relevant": 33,
+          "nonRelevant": 112,
+          "likelyHate": 5,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 62,
+          "relevant": 19,
+          "nonRelevant": 43,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-03",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 110,
+          "relevant": 23,
+          "nonRelevant": 87,
+          "likelyHate": 5,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 67,
+          "relevant": 20,
+          "nonRelevant": 47,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-04",
+      "collected": false,
+      "platforms": []
+    },
+    {
+      "date": "2026-07-05",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 129,
+          "relevant": 27,
+          "nonRelevant": 102,
+          "likelyHate": 5,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 47,
+          "relevant": 12,
+          "nonRelevant": 35,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-06",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 157,
+          "relevant": 33,
+          "nonRelevant": 124,
+          "likelyHate": 7,
+          "reviewConfirmed": 6,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 3,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 68,
+          "relevant": 17,
+          "nonRelevant": 51,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-07",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 112,
+          "relevant": 22,
+          "nonRelevant": 90,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 36,
+          "relevant": 10,
+          "nonRelevant": 26,
+          "likelyHate": 1,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 0,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 0,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-08",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 142,
+          "relevant": 26,
+          "nonRelevant": 116,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 38,
+          "relevant": 12,
+          "nonRelevant": 26,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-09",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 140,
+          "relevant": 32,
+          "nonRelevant": 108,
+          "likelyHate": 6,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 2,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 2,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 70,
+          "relevant": 19,
+          "nonRelevant": 51,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-10",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 85,
+          "relevant": 17,
+          "nonRelevant": 68,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 72,
+          "relevant": 16,
+          "nonRelevant": 56,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-11",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 149,
+          "relevant": 35,
+          "nonRelevant": 114,
+          "likelyHate": 6,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 2,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 2,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 50,
+          "relevant": 17,
+          "nonRelevant": 33,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-12",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 146,
+          "relevant": 35,
+          "nonRelevant": 111,
+          "likelyHate": 5,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 64,
+          "relevant": 15,
+          "nonRelevant": 49,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-13",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 161,
+          "relevant": 38,
+          "nonRelevant": 123,
+          "likelyHate": 6,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 2,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 94,
+          "relevant": 28,
+          "nonRelevant": 66,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-14",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 144,
+          "relevant": 27,
+          "nonRelevant": 117,
+          "likelyHate": 5,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 44,
+          "relevant": 12,
+          "nonRelevant": 32,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-15",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 147,
+          "relevant": 28,
+          "nonRelevant": 119,
+          "likelyHate": 6,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 1,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 2,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 90,
+          "relevant": 20,
+          "nonRelevant": 70,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 1,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-16",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 166,
+          "relevant": 30,
+          "nonRelevant": 136,
+          "likelyHate": 5,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 89,
+          "relevant": 22,
+          "nonRelevant": 67,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-17",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 86,
+          "relevant": 17,
+          "nonRelevant": 69,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 84,
+          "relevant": 21,
+          "nonRelevant": 63,
+          "likelyHate": 3,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 0,
+            "2": 1,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-18",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 123,
+          "relevant": 23,
+          "nonRelevant": 100,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 85,
+          "relevant": 23,
+          "nonRelevant": 62,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-19",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 151,
+          "relevant": 34,
+          "nonRelevant": 117,
+          "likelyHate": 7,
+          "reviewConfirmed": 5,
+          "reviewCorrected": 1,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 3,
+            "derogation": 2,
+            "dehumanisation": 2,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 60,
+          "relevant": 17,
+          "nonRelevant": 43,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 1,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-20",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 91,
+          "relevant": 22,
+          "nonRelevant": 69,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 37,
+          "relevant": 13,
+          "nonRelevant": 24,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-21",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 80,
+          "relevant": 19,
+          "nonRelevant": 61,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 70,
+          "relevant": 16,
+          "nonRelevant": 54,
+          "likelyHate": 2,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 0,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-22",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 90,
+          "relevant": 19,
+          "nonRelevant": 71,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 62,
+          "relevant": 16,
+          "nonRelevant": 46,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-23",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 121,
+          "relevant": 30,
+          "nonRelevant": 91,
+          "likelyHate": 6,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 2,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 95,
+          "relevant": 32,
+          "nonRelevant": 63,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-24",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 115,
+          "relevant": 27,
+          "nonRelevant": 88,
+          "likelyHate": 5,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 1,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 1
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 91,
+          "relevant": 25,
+          "nonRelevant": 66,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 1,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-25",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 144,
+          "relevant": 34,
+          "nonRelevant": 110,
+          "likelyHate": 6,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 2,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 82,
+          "relevant": 22,
+          "nonRelevant": 60,
+          "likelyHate": 2,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-26",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 104,
+          "relevant": 21,
+          "nonRelevant": 83,
+          "likelyHate": 4,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 73,
+          "relevant": 19,
+          "nonRelevant": 54,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-27",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 109,
+          "relevant": 23,
+          "nonRelevant": 86,
+          "likelyHate": 4,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 49,
+          "relevant": 17,
+          "nonRelevant": 32,
+          "likelyHate": 2,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-28",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 168,
+          "relevant": 34,
+          "nonRelevant": 134,
+          "likelyHate": 7,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 1,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 3,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 2,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 2,
+            "2": 1,
+            "3": 1
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 96,
+          "relevant": 33,
+          "nonRelevant": 63,
+          "likelyHate": 4,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-29",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 98,
+          "relevant": 20,
+          "nonRelevant": 78,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 72,
+          "relevant": 23,
+          "nonRelevant": 49,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-30",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 139,
+          "relevant": 29,
+          "nonRelevant": 110,
+          "likelyHate": 6,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 2,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 74,
+          "relevant": 24,
+          "nonRelevant": 50,
+          "likelyHate": 4,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 1,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-07-31",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 83,
+          "relevant": 21,
+          "nonRelevant": 62,
+          "likelyHate": 4,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 79,
+          "relevant": 21,
+          "nonRelevant": 58,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-01",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 106,
+          "relevant": 26,
+          "nonRelevant": 80,
+          "likelyHate": 4,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 60,
+          "relevant": 17,
+          "nonRelevant": 43,
+          "likelyHate": 3,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-02",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 89,
+          "relevant": 18,
+          "nonRelevant": 71,
+          "likelyHate": 4,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 90,
+          "relevant": 26,
+          "nonRelevant": 64,
+          "likelyHate": 3,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 0,
+            "2": 1,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-03",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 160,
+          "relevant": 40,
+          "nonRelevant": 120,
+          "likelyHate": 8,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 0,
+          "reviewPending": 4,
+          "types": {
+            "animosity": 2,
+            "derogation": 3,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 1
+          },
+          "severity": {
+            "0": 3,
+            "1": 4,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 73,
+          "relevant": 24,
+          "nonRelevant": 49,
+          "likelyHate": 3,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-04",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 163,
+          "relevant": 32,
+          "nonRelevant": 131,
+          "likelyHate": 5,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 42,
+          "relevant": 14,
+          "nonRelevant": 28,
+          "likelyHate": 2,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 1,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-05",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 99,
+          "relevant": 23,
+          "nonRelevant": 76,
+          "likelyHate": 6,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 1,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 3,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 55,
+          "relevant": 14,
+          "nonRelevant": 41,
+          "likelyHate": 4,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 1,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-06",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 162,
+          "relevant": 37,
+          "nonRelevant": 125,
+          "likelyHate": 11,
+          "reviewConfirmed": 4,
+          "reviewCorrected": 0,
+          "reviewPending": 7,
+          "types": {
+            "animosity": 5,
+            "derogation": 3,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 1
+          },
+          "severity": {
+            "0": 4,
+            "1": 5,
+            "2": 1,
+            "3": 1
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 90,
+          "relevant": 30,
+          "nonRelevant": 60,
+          "likelyHate": 8,
+          "reviewConfirmed": 3,
+          "reviewCorrected": 0,
+          "reviewPending": 5,
+          "types": {
+            "animosity": 3,
+            "derogation": 3,
+            "dehumanisation": 2,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 3,
+            "2": 2,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-07",
+      "collected": false,
+      "platforms": []
+    },
+    {
+      "date": "2026-08-08",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 81,
+          "relevant": 19,
+          "nonRelevant": 62,
+          "likelyHate": 5,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 74,
+          "relevant": 20,
+          "nonRelevant": 54,
+          "likelyHate": 4,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-09",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 83,
+          "relevant": 18,
+          "nonRelevant": 65,
+          "likelyHate": 4,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 70,
+          "relevant": 19,
+          "nonRelevant": 51,
+          "likelyHate": 4,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-10",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 126,
+          "relevant": 26,
+          "nonRelevant": 100,
+          "likelyHate": 5,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 2,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 83,
+          "relevant": 25,
+          "nonRelevant": 58,
+          "likelyHate": 5,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 2,
+            "2": 2,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-11",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 126,
+          "relevant": 31,
+          "nonRelevant": 95,
+          "likelyHate": 7,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 5,
+          "types": {
+            "animosity": 3,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 53,
+          "relevant": 14,
+          "nonRelevant": 39,
+          "likelyHate": 3,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-12",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 136,
+          "relevant": 28,
+          "nonRelevant": 108,
+          "likelyHate": 7,
+          "reviewConfirmed": 2,
+          "reviewCorrected": 0,
+          "reviewPending": 5,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 2,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 62,
+          "relevant": 15,
+          "nonRelevant": 47,
+          "likelyHate": 3,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 1,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-13",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 132,
+          "relevant": 24,
+          "nonRelevant": 108,
+          "likelyHate": 6,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 5,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 2,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 3,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 90,
+          "relevant": 23,
+          "nonRelevant": 67,
+          "likelyHate": 4,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-14",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 131,
+          "relevant": 27,
+          "nonRelevant": 104,
+          "likelyHate": 6,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 5,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 3,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 62,
+          "relevant": 21,
+          "nonRelevant": 41,
+          "likelyHate": 4,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-15",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 114,
+          "relevant": 24,
+          "nonRelevant": 90,
+          "likelyHate": 5,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 4,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 90,
+          "relevant": 27,
+          "nonRelevant": 63,
+          "likelyHate": 5,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 4,
+          "types": {
+            "animosity": 2,
+            "derogation": 2,
+            "dehumanisation": 1,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 2,
+            "2": 1,
+            "3": 0
+          }
+        }
+      ]
+    },
+    {
+      "date": "2026-08-16",
+      "collected": true,
+      "platforms": [
+        {
+          "platform": "youtube",
+          "containers": 22,
+          "observed": 90,
+          "relevant": 17,
+          "nonRelevant": 73,
+          "likelyHate": 4,
+          "reviewConfirmed": 1,
+          "reviewCorrected": 0,
+          "reviewPending": 3,
+          "types": {
+            "animosity": 2,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 1,
+            "threat": 0
+          },
+          "severity": {
+            "0": 2,
+            "1": 1,
+            "2": 1,
+            "3": 0
+          }
+        },
+        {
+          "platform": "reddit",
+          "containers": 14,
+          "observed": 58,
+          "relevant": 14,
+          "nonRelevant": 44,
+          "likelyHate": 2,
+          "reviewConfirmed": 0,
+          "reviewCorrected": 0,
+          "reviewPending": 2,
+          "types": {
+            "animosity": 1,
+            "derogation": 1,
+            "dehumanisation": 0,
+            "exclusion": 0,
+            "threat": 0
+          },
+          "severity": {
+            "0": 1,
+            "1": 1,
+            "2": 0,
+            "3": 0
+          }
+        }
+      ]
+    }
+  ]
+}

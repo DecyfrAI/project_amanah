@@ -1,0 +1,215 @@
+.figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background-color: color-mix(in srgb, var(--marketing-card) 72%, transparent);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-lg);
+  overflow-anchor: none;
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+}
+
+.title {
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  color: var(--marketing-heading);
+}
+
+.summary {
+  color: var(--marketing-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.platform {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  background-color: var(--marketing-card);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-md);
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--marketing-rule);
+}
+
+.dot {
+  width: var(--space-2);
+  height: var(--space-2);
+  border-radius: var(--radius-full);
+  background-color: var(--marketing-rule);
+}
+
+.chromeLabel {
+  margin-inline-start: var(--space-2);
+  color: var(--marketing-label);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.thread {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  max-height: 28rem;
+  padding: var(--space-4);
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+
+.post {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.postMeta {
+  color: var(--marketing-label);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.postTitle {
+  color: var(--marketing-heading);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+}
+
+.postBody {
+  color: var(--marketing-body);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.focal {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3);
+  background-color: color-mix(in srgb, var(--marketing-surface) 55%, transparent);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-md);
+}
+
+.focalHandle,
+.replyHandle {
+  color: var(--marketing-label);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.focalText {
+  color: var(--marketing-heading);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.focalLabel {
+  color: var(--marketing-body);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.replies,
+.more {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.replyItem,
+.moreItem {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  padding: var(--space-3);
+  background-color: color-mix(in srgb, var(--marketing-surface) 40%, transparent);
+  border-radius: var(--radius-md);
+  animation: reply-in var(--duration-feed-bury) var(--easing-standard) both;
+}
+
+.replyItem:nth-child(2),
+.moreItem:nth-child(2) {
+  animation-delay: calc(var(--duration-feed-bury) * 0.15);
+}
+
+.replyItem:nth-child(3),
+.moreItem:nth-child(3) {
+  animation-delay: calc(var(--duration-feed-bury) * 0.3);
+}
+
+.moreItem:nth-child(4) {
+  animation-delay: calc(var(--duration-feed-bury) * 0.45);
+}
+
+.replyText {
+  color: var(--marketing-heading);
+  font-size: var(--text-sm);
+}
+
+.moreButton {
+  align-self: flex-start;
+  min-height: var(--target-min);
+  padding-inline: var(--space-3);
+  background-color: transparent;
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-md);
+  color: var(--marketing-heading);
+  font-size: var(--text-sm);
+}
+
+.prompt {
+  display: block;
+  color: var(--marketing-heading);
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  line-height: var(--leading-snug);
+}
+
+@keyframes reply-in {
+  from {
+    transform: translateY(var(--space-3));
+    opacity: 0;
+  }
+
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .replyItem,
+  .moreItem {
+    animation: none;
+  }
+}

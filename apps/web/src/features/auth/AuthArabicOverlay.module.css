@@ -1,0 +1,59 @@
+.overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  mask-image: linear-gradient(to bottom, transparent, #000 12%, #000 88%, transparent);
+}
+
+/*
+ * Two identical rows sit side by side. Translating by exactly -50% returns the
+ * first copy to where the second started, so the loop has no visible join.
+ */
+.track {
+  display: flex;
+  width: max-content;
+  animation: drift var(--duration-watermark) linear infinite;
+}
+
+.row {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-8);
+  padding-inline-end: var(--space-8);
+}
+
+.word {
+  font-family: var(--font-arabic);
+  font-size: var(--text-4xl);
+  line-height: 1;
+  color: var(--color-text-primary);
+  opacity: 0.08;
+  user-select: none;
+  white-space: nowrap;
+}
+
+@keyframes drift {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+@media (min-width: 40em) {
+  .word {
+    font-size: 6rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}

@@ -1,0 +1,71 @@
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.title {
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text-primary);
+}
+
+.lead {
+  max-width: var(--layout-prose-width);
+  color: var(--color-text-secondary);
+  line-height: var(--leading-relaxed);
+}
+
+.list {
+  display: grid;
+  gap: var(--space-4);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  /* One column by default so a single card uses the full content width. */
+  grid-template-columns: minmax(0, 1fr);
+}
+
+@media (min-width: 64em) {
+  .list {
+    /*
+     * auto-fit: a lone card stretches; two or more share the row once each
+     * can clear the card minimum. Avoids a half-empty row with one insight.
+     */
+    grid-template-columns: repeat(auto-fit, minmax(var(--layout-insight-card-min), 1fr));
+  }
+}
+
+.empty,
+.error {
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  color: var(--color-text-secondary);
+}
+
+.error {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+  border-color: var(--color-status-harm);
+}
+
+.retry {
+  min-height: var(--target-min);
+  padding-inline: var(--space-4);
+  background-color: transparent;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+}

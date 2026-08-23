@@ -1,0 +1,111 @@
+.steps {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-7) 0 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.step {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background-color: var(--marketing-card);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-lg);
+
+  opacity: 0;
+  transform: translateY(var(--space-4));
+  transition:
+    opacity var(--duration-base) var(--easing-standard) var(--reveal-delay, 0ms),
+    transform var(--duration-base) var(--easing-standard) var(--reveal-delay, 0ms);
+}
+
+.revealed .step {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stepHeader {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.stepIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border-radius: var(--radius-full);
+  background-color: var(--palette-gold-300);
+  color: var(--palette-navy-950);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  flex-shrink: 0;
+}
+
+.stepName {
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  color: var(--marketing-heading);
+}
+
+.stepBody {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+}
+
+/* The decision point, called out because it is the whole architecture. */
+.humanNote {
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border-left: 2px solid var(--palette-gold-300);
+  background-color: var(--marketing-card);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  font-style: italic;
+  line-height: var(--leading-snug);
+  color: var(--marketing-heading);
+}
+
+@media (min-width: 40em) {
+  .steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 64em) {
+  .steps {
+    grid-template-columns: repeat(5, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .step {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}
+
+/* CC BY requires visible credit. Small, but present and linked. */
+.credits {
+  margin-top: var(--space-5);
+  font-size: var(--text-2xs);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+  opacity: 0.75;
+}
+
+.credits a {
+  color: inherit;
+}

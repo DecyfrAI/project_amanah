@@ -1,0 +1,166 @@
+/*
+ * Accordion of feature panels.
+ *
+ * On small viewports the panels stack and expand downward. From `medium` up they
+ * sit side by side and the open one widens, which is the pattern the reference
+ * sites use, but it degrades to a plain accordion rather than depending on the
+ * horizontal layout to be usable.
+ */
+.panels {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin: var(--space-7) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.panel {
+  overflow: hidden;
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-lg);
+  background-color: var(--marketing-card);
+  transition:
+    flex-grow var(--duration-base) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard);
+}
+
+.panel:hover {
+  border-color: var(--marketing-heading);
+}
+
+.panelOpen,
+.panelOpen:hover {
+  border-color: var(--palette-teal-200);
+}
+
+/* The whole header is the control, so the target is the full panel width. */
+.trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  width: 100%;
+  min-height: var(--target-min);
+  padding: var(--space-4) var(--space-5);
+  background: transparent;
+  border: none;
+  color: inherit;
+  text-align: start;
+}
+
+.ordinal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border: var(--border-width) solid currentcolor;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--marketing-label);
+  flex-shrink: 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.name {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+  white-space: nowrap;
+}
+
+.headline {
+  flex: 1;
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  color: var(--marketing-heading);
+}
+
+.marker {
+  flex-shrink: 0;
+  color: var(--marketing-label);
+  transition: transform var(--duration-base) var(--easing-standard);
+}
+
+.panelOpen .marker {
+  transform: rotate(45deg);
+}
+
+.content {
+  padding: 0 var(--space-5) var(--space-5);
+}
+
+.body {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+  max-width: 52ch;
+}
+
+.outcome {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding-top: var(--space-3);
+  border-top: var(--border-width) solid var(--marketing-rule);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+}
+
+@media (min-width: 64em) {
+  .panels {
+    flex-direction: row;
+    align-items: stretch;
+    min-height: 24rem;
+  }
+
+  .panel {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  /* Closed panels shrink to their header; the open one takes the rest. */
+  .panelOpen {
+    flex-grow: 6;
+  }
+
+  .trigger {
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: flex-start;
+    gap: var(--space-3);
+    height: 100%;
+    padding: var(--space-5);
+  }
+
+  .panelOpen .trigger {
+    flex-direction: row;
+    align-items: center;
+    height: auto;
+  }
+
+  /* Closed headers turn on their side, so a row of them reads as a spine. */
+  .panel:not(.panelOpen) .name {
+    writing-mode: vertical-rl;
+    color: var(--marketing-heading);
+  }
+
+  .panel:not(.panelOpen) .marker {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .panel.marker {
+    transition: none;
+  }
+}

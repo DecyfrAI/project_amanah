@@ -1,0 +1,477 @@
+/*
+ * Project Amanah, design tokens.
+ *
+ * The single source of every colour, type, spacing, and breakpoint value in the
+ * application. rules/frontend.md ("Styling") forbids hardcoding any of these in
+ * component styles, so if a value is not here, it does not belong in a component.
+ *
+ * Palette derives from docs/planning/PROJECT_AMANAH_BRAND_DESIGN_SYSTEM.md 4,
+ * with the teal and gold ramps rebuilt around the shipped logo's own values.
+ * The gold block below records why that ramp needed two distinct values.
+ */
+
+:root {
+  /* Native form controls follow this, not the page background. Without it,
+   * buttons and fieldsets stay in the light user-agent palette on a dark
+   * dashboard: white chips, white day squares, and light fieldset rings. */
+  color-scheme: light;
+
+  /* ---------------------------------------------------------------------
+   * Primitives, raw palette. Never referenced directly by components;
+   * components use the semantic tokens further down.
+   * ------------------------------------------------------------------ */
+
+  /* Navy, dark surfaces, primary text, navigation. */
+  --palette-navy-950: #071a2b;
+  --palette-navy-900: #0c2438;
+  --palette-navy-850: #0e2739; /* raised card on a dark marketing section */
+  --palette-navy-800: #12324a;
+  --palette-navy-750: #1d3450; /* hairline rules and borders on dark */
+  --palette-navy-700: #1c4463;
+
+  /*
+   * Navy 950 as bare channels, for the scrims and shadows that need the same
+   * colour at several alphas. `rgb(var(--...) / 55%)` keeps those gradients on
+   * the palette instead of repeating a raw triplet in every module.
+   */
+  --palette-navy-950-channels: 7 26 43;
+
+  /* Teal, brand actions and data accents. 700 is the logo's own teal. */
+  --palette-teal-50: #eefafa;
+  --palette-teal-100: #d3f1f2;
+  --palette-teal-150: #b8e4e6;
+  --palette-teal-200: #92eaf3; /* logo mark, dark theme */
+  --palette-teal-300: #5fd2dc;
+  --palette-teal-500: #0e9fa3;
+  --palette-teal-700: #017b7e; /* logo mark, light theme */
+  --palette-teal-800: #01605f;
+  --palette-teal-900: #024547;
+
+  /*
+   * Gold.
+   *
+   * Two distinct jobs that need two distinct values. Gold 500 is the logo's own
+   * wordmark colour; WCAG exempts logotypes from contrast minimums, and it fails
+   * them badly, 2.18:1 on white. So it is brand furniture only.
+   *
+   * Anything that carries *meaning* in gold, the emerging-signal accent from
+   * brand system 4, uses the darker 600 for graphics and 800 for text. Those
+ * are the same hue, darkened until they pass AA.
+ */
+  --palette-gold-100: #fbf1da;
+  --palette-gold-300: #f6d96e; /* logo wordmark, dark theme */
+  --palette-gold-500: #e6a311; /* logo wordmark, light theme, BRAND ONLY */
+  --palette-gold-600: #ab790d; /* emerging signal, graphics */
+  --palette-gold-800: #885f07; /* emerging signal, text */
+
+  /* Neutrals. */
+  --palette-ink-900: #17222d;
+  --palette-slate-600: #5b6874;
+  --palette-slate-500: #74818c;
+  --palette-slate-400: #8c949c;
+  --palette-mist-300: #b6c3ce; /* body copy on a dark marketing section */
+  --palette-mist-250: #cdd8e2;
+  --palette-mist-200: #d5dde1;
+  --palette-mist-100: #e7ecef;
+  --palette-ivory-50: #faf8f2;
+  --palette-white: #ffffff;
+
+  /* Status. Reserved meanings, see the semantic block below. */
+  --palette-red-700: #b42318;
+  --palette-red-100: #fdeceb;
+  --palette-amber-700: #a15c07;
+  --palette-amber-100: #fdf0dc;
+  --palette-green-700: #18794e;
+  --palette-green-100: #e4f4ec;
+
+  /* ---------------------------------------------------------------------
+   * Semantic surface and text tokens, light theme.
+   *
+   * Light mode is a teal ground, not ivory and white. The page sits on teal
+   * 100, cards lift to teal 50, and wells return to the page colour so an
+   * inset reads as the canvas showing through. Accent darkens to 800 so
+   * links and filled buttons still clear AA on the teal page.
+   * ------------------------------------------------------------------ */
+  --color-page: var(--palette-teal-100);
+  --color-surface: var(--palette-teal-50);
+  --color-surface-sunken: var(--palette-teal-100);
+  --color-surface-inverse: var(--palette-navy-950);
+  --color-surface-selected: var(--palette-teal-150);
+
+  --color-text-primary: var(--palette-ink-900);
+  --color-text-secondary: var(--palette-slate-600);
+  --color-text-muted: var(--palette-slate-500);
+  --color-text-inverse: var(--palette-white);
+  --color-text-on-accent: var(--palette-white);
+
+  --color-border: var(--palette-teal-100);
+  --color-border-strong: var(--palette-teal-150);
+
+  --color-accent: var(--palette-teal-800);
+  --color-accent-hover: var(--palette-teal-900);
+  --color-accent-subtle: var(--palette-teal-150);
+  --color-focus-ring: var(--palette-teal-700);
+  --color-overlay: rgb(var(--palette-navy-950-channels) / 0.48);
+  --color-infotip-surface: color-mix(in srgb, var(--color-surface) 70%, transparent);
+  --color-infotip-border: color-mix(in srgb, var(--color-border-strong) 70%, transparent);
+  --gradient-chrome: linear-gradient(
+    165deg,
+    var(--color-surface) 0%,
+    color-mix(in srgb, var(--color-surface) 82%, var(--color-page)) 55%,
+    color-mix(in srgb, var(--color-surface) 70%, var(--color-accent-subtle)) 100%
+  );
+
+  /* ---------------------------------------------------------------------
+   * Semantic status tokens.
+   *
+   * Brand system 4: red is reserved for reviewed severe harm and destructive
+   * actions, never for ordinary Muslim relevance. Gold marks an emerging
+   * signal and is not a generic warning colour. Every status pairs colour with
+   * a label and an icon, because colour alone must never carry meaning.
+   * ------------------------------------------------------------------ */
+  --color-status-harm: var(--palette-red-700);
+  --color-status-harm-surface: var(--palette-red-100);
+  --color-status-review: var(--palette-amber-700);
+  --color-status-review-surface: var(--palette-amber-100);
+  --color-status-confirmed: var(--palette-green-700);
+  --color-status-confirmed-surface: var(--palette-green-100);
+  --color-status-emerging: var(--palette-gold-800);
+  --color-status-emerging-surface: var(--palette-gold-100);
+
+  /* ---------------------------------------------------------------------
+   * Data-visualisation tokens.
+   *
+   * Brand system 8: a rising chart stays teal or gold until a high-risk
+   * reading is confirmed by a human. Red never appears in a trend line.
+   * ------------------------------------------------------------------ */
+  --color-chart-primary: var(--palette-teal-700);
+  --color-chart-secondary: var(--palette-teal-300);
+  --color-chart-tertiary: var(--palette-navy-700);
+  --color-chart-emerging: var(--palette-gold-600);
+  --color-chart-baseline: var(--palette-slate-400);
+  --color-chart-grid: var(--palette-teal-100);
+  --color-chart-gap: var(--palette-teal-150);
+  /*
+   * Categorical series for composition figures. Each slot is a different hue,
+   * not a neighbouring shade of the same teal, so two slices stay readable
+   * without relying on the label alone. Red stays reserved for reviewed severe
+   * harm and is not in this set.
+   */
+  --color-chart-cat-1: var(--palette-teal-800);
+  --color-chart-cat-2: var(--palette-gold-600);
+  --color-chart-cat-3: var(--palette-navy-700);
+  --color-chart-cat-4: var(--palette-gold-800);
+  --color-chart-cat-5: var(--palette-slate-600);
+  --chart-line-width: 2px;
+  --chart-point-radius: 0.22rem;
+
+  /* ---------------------------------------------------------------------
+   * Typography. Brand system 5.
+   * ------------------------------------------------------------------ */
+  --font-ui: 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-editorial: 'Source Serif 4', Georgia, serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  /* Decorative Arabic only, watermarks and ornament, never body text or UI. */
+  --font-arabic: 'Amiri', 'Noto Naskh Arabic', serif;
+
+  --text-2xs: 0.6875rem; /* 11px, dense table metadata only */
+  --text-xs: 0.75rem; /* 12px */
+  --text-sm: 0.875rem; /* 14px, minimum UI label */
+  --text-base: 1rem; /* 16px, body */
+  --text-lg: 1.125rem; /* 18px */
+  --text-xl: 1.375rem; /* 22px */
+  --text-2xl: 1.75rem; /* 28px */
+  --text-3xl: 2.25rem; /* 36px */
+  --text-4xl: 3rem; /* 48px */
+
+  /*
+   * Editorial display scale, public marketing routes and the presentation
+   * deck only. The dashboard never uses these: brand system 8 keeps the
+   * research workspace compact and restrained, and hateful text must never
+   * appear in display typography.
+   *
+   * Set in Source Serif 4, pairing an upright line with a coloured italic line.
+   */
+  --text-display-sm: 2.5rem; /* 40px */
+  --text-display-md: 3.25rem; /* 52px */
+  --text-display-lg: 4.25rem; /* 68px */
+  --text-display-xl: 5.25rem; /* 84px */
+
+  --leading-display: 1;
+  --leading-tight: 1.2;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* Letter-spacing. `widest` is for monospace section labels, which need
+   * generous tracking to read as labels rather than as body text. */
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.06em;
+  --tracking-widest: 0.14em;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---------------------------------------------------------------------
+   * Spacing, 4px base scale.
+   * ------------------------------------------------------------------ */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+  --space-8: 4rem;
+  --space-9: 6rem;
+
+  /* ---------------------------------------------------------------------
+   * Radius, borders, elevation.
+   *
+   * Dashboard style spec 13: flat surfaces, subtle borders, no gradients,
+   * no heavy shadows, no glowing alerts.
+   * ------------------------------------------------------------------ */
+  --radius-sm: 0.25rem;
+  --radius-md: 0.375rem;
+  --radius-lg: 0.5rem;
+  --radius-full: 9999px;
+
+  --border-width: 1px;
+  --shadow-card: 0 1px 2px rgb(var(--palette-navy-950-channels) / 6%);
+  --shadow-raised: 0 4px 12px rgb(var(--palette-navy-950-channels) / 10%);
+
+  /* ---------------------------------------------------------------------
+   * Layout.
+   * ------------------------------------------------------------------ */
+  --layout-max-width: 90rem; /* 1440px, dashboard style spec 13 */
+  --layout-prose-width: 44rem;
+  --ratio-wide: 16 / 9;
+  --layout-insight-card-min: 36rem;
+  --layout-table-min-width: 72rem;
+  --layout-table-max-height: 70dvh;
+  --layout-table-context-width: 16rem;
+  --layout-auth-width: 26rem;
+  --layout-sidebar-width: 16rem;
+  /* Lessons reader chapter rail, beside the full-width page. */
+  --layout-lesson-contents-width: 16rem;
+  /* Collapsed rail: one icon plus its target padding, nothing more. */
+  --layout-sidebar-width-collapsed: 4.5rem;
+  /* Header bar plus wordmark. The PNG bakes in clear space, so the visible
+   * mark is about half this box. Keep the two tokens in step. */
+  --layout-header-height: 6.5rem;
+  --logo-height-header: 5rem;
+  --logo-height-sidebar: 4.5rem;
+  --logo-height-splash: 8.5rem;
+  /* One step above the medium wordmark, for the centred auth lockup. */
+  --logo-height-auth: 4.25rem;
+  --logo-stacked-width: 10rem;
+  --logo-stacked-width-auth: 11.5rem;
+  --logo-mark-size-sidebar: 2.25rem;
+  --layout-wheel-size: 4.5rem;
+  --layout-tip-height: 3.5rem;
+
+  /* Profile avatar. Two sizes: the sidebar identity block and the topbar. */
+  --avatar-size-md: 2.5rem;
+  --avatar-size-sm: 2rem;
+  --avatar-size-lg: 5rem;
+  --layout-closing-min-height: 36rem;
+  --layout-closing-min-height-medium: 42rem;
+  /* Bottom-right Ask / Tour cluster. */
+  --layout-fab-size: 3.25rem;
+  --layout-fab-size-sm: 2.5rem;
+  --layout-fab-offset: var(--space-5);
+  --layout-fab-gap: var(--space-3);
+  --layout-tour-width: 18rem;
+  --layout-tour-offset: var(--space-5);
+  /* Same block padding as the workspace topbar, so the card sits in that row. */
+  --layout-tour-top: var(--space-3);
+  /* Screenshot preview on the platform-report draft. */
+  --layout-evidence-max-width: 28rem;
+  --layout-evidence-max-height: 16rem;
+  --media-blur: 0.8rem;
+
+  /* Minimum interactive target. WCAG 2.5.8 requires 24px; 44px is the
+   * brand system's recommendation and our default. */
+  --target-min: 2.75rem;
+
+  --icon-sm: 1.25rem;
+  --icon-md: 1.5rem;
+  --icon-lg: 2rem;
+
+  /*
+   * Footer silhouette. The tile is 900 x 297, so the width is pinned to that
+   * ratio at the strip height. Both values are needed: the drift animation
+   * travels exactly one tile, which is what makes the loop seamless.
+   */
+  --silhouette-height: 7rem;
+  --silhouette-tile-width: 21.2121rem;
+
+  /* ---------------------------------------------------------------------
+   * Motion. Every duration collapses to zero under reduced-motion below.
+   * ------------------------------------------------------------------ */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-cinematic: 40s;
+  --duration-watermark: 48s;
+  --duration-entry-hold: 9s;
+  --duration-tip-cycle: 3s;
+  --duration-feed-cycle: 14s;
+  --duration-feed-bury: 800ms;
+  --duration-path-cycle: 7s;
+  --easing-standard: cubic-bezier(0.2, 0, 0.15, 1);
+  --easing-cinematic: ease-in-out;
+  --scale-ken-burns-start: 1.04;
+  --scale-ken-burns-end: 1.18;
+
+  --z-sticky: 100;
+  --z-drawer: 200;
+  --z-fab: 250;
+  --z-dialog: 300;
+  --z-toast: 400;
+}
+
+/*
+ * Breakpoints.
+ *
+ * Custom properties cannot be used inside a media query, so these values live
+ * here as the documented reference and are mirrored in src/styles/breakpoints.ts
+ * for the rare case JavaScript needs them.
+ *
+ * rules/frontend.md requires device-agnostic names and em units, so that a
+ * reader's font-size preference scales the layout with them. Layouts are
+ * mobile-first: style the small case, then enhance with min-width.
+ *
+ *   small   40em   ~640px   two-column cards, table stops scrolling
+ *   medium  64em  ~1024px   persistent sidebar replaces the drawer
+ *   large   90em  ~1440px   content reaches --layout-max-width
+ */
+
+/*
+ * Dark theme.
+ *
+ * Applied when the user explicitly selects it, or when the system prefers dark
+ * and the user has not explicitly chosen light. Structure follows the same
+ * pattern the Artifact guidance uses, so the toggle wins in both directions.
+ */
+:root[data-theme='dark'] {
+  color-scheme: dark;
+
+  --color-page: var(--palette-navy-950);
+  --color-surface: var(--palette-navy-900);
+  --color-surface-sunken: var(--palette-navy-800);
+  --color-surface-inverse: var(--palette-ivory-50);
+  --color-surface-selected: var(--palette-navy-700);
+
+  --color-text-primary: var(--palette-ivory-50);
+  --color-text-secondary: #a9b6c2;
+  --color-text-muted: #7c8b99;
+  --color-text-inverse: var(--palette-ink-900);
+  --color-text-on-accent: var(--palette-navy-950);
+
+  --color-border: var(--palette-navy-750);
+  --color-border-strong: #2a4767;
+
+  --color-accent: var(--palette-teal-200);
+  --color-accent-hover: var(--palette-teal-300);
+  --color-accent-subtle: var(--palette-navy-800);
+  --color-focus-ring: var(--palette-teal-200);
+  --color-overlay: rgb(var(--palette-navy-950-channels) / 0.62);
+
+  --color-status-harm: #f97066;
+  --color-status-harm-surface: #3a1512;
+  --color-status-review: #f0b34a;
+  --color-status-review-surface: #3a2a10;
+  --color-status-confirmed: #4fc98a;
+  --color-status-confirmed-surface: #10301f;
+  --color-status-emerging: var(--palette-gold-300);
+  --color-status-emerging-surface: #3a2f10;
+
+  --color-chart-primary: var(--palette-teal-200);
+  --color-chart-secondary: var(--palette-teal-500);
+  --color-chart-tertiary: #7f9dc4;
+  --color-chart-emerging: var(--palette-gold-300);
+  --color-chart-baseline: #6b7b8c;
+  --color-chart-grid: var(--palette-navy-750);
+  --color-chart-gap: #2a4767;
+  --color-chart-cat-1: var(--palette-teal-200);
+  --color-chart-cat-2: var(--palette-gold-300);
+  --color-chart-cat-3: #7f9dc4;
+  --color-chart-cat-4: #e8a87c;
+  --color-chart-cat-5: var(--palette-gold-100);
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 40%);
+  --shadow-raised: 0 4px 12px rgb(0 0 0 / 50%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme='light']) {
+    color-scheme: dark;
+
+    --color-page: var(--palette-navy-950);
+    --color-surface: var(--palette-navy-900);
+    --color-surface-sunken: var(--palette-navy-800);
+    --color-surface-inverse: var(--palette-ivory-50);
+    --color-surface-selected: var(--palette-navy-700);
+
+    --color-text-primary: var(--palette-ivory-50);
+    --color-text-secondary: #a9b6c2;
+    --color-text-muted: #7c8b99;
+    --color-text-inverse: var(--palette-ink-900);
+    --color-text-on-accent: var(--palette-navy-950);
+
+    --color-border: var(--palette-navy-750);
+    --color-border-strong: #2a4767;
+
+    --color-accent: var(--palette-teal-200);
+    --color-accent-hover: var(--palette-teal-300);
+    --color-accent-subtle: var(--palette-navy-800);
+    --color-focus-ring: var(--palette-teal-200);
+
+    --color-status-harm: #f97066;
+    --color-status-harm-surface: #3a1512;
+    --color-status-review: #f0b34a;
+    --color-status-review-surface: #3a2a10;
+    --color-status-confirmed: #4fc98a;
+    --color-status-confirmed-surface: #10301f;
+    --color-status-emerging: var(--palette-gold-300);
+    --color-status-emerging-surface: #3a2f10;
+
+    --color-chart-primary: var(--palette-teal-200);
+    --color-chart-secondary: var(--palette-teal-500);
+    --color-chart-tertiary: #7f9dc4;
+    --color-chart-emerging: var(--palette-gold-300);
+    --color-chart-baseline: #6b7b8c;
+    --color-chart-grid: var(--palette-navy-750);
+    --color-chart-gap: #2a4767;
+    --color-chart-cat-1: var(--palette-teal-200);
+    --color-chart-cat-2: var(--palette-gold-300);
+    --color-chart-cat-3: #7f9dc4;
+    --color-chart-cat-4: #e8a87c;
+    --color-chart-cat-5: var(--palette-gold-100);
+
+    --shadow-card: 0 1px 2px rgb(0 0 0 / 40%);
+    --shadow-raised: 0 4px 12px rgb(0 0 0 / 50%);
+  }
+}
+
+/*
+ * Brand system 9 and rules/frontend.md both require honouring reduced motion.
+ * Collapsing the duration tokens disables transitions everywhere at once,
+ * rather than relying on each component to remember.
+ */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-watermark: 0ms;
+    --duration-entry-hold: 0ms;
+    --duration-tip-cycle: 0ms;
+    --duration-feed-cycle: 0ms;
+    --duration-feed-bury: 0ms;
+    --duration-path-cycle: 0ms;
+  }
+}

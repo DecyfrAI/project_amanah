@@ -1,0 +1,134 @@
+/*
+ * Two-sided card. The reader presses the front to reveal the detail on the back.
+ *
+ * Implemented as a button, so it is keyboard operable, announced with its
+ * pressed state, and needs no invented ARIA. Under reduced motion the sides
+ * swap instantly rather than rotating.
+ */
+.card {
+  display: block;
+  width: 100%;
+  min-height: 15rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  perspective: 60rem;
+  text-align: start;
+}
+
+.inner {
+  /* Spans are inline by default, and transform, width, and preserve-3d are all
+   * inert on an inline box, without this the card silently refuses to flip. */
+  display: block;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: inherit;
+  transform-style: preserve-3d;
+  transition: transform var(--duration-base) var(--easing-standard);
+}
+
+.flipped .inner {
+  transform: rotateY(180deg);
+}
+
+.card:hover .face {
+  border-color: var(--palette-teal-200);
+}
+
+.face {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  width: 100%;
+  min-height: 15rem;
+  padding: var(--space-5);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-lg);
+  background-color: var(--marketing-card);
+  backface-visibility: hidden;
+  transition: border-color var(--duration-fast) var(--easing-standard);
+}
+
+.back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  border-color: var(--palette-teal-200);
+}
+
+.name {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+}
+
+.summary {
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  color: var(--marketing-heading);
+}
+
+.detail {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+}
+
+/* Affordance, pinned to the bottom of whichever face is showing. */
+.hint {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+}
+
+.card:hover .hint {
+  color: var(--marketing-heading);
+}
+
+.hintIcon {
+  transition: transform var(--duration-fast) var(--easing-standard);
+}
+
+.card:hover .hintIcon {
+  transform: translateX(var(--space-1));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .inner {
+    transition: none;
+  }
+
+  /* No rotation at all: show one face or the other outright. */
+  .card {
+    perspective: none;
+  }
+
+  .inner.flipped .inner {
+    transform: none;
+  }
+
+  .back {
+    transform: none;
+    display: none;
+  }
+
+  .flipped .back {
+    display: flex;
+  }
+
+  .flipped .front {
+    visibility: hidden;
+  }
+}

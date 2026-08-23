@@ -1,0 +1,64 @@
+/*
+ * Repeating أمانة set very faintly behind a light section, drifting slowly.
+ *
+ * Purely ornamental: the word is rendered as live text so it stays crisp at any
+ * size, but it is hidden from assistive technology and must never be the only
+ * place a piece of meaning appears.
+ *
+ * Kept extremely low-contrast so it never competes with body copy or pushes any
+ * foreground pair below its AA ratio.
+ */
+.watermark {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  mask-image: linear-gradient(to bottom, transparent, #000 25%, #000 75%, transparent);
+}
+
+.track {
+  display: flex;
+  width: max-content;
+  gap: var(--space-8);
+  padding-top: var(--space-6);
+  animation: drift-left 90s linear infinite;
+}
+
+.row {
+  display: flex;
+  gap: var(--space-8);
+  flex-shrink: 0;
+}
+
+.word {
+  font-family: var(--font-arabic);
+  font-size: 8rem;
+  line-height: 1;
+  color: var(--marketing-heading);
+  opacity: 0.06;
+  user-select: none;
+  white-space: nowrap;
+}
+
+/* The track holds two identical rows; shifting by exactly half loops seamlessly. */
+@keyframes drift-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(calc(-50% - var(--space-8) / 2));
+  }
+}
+
+@media (min-width: 64em) {
+  .word {
+    font-size: 12rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .track {
+    animation: none;
+  }
+}

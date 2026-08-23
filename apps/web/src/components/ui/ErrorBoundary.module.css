@@ -1,0 +1,42 @@
+/*
+ * Keeps the surrounding layout intact so the reader can see which part of the
+ * page failed, per rules/frontend.md ("Error States").
+ */
+.container {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  align-items: flex-start;
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.heading {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.body {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  max-width: var(--layout-prose-width);
+}
+
+.retry {
+  min-height: var(--target-min);
+  padding: var(--space-2) var(--space-4);
+  background-color: var(--color-accent);
+  color: var(--color-text-on-accent);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  border: none;
+  border-radius: var(--radius-md);
+  transition: background-color var(--duration-fast) var(--easing-standard);
+}
+
+.retry:hover {
+  background-color: var(--color-accent-hover);
+}

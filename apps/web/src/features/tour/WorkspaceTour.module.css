@@ -1,0 +1,118 @@
+.dialog {
+  position: absolute;
+  z-index: var(--z-dialog);
+  /* Reset the dialog UA box so top/left are relative to the content column. */
+  inset: auto;
+  top: var(--layout-tour-top);
+  left: var(--space-5);
+  width: min(var(--layout-tour-width), calc(100% - var(--space-8)));
+  max-width: none;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: var(--space-3);
+  /* Opaque mix: 92% surface, no alpha, so type never reads through the card. */
+  background-color: color-mix(in srgb, var(--color-surface) 92%, var(--color-page));
+  color: var(--color-text-primary);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-raised);
+  isolation: isolate;
+  opacity: 1;
+}
+
+.dialog[open] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.dialog::backdrop {
+  background-color: transparent;
+  pointer-events: none;
+}
+
+.progress {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.title {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+}
+
+.body {
+  color: var(--color-text-secondary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+}
+
+.saveError {
+  color: var(--color-status-review);
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  margin-top: var(--space-1);
+}
+
+.skip {
+  min-height: var(--target-min);
+  padding-inline: var(--space-2);
+  background-color: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.skip:hover {
+  color: var(--color-text-primary);
+}
+
+.arrows {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.arrow {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-min);
+  height: var(--target-min);
+  padding: 0;
+  background-color: transparent;
+  border: var(--border-width) solid color-mix(in srgb, var(--color-border-strong) 55%, transparent);
+  border-radius: var(--radius-full);
+  color: var(--color-text-primary);
+  font-size: var(--text-lg);
+  line-height: 1;
+}
+
+.arrow:hover:not(:disabled) {
+  border-color: var(--color-accent);
+}
+
+.arrow:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+@media (min-width: 64em) {
+  .dialog {
+    top: var(--layout-tour-top);
+    left: var(--space-6);
+  }
+}

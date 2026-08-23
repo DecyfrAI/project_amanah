@@ -1,0 +1,87 @@
+.wrap {
+  position: relative;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+}
+
+/*
+ * The visible mark is the glyph. The button stays the minimum hit size and
+ * overflows equally, so a card title and the question mark share a row and
+ * share the same inset from the box edge.
+ */
+.wrapCard {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  margin-inline-start: auto;
+  overflow: visible;
+}
+
+.wrapCard .trigger {
+  margin: calc((var(--target-min) - var(--icon-sm)) / -2);
+}
+
+.wrapCard .panel {
+  right: 0;
+  left: auto;
+}
+
+.trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--target-min);
+  height: var(--target-min);
+  padding: 0;
+  background-color: transparent;
+  border: none;
+  color: var(--color-text-secondary);
+  cursor: help;
+}
+
+.glyph {
+  display: inline-flex;
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+}
+
+.glyph svg {
+  width: 100%;
+  height: 100%;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.trigger:hover,
+.wrap:focus-within .trigger {
+  color: var(--color-accent);
+}
+
+.panel {
+  position: absolute;
+  z-index: var(--z-toast);
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: max-content;
+  max-width: min(18rem, 70vw);
+  padding: var(--space-3);
+  background-color: var(--color-infotip-surface);
+  border: var(--border-width) solid var(--color-infotip-border);
+  border-radius: var(--radius-md);
+  box-shadow: none;
+  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: var(--weight-regular);
+  line-height: var(--leading-relaxed);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.wrap:hover .panel,
+.wrap:focus-within .panel {
+  opacity: 1;
+  visibility: visible;
+}

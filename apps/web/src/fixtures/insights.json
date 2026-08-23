@@ -1,0 +1,54 @@
+{
+  "insights": [
+    {
+      "id": "ins_collective_blame",
+      "title": "Collective-blame share rose in the monitored YouTube sample",
+      "summary": "In the fixture window, items classified as likely collective blame grew as a share of Muslim-relevant items. The rise coincides with a busier collection week. It is not a claim that any event caused the change, and it is not a prevalence estimate for YouTube as a whole.",
+      "window": {
+        "from": "2026-08-01",
+        "to": "2026-08-16",
+        "timezone": "UTC"
+      },
+      "coverage": {
+        "sources": ["youtube"],
+        "itemsObserved": 1483,
+        "itemsRelevant": 312,
+        "lastSuccessfulRun": "2026-08-16T13:00:00Z",
+        "warnings": []
+      },
+      "facts": [
+        {
+          "id": "fact_rate",
+          "claim": "Likely-hate items among relevant items were 74 of 312 (23.7 percent) in this window.",
+          "numerator": 74,
+          "denominator": 312,
+          "metric": "likely_hate_rate"
+        },
+        {
+          "id": "fact_narrative",
+          "claim": "Collective-blame items were 21 of the 74 likely-hate items (28.4 percent).",
+          "numerator": 21,
+          "denominator": 74,
+          "metric": "collective_blame_share"
+        }
+      ],
+      "citations": [
+        {
+          "kind": "figure",
+          "id": "fig_daily_rate",
+          "label": "Daily likely-hate rate"
+        },
+        {
+          "kind": "coverage",
+          "id": "cov_youtube",
+          "label": "YouTube collection coverage"
+        }
+      ],
+      "generation": {
+        "model": "fixture",
+        "generatedAt": "2026-08-16T14:00:00Z",
+        "isMachineGenerated": true
+      }
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+/*
+ * Shared layout for the prose beats of the argument: label, display heading,
+ * body copy, and an optional aside column.
+ */
+.layout {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.prose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: var(--layout-prose-width);
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+}
+
+/*
+ * Founder perspective. Set in the editorial serif to mark it as a human voice
+ * rather than product copy. Brand system: use sparingly, never as spectacle.
+ */
+.testimony {
+  margin: 0;
+  padding-left: var(--space-5);
+  border-left: 2px solid var(--palette-gold-300);
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  font-style: italic;
+  line-height: var(--leading-snug);
+  color: var(--marketing-heading);
+}
+
+.emphasis {
+  color: var(--marketing-heading);
+  font-weight: var(--weight-semibold);
+}
+
+.aside {
+  min-width: 0;
+}
+
+@media (min-width: 64em) {
+  .layout {
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-8);
+    align-items: start;
+  }
+
+  .layoutSingle {
+    grid-template-columns: minmax(0, 60rem);
+  }
+
+  .header,
+  .aside {
+    position: sticky;
+    top: calc(var(--layout-header-height) + var(--space-5));
+  }
+}

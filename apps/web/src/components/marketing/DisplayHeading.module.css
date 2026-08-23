@@ -1,0 +1,58 @@
+/*
+ * The house display treatment: an upright line followed by an italic line in
+ * the accent colour. Editorial routes only, brand system 8 keeps the research
+ * workspace compact, and hateful text never appears at display size.
+ */
+.heading {
+  font-family: var(--font-editorial);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-display);
+  letter-spacing: var(--tracking-tight);
+  text-wrap: balance;
+  color: var(--marketing-heading);
+  font-size: var(--text-display-sm);
+
+  /* Measure, in `ch` of the display size itself. Setting this on a wrapper at
+   * body size would resolve against 16px and clamp the heading far too narrow. */
+  max-width: 22ch;
+}
+
+.upright,
+.accent {
+  display: block;
+}
+
+.accent {
+  font-style: italic;
+  font-weight: var(--weight-regular);
+  color: var(--marketing-heading-accent);
+}
+
+@media (min-width: 40em) {
+  .heading {
+    font-size: var(--text-display-md);
+  }
+}
+
+@media (min-width: 64em) {
+  .heading {
+    font-size: var(--text-display-lg);
+  }
+}
+
+.hero {
+  font-size: var(--text-display-md);
+  max-width: 28ch;
+}
+
+@media (min-width: 40em) {
+  .hero {
+    font-size: var(--text-display-lg);
+  }
+}
+
+@media (min-width: 64em) {
+  .hero {
+    font-size: var(--text-display-xl);
+  }
+}

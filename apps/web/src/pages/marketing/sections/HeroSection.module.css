@@ -1,0 +1,196 @@
+/*
+ * Full-bleed hero built from stacked layers:
+ *
+ *   media   , optional video or image, drop-in slot
+ *   aurora  , slow-drifting brand-coloured field, the default backdrop
+ *   grid    , fine rule grid, borrowed from the house style
+ *   scrim   , navy gradient that guarantees text contrast over any media
+ *   content , the actual headline and actions
+ *
+ * The first three share one parallax container so they travel together.
+ */
+.hero {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  min-height: 100svh;
+  overflow: hidden;
+  isolation: isolate;
+  background-color: var(--palette-navy-950);
+  color: var(--palette-ivory-50);
+
+  /* The hero is its own tone, so it declares the full --marketing-* set that
+   * DisplayHeading and the other primitives read. */
+  --marketing-rule: var(--palette-navy-750);
+  --marketing-body: var(--palette-mist-300);
+  --marketing-label: var(--palette-teal-200);
+  --marketing-heading: var(--palette-ivory-50);
+  --marketing-heading-accent: var(--palette-teal-200);
+}
+
+.backdrop {
+  position: absolute;
+  inset: -10% 0 0;
+  z-index: -2;
+  transform: translate3d(0, var(--parallax-offset, 0), 0);
+  will-change: transform;
+}
+
+/*
+ * The footage, or its poster frame under reduced motion. The scrim above it
+ * guarantees text contrast regardless of what the clip is doing.
+ */
+.media {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/*
+ * Generated backdrop: three slow-drifting pools of brand colour. Reads as depth
+ * without depicting anyone, which matters for a page about people being
+ * demeaned.
+ */
+.aurora {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(70% 60% at 22% 30%, rgb(1 123 126 / 55%) 0%, transparent 65%),
+    radial-gradient(55% 55% at 78% 22%, rgb(14 159 163 / 34%) 0%, transparent 62%),
+    radial-gradient(58% 55% at 62% 85%, rgb(230 163 17 / 16%) 0%, transparent 65%);
+  opacity: 0.75;
+  mix-blend-mode: soft-light;
+  animation: drift 26s ease-in-out infinite alternate;
+}
+
+.scrim {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background:
+    linear-gradient(
+      to right,
+      rgb(var(--palette-navy-950-channels) / 92%) 0%,
+      rgb(var(--palette-navy-950-channels) / 55%) 55%,
+      transparent 100%
+    ),
+    linear-gradient(to top, rgb(var(--palette-navy-950-channels) / 95%) 0%, transparent 45%);
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding: var(--layout-header-height) var(--space-5) var(--space-8);
+}
+
+/*
+ * The rotating clause. A fixed min-height stops the block below from jumping as
+ * phrases of different lengths swap in.
+ */
+.rotator {
+  display: block;
+  min-height: 1.1em;
+}
+
+.rotatorPhrase {
+  display: inline-block;
+  font-weight: var(--weight-bold);
+  animation: phraseIn var(--duration-base) var(--easing-standard) both;
+}
+
+.subhead {
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+  max-width: 52ch;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+/* Scroll affordance, anchored to the first section below. */
+.chevron {
+  position: absolute;
+  bottom: var(--space-5);
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding: var(--space-2);
+  color: var(--marketing-body);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.chevron:hover {
+  color: var(--palette-ivory-50);
+}
+
+.chevronIcon {
+  animation: nudge 2.4s ease-in-out infinite;
+}
+
+@keyframes drift {
+  from {
+    transform: scale(1) translate3d(0, 0, 0);
+  }
+  to {
+    transform: scale(1.12) translate3d(2%, -2%, 0);
+  }
+}
+
+@keyframes phraseIn {
+  from {
+    opacity: 0;
+    transform: translateY(0.28em);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes nudge {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(var(--space-1));
+  }
+}
+
+@media (min-width: 40em) {
+  .content {
+    gap: var(--space-6);
+    padding-inline: var(--space-7);
+  }
+
+  .subhead {
+    font-size: var(--text-xl);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .aurora,
+  .chevronIcon,
+  .rotatorPhrase {
+    animation: none;
+  }
+}
