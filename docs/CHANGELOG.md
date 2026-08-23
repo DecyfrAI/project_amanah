@@ -6,6 +6,32 @@ All notable project changes are documented here using the Keep a Changelog struc
 
 ### Added
 
+- `docs/frontend-backend-reconciliation.md`: the audited gap list (G1–G11) between the
+  shipped frontend and the planned backend, the direction agreed for each, and the
+  disposition of the 23 August 2026 product-owner change requests (news relevance
+  filtering, database-checked dedupe, no profanity censoring, RSS allowlist, assistant
+  default queries, image classification, per-run insights, five-year backfill).
+- Backend plan/todo steps B-S24 (bounded historical backfill), B-S25 (grounded dashboard
+  assistant), B-S26 (image-evidence catalog and classification per ADR 0007), and B-S27
+  (insight snapshots, discussion, captures, and `PATCH /v1/me` per ADR 0004), plus
+  B-S9.7–B-S9.9 (RSS allowlist, topical relevance filter, context news stream contract),
+  B-S12.9 (stored text is never profanity-filtered), and B-S15.10 (insights refresh on
+  every ETL run). B-S25–B-S27 require an additive `spec.md` §13 amendment before code.
+- Frontend todo step F-S21 (live-backend contract reconciliation: bearer token,
+  `/v1/dashboard` adoption, items/filters reshape, bundle split, report-flow and
+  public-`/resources` decisions) and a status note that the checklist describes scope,
+  not progress.
+- Spec v2.2 (23 August 2026, product-owner decisions closing the reconciliation):
+  additive §13.2 rows for the insights/discussion/captures/viewer-post routes
+  (ADR 0004), `POST /v1/assistant/query`, and `GET /v1/image-examples` /
+  `POST /v1/image-classifications` (ADR 0007); FR-TOS-010 hybrid assisted-report flow
+  (policy catalog where an official reporting form exists, allow-listed email-style
+  draft otherwise, never auto-sent; also B-S18.9); and the static lesson library at
+  `/resources` recorded as a public marketing surface that must never fetch a `/v1`
+  product API (ADR 0008, §7.1/§7.2, `AGENTS.md` aligned). Qur'anic-translation
+  verification and Supabase credentials remain deferred; F-S9/F-S21.1 wait on the
+  credentials.
+
 - Relational schema for sources, approved source seeds, dataset packages and import runs,
   collection runs, canonical content, predictions, review tasks and events, metric buckets,
   news links, insight snapshots, user profiles, submissions, disputes, contribution events,

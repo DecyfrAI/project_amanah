@@ -3,6 +3,7 @@
 **Source of truth:** [`spec.md`](./spec.md)  
 **Candidate source catalog:** [`PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md`](./PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md) — review input only  
 **Implementation plan:** [`backend-implementation-plan.md`](./backend-implementation-plan.md)  
+**Frontend reconciliation:** [`frontend-backend-reconciliation.md`](./frontend-backend-reconciliation.md) — gaps G1–G11 and the 23 Aug 2026 change requests; B-S24–B-S27 originate there  
 **Agent rules:** [`AGENTS.md`](./AGENTS.md) and applicable files under [`rules/`](./rules/)  
 **Tracks:** Backend, ML, DevOps
 
@@ -101,9 +102,12 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [ ] **B-S9.1** Select/configure GDELT and/or reviewed RSS without embedding credentials.
   - [ ] **B-S9.2** Store headline, publisher, canonical URL, permitted excerpt, publication/retrieval time, language, scope, and explicit location only.
   - [ ] **B-S9.3** Avoid full-article storage, paywall bypass, and unauthorized scraping.
-  - [ ] **B-S9.4** Deduplicate by canonical URL and normalized provider/headline.
+  - [ ] **B-S9.4** Deduplicate by canonical URL and normalized provider/headline, checking the database before insert; a duplicate links to the existing row instead of writing a new one.
   - [ ] **B-S9.5** Add timeouts, result/byte limits, rate handling, checkpoints, and coverage warnings.
   - [ ] **B-S9.6** Test malformed, partial, duplicate, paginated, rate-limited, and outage responses at the HTTP boundary.
+  - [ ] **B-S9.7** Use [`news-rss-sources.md`](./news-rss-sources.md) as the reviewed RSS/Atom allowlist and apply its per-feed topical relevance filters (keep religion/hate-crime/public-affairs coverage; drop sport/celebrity) through configuration, never treating Muslim-related vocabulary as a harm signal. Do not add feeds it rejected or invent replacements.
+  - [ ] **B-S9.8** Serve `GET /v1/news` as the context news stream contract from that hand-off (`window`, `applied`, `coverage`, `data_mode`, `next_cursor`, publisher-metadata items with no hate label, score, or review state), reworking the Milestone 2 items-shaped route with OpenAPI and contract tests updated together (reconciliation G5).
+  - [ ] **B-S9.9** Keep English-only for P0, scope to Canada/US/UK plus clearly global religion or hate-crime reporting, and never attach a classification to an ingested article.
 
 - [ ] **B-S9A — Implement reviewed open-datapack ingestion**
   - [ ] **B-S9A.1** Define a reviewed manifest for provider, dataset name/version, landing page, license, permitted uses, retrieval time, file hash, schema mapping, and approval.
@@ -147,6 +151,15 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [ ] **B-S12.6** Version normalization and make content upserts retry-idempotent.
   - [ ] **B-S12.7** Test Unicode, counterspeech, quotation, missing context, duplicate source IDs, canonical URLs, and repeat execution.
   - [ ] **B-S12.8** Deduplicate datapack rows by dataset package/row identity without collapsing the same row ID across different packages.
+  - [ ] **B-S12.9** Never mask, censor, or profanity-filter stored original or normalized text: researchers need the exact wording. Redaction and blurring are display-layer (frontend) and report-snapshot (B-S20.3) concerns only.
+
+- [ ] **B-S24 — Implement bounded historical backfill (~5 years)**
+  - [ ] **B-S24.1** Backfill exclusively through the existing canonical pipeline and adapters; no new scraping path and no source outside approved configuration.
+  - [ ] **B-S24.2** Use reviewed open datapacks (B-S9A) as the primary historical source, with GDELT/RSS historical windows for news where provider terms permit.
+  - [ ] **B-S24.3** Use official-API YouTube seed/query discovery with explicit date windows and per-window item caps for historical social content.
+  - [ ] **B-S24.4** Run backfill as resumable windowed runs with checkpoints, distinct run provenance (`backfill` vs incremental), and the same strata/registry rules as live collection.
+  - [ ] **B-S24.5** Carry per-bucket coverage so sparse historical windows render as gaps or low-coverage, never as a real zero or a prevalence claim.
+  - [ ] **B-S24.6** Test window slicing, resume after interruption, dedupe against already-ingested content, cap enforcement, and coverage bucket provenance.
 
 ### Milestone 5 — Authenticated contributions and human review
 
@@ -178,6 +191,16 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [ ] **B-S18.6** Prohibit platform reporting API calls, arbitrary destinations, and automatic submission.
   - [ ] **B-S18.7** Add per-user/item abuse controls and anti-brigading limits.
   - [ ] **B-S18.8** Test stale policies, low confidence, confirmation, ownership, outcomes, and absence of external side effects.
+  - [ ] **B-S18.9** Use the policy-catalog flow for platforms with an official reporting form; for a platform without one, produce an email-style draft (subject, body, evidence summary) addressed only to a reviewer-approved allow-listed address, never auto-sent (FR-TOS-010, spec v2.2; matches the frontend `ReportDraft` contract's `to_kind` split).
+
+- [ ] **B-S27 — Implement insight snapshots, discussion, captures, and profile persistence (ADR 0004)**
+  - [ ] **B-S27.1** Implement `PATCH /v1/me` for profile/onboarding persistence (spec §13.2 already lists it; reconciliation G10). Pull this sub-item forward if frontend onboarding needs it before the rest of the step.
+  - [x] **B-S27.2** Land the additive `spec.md` §13 amendment for insights/discussion/captures/viewer-post routes (reconciliation G6). *(Done 23 Aug 2026: spec v2.2.)*
+  - [ ] **B-S27.3** Implement `GET/POST /v1/insights` and `GET /v1/insights/{id}` over the existing `insight_snapshots` table: a snapshot freezes claim, numerator/denominator, metric, window, coverage, and the Explorer filter state at capture time.
+  - [ ] **B-S27.4** Implement discussion (`GET /v1/insights/{id}/discussion`, `POST …/discussion/posts`), reactions (`useful`/`needs_context` counts only, never author ranking), and retraction that replaces the body and removes the capture while leaving the row.
+  - [ ] **B-S27.5** Implement `POST /v1/captures` for first-party dashboard figure captures (alt text, filter hash, Explorer deep link) and `GET /v1/me/posts` scoped to the caller.
+  - [ ] **B-S27.6** Keep participation invite-only per ADR 0004, deny anonymous access everywhere, apply RLS ownership boundaries, and rate-limit posting.
+  - [ ] **B-S27.7** Test snapshot immutability, retraction semantics, reaction idempotency, ownership and anonymous denial, and that no person-level ranking or free-floating board exists.
 
 ### Milestone 6 — Research reports and curated resources
 
@@ -244,6 +267,25 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [ ] **B-S15.7** Cache by filter/data/model/prompt version and preserve deterministic results when AI fails.
   - [ ] **B-S15.8** Test aggregation, missing coverage, citation/numeric fidelity, causal refusal, insufficient data, and cache behavior.
   - [ ] **B-S15.9** Group by sampling stratum and prevent enriched seed, boundary/control, and ordinary-monitoring results from silently becoming a prevalence metric.
+  - [ ] **B-S15.10** Refresh cached fact bundles and insights whenever an ETL run lands new data (the version-keyed cache from B-S15.7 makes this an invalidation, not a bypass), so each pull yields current insights.
+
+- [ ] **B-S25 — Implement the grounded dashboard assistant (`POST /v1/assistant/query`)**
+  - [x] **B-S25.1** Land the additive `spec.md` §13 amendment for this route (reconciliation G7). *(Done 23 Aug 2026: spec v2.2, product-owner approval.)*
+  - [ ] **B-S25.2** Accept the frontend `AssistantAskInput` contract: a question plus the exact dashboard filters, so the reply cannot describe a different sample.
+  - [ ] **B-S25.3** Answer only from stored fact bundles (B-S15) and methodology text through the controlled Gemini client; the model never computes a number or reaches the database.
+  - [ ] **B-S25.4** Return `answer`, typed citations for every quantitative claim, explicit limitations, and `grounded_in` (`figures`/`methodology`/`none`); an ungrounded question gets a typed refusal, not an invented answer.
+  - [ ] **B-S25.5** Support the shipped starter queries (rate, trend, coverage, a single item walk-through, current events, news-coincidence) and describe association as coincidence only, refusing causal phrasing.
+  - [ ] **B-S25.6** Treat the question as untrusted prompt-injection input, apply the B-S13 budgets/caching, and rate-limit per user.
+  - [ ] **B-S25.7** Test citation fidelity, causal refusal, injection resistance, insufficient-data abstention, filter fidelity, budget exhaustion, and Gemini-unavailable degradation.
+
+- [ ] **B-S26 — Implement the image-evidence catalog and classification (ADR 0007)**
+  - [x] **B-S26.1** Land the additive `spec.md` §13 amendment for the image routes (reconciliation G8). *(Done 23 Aug 2026: spec v2.2 adds `GET /v1/image-examples` and `POST /v1/image-classifications`.)*
+  - [ ] **B-S26.2** Store image bytes in object storage only; Postgres holds path, sha256, mime, byte size, dataset annotation JSON, and prediction JSON. Never base64 in the database and never pixels across the browser API boundary.
+  - [ ] **B-S26.3** Serve the authenticated image-example catalog with manifest provenance and short-lived signed URLs.
+  - [ ] **B-S26.4** Classify images server-side through the controlled Gemini boundary using the staged taxonomy (relevance, stance, types, severity, narrative, score, tier, rationale, review requirement), keeping dataset annotations separate from Amanah predictions.
+  - [ ] **B-S26.5** Keep live image *ingestion* gated: Reddit stays disabled/fixture until Reddit-for-Researchers approval and credentials exist (spec §10.2), and any YouTube thumbnail/frame capture is a separate reviewed decision. Until then the corpus is the reviewed research datapack plus user-submitted URLs.
+  - [ ] **B-S26.6** Enforce the ADR 0007 safeguards: authenticated surfaces only, blur-by-default projections, no person indexing/search/ranking, and the corpus never leaves the private repo or first-party storage.
+  - [ ] **B-S26.7** Test signed-URL expiry, annotation/prediction separation, classification schema validity, anonymous denial, and absence of image bytes in API responses and logs.
 
 ## TRACK: devops
 
