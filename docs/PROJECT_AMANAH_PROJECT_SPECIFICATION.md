@@ -8,6 +8,8 @@
 
 > **Seed-registry addendum (2026-08-22):** [`PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md`](../PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md) is a candidate Reddit/YouTube sampling catalog, not executable configuration, automatic approval, a hate label, or a representative prevalence sample. Only reviewed entries projected into versioned runtime configuration may run; see the authoritative root [`spec.md`](../spec.md).
 
+> **Authentication-scope addendum (2026-08-22):** Only the marketing homepage and required authentication entry/callback routes are anonymous. Dashboard, items, news, methodology, resources, forum, reports, contributions, reviewer/admin surfaces, and every `/v1` product endpoint require authentication. This supersedes any public-dashboard or action-only-auth wording below; the root [`spec.md`](../spec.md) is authoritative.
+
 **Companion implementation detail:** [Data, API & Dashboard Blueprint](./PROJECT_AMANAH_DATA_API_DASHBOARD_BLUEPRINT.md)
 
 ## 1. Executive summary
@@ -342,7 +344,7 @@ Capture → Classify → Contextualize and route → Human decision → Learn an
 
 Create an evidence manifest with source URL/ID, captured/observed/published times, permitted excerpt, surrounding-context IDs, media object key, SHA-256, MIME type, collector version, terms/retention policy, and chain-of-custody events. Store immutable original hash and derivative hashes separately. Timestamp in UTC and retain source timezone when present.
 
-Raw evidence is private, encrypted, access logged, and subject to expiry/deletion. The public dashboard uses aggregates and synthetic/redacted examples. A deleted source item is marked unavailable; retained copies follow source terms and approved research/legal policy. Exports include methodology, scope, provenance, model/human status, and a warning that a hash verifies the stored artifact—not the truth of its claim.
+Raw evidence is private, encrypted, access logged, and subject to expiry/deletion. The authenticated dashboard uses base-role-safe aggregates and synthetic/redacted examples. A deleted source item is marked unavailable; retained copies follow source terms and approved research/legal policy. Exports include methodology, scope, provenance, model/human status, and a warning that a hash verifies the stored artifact—not the truth of its claim.
 
 Reports are aggregate-first and filtered by date, source/platform, approved community/channel, query, narrative, severity and review state. A report contains executive summary, selected-filter statement, coverage/denominators, trend charts, narrative findings, reviewed event associations, redacted evidence references, methodology, model/dataset disclosure, limitations and generation metadata. CSV exports contain chart/aggregate data by default; item-level exports require elevated permission, explicit redaction and audit logging. For the hackathon, a print-optimized HTML report plus filtered aggregate CSV is sufficient.
 

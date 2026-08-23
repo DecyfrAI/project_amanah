@@ -1,6 +1,6 @@
 # Project Amanah — Developer-Ready Product Specification
 
-**Version:** 2.0  
+**Version:** 2.1  
 **Date:** 2026-08-22  
 **Status:** Approved product direction; ready for hackathon implementation  
 **Delivery constraint:** 48-hour hackathon  
@@ -15,8 +15,8 @@ This specification is the implementation source of truth for the hackathon versi
 Earlier documents remain useful technical references, but the following decisions in this file take precedence:
 
 - Research-oriented users are the primary audience.
-- The homepage, dashboard, news, aggregate findings, and item pages are public.
-- Authentication gates actions, not viewing.
+- Only the marketing homepage is public product content; authentication entry/callback routes remain reachable solely to establish a session.
+- The dashboard, news, findings, item pages, methodology, resources, forum placeholder, reports, contributions, and all other application surfaces require authentication.
 - Current events and researcher-facing insights are the core experience.
 - Education/resources, user contributions, classification disputes, assisted platform reporting, PDF reports, filters, and transparent AI-confidence displays are in scope.
 - Social sharing is a mock in the hackathon.
@@ -32,7 +32,7 @@ Requirement keywords use the following meanings:
 
 ## 2. Executive summary
 
-Project Amanah is a public web application for monitoring, analyzing, and reporting on anti-Muslim hate and Islamophobic rhetoric in online public discourse. It combines authorized social-media content, local and major global news, user-submitted public URLs, open research datapacks such as appropriately licensed Kaggle datasets, AI-assisted classification, human correction, and transparent aggregate analysis.
+Project Amanah is an authenticated research and reporting web application with a public marketing homepage. It monitors and analyzes anti-Muslim hate and Islamophobic rhetoric in online public discourse by combining authorized social-media content, local and major global news, user-submitted public URLs, open research datapacks such as appropriately licensed Kaggle datasets, AI-assisted classification, human correction, and transparent aggregate analysis.
 
 The product helps researchers in sociology, anthropology, socio-political fields, journalism, civil society, and related disciplines answer:
 
@@ -70,7 +70,7 @@ Amanah turns authorized public signals into:
 - **Evidence before assertion:** Every quantitative claim MUST trace to deterministic data.
 - **Relevance is not hate:** Muslim-related content MUST be classified separately from anti-Muslim rhetoric.
 - **Uncertainty stays visible:** AI labels MUST expose confidence tiers and review state.
-- **Public information, protected actions:** Viewing is public; contribution and reporting actions require an account.
+- **Public marketing, protected application:** Only the marketing homepage is public; every research, content, resource, reporting, and community surface requires an authenticated session.
 - **Human correction:** User disputes trigger manual review and MUST NOT directly overwrite a model result.
 - **No causal overclaim:** News events may coincide with changes; Amanah MUST NOT state that they caused them.
 - **No person profiling:** The system analyzes content and aggregate patterns, not personal identities.
@@ -93,8 +93,8 @@ Researchers and research-adjacent users who need evidence and insights about Isl
 
 | Role | Access |
 |---|---|
-| Anonymous visitor | Homepage, public dashboard, news, aggregate insights, redacted item pages, methodology, and resources |
-| Registered user | Anonymous access plus URL submission, classification disputes, assisted platform reporting, saved contribution history, PDF report generation, and future community actions |
+| Anonymous visitor | Marketing homepage plus login, sign-up, password-recovery, and authentication-callback routes needed to establish a session; no dashboard or application data |
+| Registered user | Dashboard, news, aggregate insights, redacted item pages, methodology, resources, forum placeholder, URL submission, classification disputes, assisted platform reporting, contribution history, PDF report generation, and future community actions |
 | Reviewer | Registered access plus manual review queue, corrected labels, policy-mapping review, and contribution disposition |
 | Administrator | Reviewer access plus source configuration, connector status, scheduled runs, resource catalog, platform-policy catalog, and account/role management |
 
@@ -104,7 +104,7 @@ Open registration MAY be enabled for the demo. If open registration creates deli
 
 ### 5.1 Goals
 
-- Present current headlines and monitored social-media findings in one public experience.
+- Present current headlines and monitored social-media findings in one authenticated research experience.
 - Refresh available data approximately every eight hours, subject to provider quotas.
 - Make model classification and its uncertainty understandable.
 - Allow researchers to filter, sort, inspect, and export findings.
@@ -131,29 +131,30 @@ Open registration MAY be enabled for the demo. If open registration creates deli
 
 The demonstration is successful when the following vertical slice works:
 
-1. A visitor opens the homepage and enters the public dashboard.
-2. The dashboard displays current news, collection freshness, at least one useful aggregate metric, and one AI-generated finding.
-3. The visitor filters or sorts results and opens an item.
-4. The item displays its summary, classification, confidence tier, rationale, source, and related insight.
-5. A registered user completes one gated action: submit a URL, dispute a classification, or prepare a platform report.
-6. The action appears in the user’s contribution history.
-7. A reviewer can see and resolve a submitted dispute or contribution.
-8. A filtered report can be printed or saved as PDF.
-9. Live, fixture, stale, failed, and unavailable states are visually distinguishable.
+1. A visitor opens the marketing homepage and selects the dashboard CTA.
+2. The visitor signs up or logs in; a first-time user completes or skips onboarding.
+3. The authenticated dashboard displays current news, collection freshness, at least one useful aggregate metric, and one AI-generated finding.
+4. The user filters or sorts results and opens an item.
+5. The item displays its summary, classification, confidence tier, rationale, source, and related insight.
+6. The user completes one action: submit a URL, dispute a classification, or prepare a platform report.
+7. The action appears in the user’s contribution history.
+8. A reviewer can see and resolve a submitted dispute or contribution.
+9. A filtered report can be printed or saved as PDF.
+10. Live, fixture, stale, failed, and unavailable states are visually distinguishable.
 
 ## 6. Scope and delivery priority
 
 ### 6.1 P0 — must function in the demo
 
-- Branded public homepage with a primary “View dashboard” action.
-- Public dashboard with headlines, freshness/coverage, key metrics, filters, sorting, and current findings.
-- Public item detail page for news and social content.
+- Branded public marketing homepage with primary “Sign in to dashboard” and secondary sign-up actions.
+- Authenticated dashboard with headlines, freshness/coverage, key metrics, filters, sorting, and current findings.
+- Authenticated item detail page for news and social content.
 - AI classification with High/Medium/Low confidence badge on every AI-classified item card.
 - Exact score, model version, rationale, and review status in item detail.
 - Gemini-generated item summaries and bounded aggregate insights.
 - At least one live authorized content source or a clearly disclosed controlled fallback.
 - News retrieval through GDELT, curated RSS, or another configured provider.
-- Authentication for gated actions using Supabase Auth.
+- Authentication for the entire application beyond the marketing/auth-entry surfaces using Supabase Auth.
 - URL-only user content submission.
 - Open-datapack import for reviewed CSV or JSONL datasets, including Kaggle and other openly licensed research packs.
 - “Not actually hateful” dispute action and reviewer queue.
@@ -163,7 +164,7 @@ The demonstration is successful when the following vertical slice works:
 - Resources and education page with a reviewed starter catalog or clearly labelled research-pending sections.
 - First-sign-in onboarding guide.
 - Print-optimized report and browser “Save as PDF.”
-- Public methodology and limitations page.
+- Authenticated methodology and limitations page.
 - Loading, empty, partial, stale, error, unavailable, fixture, and unauthorized states.
 - Responsive and keyboard-accessible experience.
 
@@ -204,25 +205,27 @@ Mock actions MUST be labelled “Demo” or “Coming soon” and MUST NOT imply
 
 ## 7. Information architecture and routes
 
-### 7.1 Public routes
+### 7.1 Unauthenticated routes
 
 | Route | Purpose |
 |---|---|
-| `/` | Homepage, value proposition, Amanah story, responsible use, dashboard CTA |
-| `/dashboard` | Current headlines, aggregate metrics, findings, filters, and sorting |
-| `/items/:id` | Public-safe item detail, summary, AI analysis, provenance, and action entry points |
-| `/news` | Filterable news/current-events listing; MAY be integrated into the dashboard for P0 |
-| `/resources` | Education, research, reporting, support, and getting-involved resources |
-| `/methodology` | Sources, sampling, taxonomy, models, confidence, limitations, and disclosures |
-| `/forum` | “Coming soon” page |
+| `/` | Public marketing homepage, value proposition, Amanah story, responsible use, and authentication CTAs; MUST NOT request protected application data |
 | `/login` | Login |
 | `/signup` | Account creation |
+| `/auth/callback` | Authentication provider callback; validates safe internal return state |
+| `/recover` | Password-recovery entry if enabled |
 
 ### 7.2 Authenticated routes
 
 | Route | Purpose |
 |---|---|
 | `/onboarding` | First-sign-in product tour |
+| `/dashboard` | Current headlines, aggregate metrics, findings, filters, and sorting |
+| `/items/:id` | Authenticated-safe item detail, summary, AI analysis, provenance, and actions |
+| `/news` | Filterable news/current-events listing; MAY be integrated into the dashboard for P0 |
+| `/resources` | Education, research, reporting, support, and getting-involved resources |
+| `/methodology` | Sources, sampling, taxonomy, models, confidence, limitations, and disclosures |
+| `/forum` | “Coming soon” page |
 | `/contributions` | Submitted URLs, disputes, prepared reports, and future comments/posts |
 | `/contributions/:id` | Contribution status and final disposition |
 | `/reporting/:itemId` | Assisted platform-report preparation |
@@ -243,24 +246,25 @@ Mock actions MUST be labelled “Demo” or “Coming soon” and MUST NOT imply
 
 ## 8. Core user journeys
 
-### 8.1 Public discovery
+### 8.1 Authenticated discovery
 
 ```text
-Homepage → View dashboard → Scan headlines and metrics
+Marketing homepage → Sign in / Sign up → Onboarding if first sign-in
+ → Dashboard → Scan headlines and metrics
  → Apply filters/sort → Open item → Read summary and AI insight
- → Follow full-article/source link or choose a gated action
+ → Follow full-article/source link or choose an application action
 ```
 
 ### 8.2 Authentication and onboarding
 
-1. An anonymous visitor clicks any gated action.
-2. The application preserves the intended destination.
-3. The visitor signs up or logs in.
+1. An anonymous visitor selects a marketing CTA or requests a protected application URL.
+2. The application preserves only a validated internal destination, defaulting to `/dashboard`.
+3. The visitor signs up or logs in through an unauthenticated auth-entry route.
 4. A first-time user sees a skippable onboarding guide covering:
    - dashboard navigation;
    - what the headline, metrics, filters, confidence tiers, and review labels mean;
    - primary actions: submit content, dispute a classification, prepare a platform report, and generate a PDF.
-5. The user returns to the intended action.
+5. The user enters the intended protected route or `/dashboard`.
 6. Completion or skip state is stored in the user profile.
 
 ### 8.3 Item exploration
@@ -319,7 +323,7 @@ User-submitted items MUST pass through the same canonicalization, classification
 ### 8.7 Research report
 
 ```text
-Dashboard filters → Generate report → Login if needed
+Dashboard filters → Generate report
  → Preview scope, coverage, charts, findings, sources, and limitations
  → Create immutable snapshot → Print / Save as PDF
 ```
@@ -329,10 +333,11 @@ Dashboard filters → Generate report → Login if needed
 ### 9.1 Homepage
 
 - **FR-HOME-001:** The homepage MUST explain the problem, intended users, and value within the first viewport.
-- **FR-HOME-002:** The primary CTA MUST be “View dashboard.”
+- **FR-HOME-002:** The primary CTA MUST be “Sign in to dashboard,” with a secondary sign-up action when registration is enabled.
 - **FR-HOME-003:** The page MUST explain that Amanah measures a monitored sample and uses AI with human correction.
 - **FR-HOME-004:** The page SHOULD explain the name Amanah as a trust and responsibility without presenting the application as a religious authority.
-- **FR-HOME-005:** The page MUST link to Methodology, Resources, Login, and Sign up.
+- **FR-HOME-005:** The page MUST link to Login and Sign up. Methodology and Resources MAY be described in marketing copy but their application routes require authentication.
+- **FR-HOME-006:** The marketing page MUST render without a session and MUST NOT call dashboard, item, news, methodology, resource, report, or connection-status APIs.
 
 ### 9.2 Dashboard and headlines
 
@@ -343,11 +348,11 @@ Dashboard filters → Generate report → Login if needed
 - **FR-DASH-005:** Every rate MUST expose numerator, denominator, date window, source scope, and fixture/live status.
 - **FR-DASH-006:** Missing data MUST render as a gap or warning, never as zero.
 - **FR-DASH-007:** Users MUST be able to open supporting items from a metric or chart.
-- **FR-DASH-008:** The dashboard MUST be usable without an account.
+- **FR-DASH-008:** The dashboard MUST require a valid authenticated session and redirect unauthenticated browser navigation to login with a validated internal return target.
 
 ### 9.3 Filters and sorting
 
-The public dashboard MUST support:
+The authenticated dashboard MUST support:
 
 - date range;
 - content kind: news or social;
@@ -417,7 +422,7 @@ The interface MUST NOT label this value as the sentiment of all Western users or
 - **FR-SUBMIT-005:** A valid submission immediately returns `processing`.
 - **FR-SUBMIT-006:** Scheduled or manually dispatched processing MUST use the same pipeline as collected content.
 - **FR-SUBMIT-007:** The final state MUST be one of `processing | analyzed | duplicate | unsupported | inaccessible | rejected | failed`.
-- **FR-SUBMIT-008:** Completed contributions MUST link to the resulting public-safe item.
+- **FR-SUBMIT-008:** Completed contributions MUST link to the resulting authenticated-safe item.
 
 ### 9.8 Classification disputes
 
@@ -528,7 +533,7 @@ YouTube is prioritized over Reddit for the two-day build because it offers a doc
 - Runtime code MUST use approved, stable registry keys copied into validated configuration; it MUST NOT parse the Markdown document or activate every listed entry automatically.
 - Registry inclusion establishes relevance for purposive sampling only. It MUST NOT label a creator, community, video, submission, or commenter as hateful.
 - Collection MUST label and retain `registry_key`, `query_family`, `query_purpose`, `sampling_stratum`, item cap, and configuration version where applicable.
-- The enriched hackathon seed stratum, boundary/control strata, and ordinary monitoring strata MUST remain distinguishable in storage, metrics, reports, and public methodology. They MUST NOT be silently combined into a prevalence estimate.
+- The enriched hackathon seed stratum, boundary/control strata, and ordinary monitoring strata MUST remain distinguishable in storage, metrics, reports, and user-facing methodology. They MUST NOT be silently combined into a prevalence estimate.
 - The registry's French-language candidate is outside the English-only MVP. It MUST remain disabled unless the product language scope and classifier/evaluation coverage are explicitly expanded.
 - Reddit entries remain fixture-only or disabled until official access and the intended research/classification use are explicitly approved. Synthetic/redacted records are the required fallback.
 - YouTube seed IDs MUST be preflighted because videos may be unavailable or comments disabled. An unavailable seed is a coverage gap, not a zero-comment observation.
@@ -611,10 +616,10 @@ This architecture is selected because it reuses the existing planning work, keep
 
 ```mermaid
 flowchart LR
-    U[Anonymous visitor] --> W[Netlify React web app]
+    U[Anonymous visitor: marketing/auth only] --> W[Netlify React web app]
     A[Registered user] --> W
     R[Reviewer/Admin] --> W
-    W -->|Public and authenticated HTTPS| API[Render FastAPI]
+    W -->|Authenticated product HTTPS| API[Render FastAPI]
     W -->|Authentication| AUTH[Supabase Auth]
     API --> DB[(Supabase Postgres)]
     API --> STORE[Private Supabase Storage]
@@ -641,7 +646,7 @@ schedule, reviewed datapack, or user URL
  → detect changes
  → generate cached findings
  → create review tasks
- → publish public-safe projections
+ → publish authenticated-safe projections
 ```
 
 Every stage MUST be idempotent and checkpoint its result before the next stage begins.
@@ -650,26 +655,28 @@ Every stage MUST be idempotent and checkpoint its result before the next stage b
 
 All endpoints are versioned under `/v1`, except health checks. Responses use UTC ISO-8601 timestamps, request IDs, stable safe error codes, and cursor pagination.
 
-### 13.1 Public endpoints
+### 13.1 Unauthenticated operational endpoints
 
 | Method | Path | Purpose |
 |---|---|---|
 | GET | `/healthz` | Process health |
 | GET | `/readyz` | Database/config readiness without secrets |
-| GET | `/v1/dashboard` | Headlines, coverage, metrics, trends, findings |
-| GET | `/v1/items` | Filtered public-safe items |
-| GET | `/v1/items/{id}` | Public-safe item detail |
-| GET | `/v1/news` | Filtered news/current events |
-| GET | `/v1/filters` | Allowed filter values |
-| GET | `/v1/resources` | Reviewed resource catalog |
-| GET | `/v1/methodology` | Public methodology and disclosures |
-| GET | `/v1/connections/public` | Safe source coverage/status summary |
 
-### 13.2 Authenticated endpoints
+No `/v1` product-data endpoint is anonymous. The marketing page is a static frontend surface and MUST NOT depend on product APIs.
+
+### 13.2 Authenticated product endpoints
 
 | Method | Path | Purpose |
 |---|---|---|
 | GET/PATCH | `/v1/me` | Profile and onboarding state |
+| GET | `/v1/dashboard` | Headlines, coverage, metrics, trends, findings |
+| GET | `/v1/items` | Filtered authenticated-safe items |
+| GET | `/v1/items/{id}` | Authenticated-safe item detail |
+| GET | `/v1/news` | Filtered news/current events |
+| GET | `/v1/filters` | Allowed filter values |
+| GET | `/v1/resources` | Reviewed resource catalog |
+| GET | `/v1/methodology` | Methodology and disclosures |
+| GET | `/v1/connections` | Safe source coverage/status summary |
 | GET | `/v1/me/contributions` | User contribution history |
 | POST | `/v1/submissions` | Submit public URL |
 | GET | `/v1/submissions/{id}` | Own submission status |
@@ -921,9 +928,12 @@ For open-datapack items, provenance MUST additionally retain dataset provider, n
 
 ## 16. Authentication and authorization
 
+This boundary is recorded in [ADR 0001: Require authentication for application access](./docs/adr/0001-require-authentication-for-application-access.md).
+
 - Supabase Auth manages identity and sessions.
-- Anonymous users access only public-safe API projections.
-- Every gated action MUST be enforced server-side; hiding a button is not authorization.
+- Anonymous users have no access to `/v1` product data. Only health/readiness endpoints and the frontend marketing/auth-entry surfaces are unauthenticated.
+- Every product endpoint MUST verify a valid session server-side; frontend route guards are UX, not authorization.
+- Authenticated base-role users receive only authenticated-safe projections. Raw/encrypted content, author identifiers, internal evidence, reviewer context, and admin state remain separately authorized.
 - Users may read only their own contributions and prepared reports.
 - Reviewers may read assigned/available review context but not unrestricted user account data.
 - Admin-only actions require server-verified role claims.
@@ -960,6 +970,7 @@ For open-datapack items, provenance MUST additionally retain dataset provider, n
 | Review submission conflict | Use idempotency key; return existing decision when identical |
 | PDF/print failure | Keep report preview and offer retry/print instructions |
 | Auth expiry during action | Preserve unsent form locally, reauthenticate, and retry safely |
+| Anonymous request to application route/API | Redirect browser navigation to login with a validated internal return target; APIs return the standard non-enumerating `401` envelope |
 | Database unavailable | Return service-unavailable state; do not claim an action was saved |
 
 ### 17.3 Job states
@@ -990,7 +1001,7 @@ All job transitions MUST be valid, idempotent, and auditable.
 - Include a content warning and deliberate reveal control.
 - Reporting assistance MUST avoid brigading and repeated coordinated reporting.
 - High-severity threats MAY be routed for internal review, but no external escalation is automatic.
-- All public metrics MUST disclose sampling limitations.
+- All user-facing metrics MUST disclose sampling limitations.
 - Metrics and reports MUST keep enriched seed, boundary/control, and ordinary-monitoring strata separate by default; cross-stratum aggregation requires an explicit comparison view and may not be described as population prevalence.
 
 ## 19. Accessibility and UX quality
@@ -1014,7 +1025,7 @@ Track without recording harmful raw content:
 - items discovered, fetched, canonicalized, relevant, classified, deferred, and failed;
 - connector state and last success;
 - Gemini calls, tokens, latency, validation failure, cache hit, and budget deferral;
-- public API latency and error rate;
+- product API latency and error rate;
 - submissions, disputes, prepared reports, and report outcomes;
 - review queue depth and age;
 - PDF/report creation success;
@@ -1054,7 +1065,7 @@ Alert on stale data, zero-volume anomalies, repeated connector failure, budget e
 - Migrations apply to an empty database.
 - Datapack package/import/row provenance constraints prevent collisions while public source remains `N/A`.
 - Unique constraints prevent duplicate content/predictions/disputes.
-- RLS denies anonymous raw-table access.
+- RLS denies anonymous access to all product tables, views, and functions, including otherwise safe projections.
 - Users cannot read another user’s contributions or reports.
 - Review events remain append-only.
 - Report snapshots cannot mutate after readiness.
@@ -1076,8 +1087,8 @@ Measure confusion matrix, macro F1, per-class precision/recall, calibration, unc
 
 ### 21.5 Integration tests
 
-- Authenticated and anonymous route behavior.
-- A reviewed datapack import traverses canonicalization, classification, metrics, and public-safe item projection.
+- Marketing/auth-entry availability plus authenticated denial/allow behavior for every product route and endpoint.
+- A reviewed datapack import traverses canonicalization, classification, metrics, and authenticated-safe item projection.
 - Submission creates a pipeline job and contribution record.
 - Dispute creates review task and updates user-visible status after reviewer decision.
 - Prepared platform report uses the current policy version.
@@ -1088,8 +1099,8 @@ Measure confusion matrix, macro F1, per-class precision/recall, calibration, unc
 
 ### 21.6 End-to-end tests
 
-1. Homepage → dashboard → filter → item.
-2. Anonymous action → login → onboarding → return to intended action.
+1. Homepage → login/sign-up → onboarding if first sign-in → dashboard → filter → item.
+2. Anonymous protected deep link → login → validated return to the intended internal route.
 3. Submit URL → processing → analyzed result in contributions.
 4. Dispute classification → reviewer decision → visible outcome.
 5. Prepare platform report → mark submitted → record outcome.
@@ -1109,7 +1120,7 @@ Measure confusion matrix, macro F1, per-class precision/recall, calibration, unc
 
 ### 21.8 Accessibility and visual tests
 
-- Automated accessibility scan for every public and authenticated P0 route.
+- Automated accessibility scan for the public marketing/auth-entry routes and every authenticated P0 route.
 - Keyboard-only completion of all P0 flows.
 - Screen-reader labels for filters, charts, confidence, and status.
 - Responsive checks at 375, 768, 1024, and 1440 px.
@@ -1171,14 +1182,14 @@ Optional variables MUST not be injected when a connector is not approved. Startu
 ### Hours 0–4: foundation
 
 - Freeze API types, taxonomy, fixture schema, routes, and environment validation.
-- Create Supabase schema/migrations and public/authenticated projections.
+- Create Supabase schema/migrations and authenticated-safe/reviewer/admin projections with anonymous denial.
 - Set up React, FastAPI, authentication, and fixture provider.
 
-### Hours 4–12: public value path
+### Hours 4–12: authenticated value path
 
-- Build homepage, public dashboard, headline cards, metrics, filters, item listing, and item detail.
+- Build the public marketing homepage, auth gate, authenticated dashboard, headline cards, metrics, filters, item listing, and item detail.
 - Seed coherent synthetic/redacted fixtures.
-- Implement public methodology and live/fixture/freshness states.
+- Implement authenticated methodology and live/fixture/freshness states.
 
 ### Hours 12–20: live data and Gemini
 
@@ -1187,7 +1198,7 @@ Optional variables MUST not be injected when a connector is not approved. Startu
 - Implement canonical pipeline, dedupe, structured Gemini classification/summary, cache, and metrics.
 - Add user-submitted URL ingestion with safe retrieval.
 
-### Hours 20–29: gated actions
+### Hours 20–29: authenticated actions
 
 - Complete signup/login and onboarding.
 - Implement Your Contributions.
@@ -1215,12 +1226,12 @@ Optional variables MUST not be injected when a connector is not approved. Startu
 
 ## 24. Demo script
 
-1. Explain Amanah’s purpose and open the public homepage.
-2. Select “View dashboard.”
-3. Show current headlines, data freshness, and the monitored-sample rate.
-4. Filter by source and open an item.
-5. Explain the confidence tier, exact score, rationale, model-only/reviewed state, and source context.
-6. Sign in from an action and complete the onboarding guide.
+1. Explain Amanah’s purpose on the public marketing homepage.
+2. Select “Sign in to dashboard” and authenticate with the demo account.
+3. Complete or skip first-sign-in onboarding.
+4. Show current headlines, data freshness, and the monitored-sample rate.
+5. Filter by source and open an item.
+6. Explain the confidence tier, exact score, rationale, model-only/reviewed state, and source context.
 7. Prepare a platform report or dispute the classification.
 8. Show the saved action in Your Contributions.
 9. Switch to reviewer view and resolve the task.
@@ -1270,7 +1281,7 @@ Each unresolved dependency MUST have an explicit unavailable/fixture state and M
 The hackathon build is done when:
 
 - all P0 acceptance steps in Section 5.3 work in the deployed environment;
-- anonymous viewing and authenticated actions are enforced correctly;
+- only the marketing/auth-entry surfaces are anonymous and every application route/API is authentication-protected;
 - the site displays honest freshness, coverage, confidence, review, and fixture/live states;
 - at least one data path works end to end;
 - any registry-backed demo path discloses its purposive/enriched sampling stratum and does not imply platform-wide prevalence;
@@ -1309,4 +1320,4 @@ The following documents should be updated after this specification is accepted:
 - `docs/PROJECT_AMANAH_IMPLEMENTATION_DEPLOYMENT.md`
 - `docs/PROJECT_AMANAH_BRAND_DESIGN_SYSTEM.md`
 
-Required updates include the primary research audience, public dashboard access, headline-first hierarchy, action-only authentication, contribution flows, platform-report assistance, education/resources, onboarding, confidence-tier presentation, PDF reports, eight-hour scheduling, and the current Reddit research-access constraint.
+Required updates include the primary research audience, marketing-only public access, authenticated application routing and APIs, headline-first hierarchy, contribution flows, platform-report assistance, education/resources, onboarding, confidence-tier presentation, PDF reports, eight-hour scheduling, and the current Reddit research-access constraint.

@@ -7,6 +7,8 @@
 
 > **Open-datapack addendum (2026-08-22):** Datapack item cards and filters display source/platform as `N/A` and expose Dataset provider/name/version separately when public-safe. Item detail preserves dataset/license provenance. See the authoritative root [`spec.md`](../spec.md).
 
+> **Authentication-scope addendum (2026-08-22):** Only the marketing homepage and authentication entry/callback routes are anonymous. Restore the session before resolving routes, deny every application route by default, and do not issue protected API requests from the marketing page or before session validation. The root [`spec.md`](../spec.md) is authoritative.
+
 ## 1. Frontend outcome
 
 Ship one coherent experience:

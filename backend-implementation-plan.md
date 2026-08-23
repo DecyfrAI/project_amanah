@@ -19,9 +19,9 @@ Every code-generation prompt below requires the coding LLM to read the applicabl
   - **Main components:** FastAPI app, Pydantic settings, OpenAPI models, error middleware, authentication boundary, test harness.
   - **Expected artifacts:** Runnable API, versioned contracts, health/readiness endpoints, safe error envelope, backend tests.
 
-- **Milestone 2: Relational storage and public read API**
-  - **Goal:** Create the minimum secure schema and public-safe query projections required by the anonymous dashboard, items, resources, methodology, and source status.
-  - **Main components:** Alembic migrations, SQLAlchemy models/repositories, Supabase RLS, filters, pagination, public endpoints.
+- **Milestone 2: Relational storage and authenticated read API**
+  - **Goal:** Create the minimum secure schema and authenticated-safe query projections required by the protected dashboard, items, resources, methodology, and source status while denying anonymous product-data access.
+  - **Main components:** Alembic migrations, SQLAlchemy models/repositories, Supabase RLS, filters, pagination, authenticated endpoints.
   - **Expected artifacts:** Database schema, indexes/constraints, access policies, dashboard/item/resource APIs, contract/integration tests.
 
 - **Milestone 3: Collection and canonical processing**
@@ -53,10 +53,10 @@ Every code-generation prompt below requires the coding LLM to read the applicabl
 
 - **B-S1 (Milestone 1) [backend]: Audit and scaffold the FastAPI service.** Preserve existing work, establish the Python package, locked dependencies, local commands, and basic tests without feature logic. Dependencies: none.
 - **B-S2 (Milestone 1) [backend]: Define contract-first domain and API schemas.** Add controlled enums, common metadata, pagination, filter models, and the safe error contract from `spec.md`. Dependencies: B-S1.
-- **B-S3 (Milestone 2) [backend]: Create the core database schema and RLS foundation.** Add migrations, dataset package/import provenance, constraints, indexes, timestamps, public-safe projections, and role policies for content, predictions, metrics, users, and contributions. Dependencies: B-S2.
+- **B-S3 (Milestone 2) [backend]: Create the core database schema and RLS foundation.** Add migrations, dataset package/import provenance, constraints, indexes, timestamps, authenticated-safe projections, anonymous denial, and role policies for content, predictions, metrics, users, and contributions. Dependencies: B-S2.
 - **B-S4 (Milestone 1) [backend]: Add configuration, health, errors, and authentication boundary.** Validate settings at startup, implement health/readiness, request IDs, safe errors, Supabase JWT verification, and role/ownership dependencies. Dependencies: B-S1–B-S3.
-- **B-S5 (Milestone 2) [backend]: Implement dashboard and item read APIs.** Add public-safe filter/sort/pagination repositories and endpoints for dashboard, items, news, allowed filters, and separate dataset provenance/filter values. Dependencies: B-S3–B-S4.
-- **B-S6 (Milestone 2) [backend]: Implement methodology, resources, and connection-status reads.** Add public curated resources, methodology disclosures, and safe connector state without secrets. Dependencies: B-S3–B-S5.
+- **B-S5 (Milestone 2) [backend]: Implement authenticated dashboard and item read APIs.** Add authenticated-safe filter/sort/pagination repositories and protected endpoints for dashboard, items, news, allowed filters, and separate dataset provenance/filter values. Dependencies: B-S3–B-S4.
+- **B-S6 (Milestone 2) [backend]: Implement authenticated methodology, resources, and connection-status reads.** Add protected curated resources, methodology disclosures, and safe connector state without secrets. Dependencies: B-S3–B-S5.
 - **B-S7 (Milestone 3) [backend]: Implement collection-run and background-job state machines.** Add idempotent run/job persistence, claims, retries, checkpoints, dead-letter/policy-blocked states, and admin run reads. Dependencies: B-S3–B-S4.
 - **B-S8 (Milestone 3) [backend]: Implement the canonical adapter contract and fixture adapter.** Define discovery/fetch/canonicalize/checkpoint/health interfaces, approved seed-configuration provenance, the `N/A` source semantics for datapack items, and prove them with safe deterministic fixtures. Dependencies: B-S2, B-S7.
 - **B-S9 (Milestone 3) [backend]: Implement bounded news ingestion.** Add GDELT and/or reviewed RSS retrieval, metadata-only storage, canonical-URL deduplication, coverage, and provider failure handling. Dependencies: B-S8.
@@ -70,7 +70,7 @@ Every code-generation prompt below requires the coding LLM to read the applicabl
 - **B-S16 (Milestone 5) [backend]: Implement URL submissions and contribution history.** Add authenticated idempotent submission/status APIs, pipeline enqueueing, contribution events, and ownership-safe reads. Dependencies: B-S4, B-S7, B-S11–B-S12.
 - **B-S17 (Milestone 5) [backend]: Implement disputes and reviewer decisions.** Add one-open-dispute constraint, review tasks/claims/append-only decisions, effective labels, user-visible resolutions, and training-candidate quarantine. Dependencies: B-S14, B-S16.
 - **B-S18 (Milestone 5) [backend]: Implement platform-policy assistance and prepared reports.** Add versioned policy catalog, constrained Gemini matching, human confirmation, prepared text persistence, status/outcome tracking, and anti-abuse limits. Dependencies: B-S13–B-S17.
-- **B-S19 (Milestone 6) [backend]: Implement curated resource administration and governance.** Add reviewer/admin resource mutations, review dates/status, public projections, and safe external-link validation. Dependencies: B-S4, B-S6.
+- **B-S19 (Milestone 6) [backend]: Implement curated resource administration and governance.** Add reviewer/admin resource mutations, review dates/status, authenticated base-role projections, and safe external-link validation. Dependencies: B-S4, B-S6.
 - **B-S20 (Milestone 6) [backend]: Implement research-report snapshots and aggregate export.** Resolve authorized filters, freeze coverage/findings/citations, redact, create immutable snapshots, and optionally emit aggregate CSV. Dependencies: B-S5, B-S15–B-S17.
 - **B-S21 (Milestone 7) [devops]: Assemble the idempotent ETL command and eight-hour workflow.** Orchestrate connector and reviewed-datapack stages, checkpoints, manual dispatch, credential-based connector enablement, redacted run artifacts, and safe concurrency. Dependencies: B-S7–B-S15, including B-S9A.
 - **B-S22 (Milestone 7) [backend]: Add production resilience and observability.** Implement structured redacted logs, request/run correlation, metrics, timeouts, retries, rate limits, stale/partial coverage, and dependency isolation. Dependencies: B-S4–B-S21.
@@ -135,7 +135,7 @@ Task:
 
 Requirements:
 - Add controlled enums for source/content/relevance/stance/type/severity/confidence/review/contribution/job states, including `open_datapack` source kind and `not_applicable` public source/platform value.
-- Define public dashboard/item/resource models, cursor pagination, validated filters/sorts, request metadata, and the exact safe error envelope.
+- Define authenticated-safe dashboard/item/resource models, cursor pagination, validated filters/sorts, request metadata, the exact safe error envelope, and OpenAPI bearer-auth requirements for every `/v1` product operation.
 - Use UTC ISO timestamps, snake_case JSON, explicit nullable semantics, and additive versioning.
 - Add schema tests for invalid enums, unsupported filters/sorts, missing metric denominators, and error serialization.
 - Do not add database models or routes beyond schema exposure needed for tests.
@@ -169,8 +169,8 @@ Requirements:
 - Store datapack provider/name/version/license/file hash/schema mapping/import run/row lineage separately while mapping public source/platform to the controlled `N/A` source record.
 - Add documented unique/check/foreign-key constraints and only query-driven indexes.
 - Make review/contribution decisions append-only and report snapshots immutable after ready.
-- Add public-safe views/projections; anonymous access must not reach raw/encrypted fields.
-- Add Supabase RLS policies for anonymous, authenticated owner, reviewer, and admin boundaries.
+- Add authenticated-safe views/projections; anonymous access must not reach any product table, view, function, or storage object, including otherwise safe projections.
+- Add Supabase RLS policies that deny anonymous product data and enforce authenticated base-role, owner, reviewer, and admin boundaries.
 - Test migrations on an empty database, constraints, negative RLS cases, and rollback/forward compatibility where supported.
 - Extend and integrate; do not rewrite working code.
 
@@ -200,7 +200,8 @@ Requirements:
 - Fail startup for missing core settings; mark optional connectors disabled rather than failing.
 - Implement /healthz and /readyz without secrets or internal versions.
 - Attach request IDs and exact spec.md error envelopes.
-- Verify JWTs server-side and expose reusable anonymous/user/reviewer/admin dependencies.
+- Verify JWTs server-side and expose reusable authenticated-user/reviewer/admin dependencies plus a consistent anonymous `401` path. Only `/healthz` and `/readyz` remain unauthenticated API routes.
+- Apply authenticated-user dependency by default to the `/v1` product router so new endpoints cannot become anonymous by omission.
 - Log auth/authorization outcomes without tokens or harmful content.
 - Add tests for startup validation, readiness degradation, invalid/expired tokens, roles, ownership, and safe errors.
 - Extend and integrate; do not rewrite working code.
@@ -212,29 +213,30 @@ Output:
 If something is ambiguous, ask clarifying questions before producing code.
 ```
 
-### Step B-S5 — Dashboard and item read APIs [backend]
+### Step B-S5 — Authenticated dashboard and item read APIs [backend]
 
 ```text
 You are implementing backend step B-S5 for Project Amanah.
 
 Mandatory first action:
-- Read spec.md public API, metrics, filters, and item requirements.
+- Read spec.md authenticated product API, metrics, filters, and item requirements.
 - Read rules/general.md, rules/backend.md, rules/api.md, rules/database.md, rules/security.md, and rules/testing.md.
 
 Context:
 - Schema/auth/error foundations exist.
 
 Task:
-- Implement public-safe repositories and endpoints for dashboard, item/news lists, item detail, and allowed filter values.
+- Implement authenticated-safe repositories and protected endpoints for dashboard, item/news lists, item detail, and allowed filter values.
 
 Requirements:
 - Support validated date/content/source/geography/narrative/severity/review/confidence filters, a separate Dataset filter, and documented stable sorts.
-- Datapack rows return source/platform `N/A`; dataset provider/name/version remain separate public-safe provenance fields.
+- Datapack rows return source/platform `N/A`; dataset provider/name/version remain separate authenticated-base-role provenance fields.
 - Use cursor pagination; do not expose raw tables or author identifiers.
+- Require a verified base-role user for every endpoint and return the standard `401` envelope before querying product data when authentication is missing or invalid.
 - Every rate returns numerator, denominator, scope, window, coverage, and data mode.
 - Preserve missing buckets as gaps and surface stale/partial warnings.
 - Parameterize queries and test query plans for the expected fixture volume.
-- Add API/DB integration tests for filters, stable cursors, unsupported inputs, empty data, and public redaction.
+- Add API/DB integration tests for filters, stable cursors, unsupported inputs, empty data, authenticated-safe redaction, and anonymous denial for every route.
 - Extend and integrate; do not rewrite working code.
 
 Output:
@@ -254,16 +256,16 @@ Mandatory first action:
 - Read rules/general.md, rules/backend.md, rules/api.md, rules/security.md, and rules/testing.md.
 
 Context:
-- Public dashboard/item APIs work.
+- Authenticated dashboard/item APIs work and anonymous `/v1` product access is denied.
 
 Task:
-- Implement public reads for methodology, reviewed resources, and safe connector/coverage status.
+- Implement authenticated reads for methodology, reviewed resources, and safe connector/coverage status.
 
 Requirements:
-- Resource responses include organization, country/scope, category, summary, URL, and last-reviewed date; only published entries are public.
+- Resource responses include organization, country/scope, category, summary, URL, and last-reviewed date; only published entries reach authenticated base-role users.
 - Methodology exposes taxonomy/model/coverage/sampling/limitations without sensitive lexicon internals.
 - Connection status exposes purpose, state, last success/check, and safe warning; never keys, connection strings, or raw provider errors.
-- Add caching where appropriate and tests for unpublished-resource denial and secret-free serialization.
+- Add caching where appropriate and tests for anonymous denial, unpublished-resource denial, and secret-free serialization.
 - Extend and integrate; do not rewrite working code.
 
 Output:
@@ -568,7 +570,7 @@ Mandatory first action:
 - Read rules/general.md, rules/ml.md, rules/agentic.md, rules/database.md, rules/backend.md, rules/security.md, and rules/testing.md.
 
 Context:
-- Predictions are versioned and public reads exist.
+- Predictions are versioned and authenticated-safe reads exist.
 
 Task:
 - Implement deterministic metric aggregation and cited Gemini explanations over bounded fact bundles.
@@ -609,7 +611,7 @@ Task:
 Requirements:
 - Validate ownership and one public HTTP(S) URL per request.
 - Require idempotency; canonical duplicates link to existing items/contributions instead of duplicating work.
-- Immediately persist processing, enqueue the same canonical pipeline, and append public-safe contribution events.
+- Immediately persist processing, enqueue the same canonical pipeline, and append user-safe contribution events.
 - Support processing/analyzed/duplicate/unsupported/inaccessible/rejected/failed.
 - Return cursor-paginated own contributions across typed variants; never expose another user’s data.
 - Rate-limit submissions and add auth/ownership/idempotency/state/pipeline-enqueue tests.
@@ -702,7 +704,7 @@ Task:
 
 Requirements:
 - Validate HTTPS URLs, category, country/scope, organization, summary length, status, reviewer, and last-reviewed date.
-- Use draft/published/archived lifecycle; only published resources reach public reads.
+- Use draft/published/archived lifecycle; only published resources reach authenticated base-role reads.
 - Keep audit history and prevent unreviewed AI-generated descriptions from publication.
 - Seed only explicitly reviewed starter entries; otherwise retain candidates as draft.
 - Add role, validation, publication, archive, and public-projection tests.
@@ -831,7 +833,7 @@ Requirements:
 - CI runs lint/format/typecheck/unit/integration/contract tests, disposable-Postgres migrations/RLS tests, fixture E2E, OpenAPI compatibility, dependency scan, and secret scan with no live secrets/providers.
 - Add an AI eval workflow for schema validity, numeric/citation fidelity, benign-Muslim false positives, insufficient-data abstention, causal-language rejection, prompt injection, and prohibited tools/data transfer.
 - Add Render health/readiness/deploy configuration and documented Netlify/Supabase environment handoff without secret values.
-- Provide deployed smoke tests for health, public dashboard, auth denial, and one deterministic fixture vertical slice.
+- Provide deployed smoke tests proving health/readiness remain anonymous, every `/v1` product route denies anonymous access, and an authenticated demo account completes one deterministic fixture vertical slice.
 - Document rollback, missing-key behavior, manual ETL, fixture fallback, known limitations, and the exact live/mock integration inventory.
 - Run all gates and fix only acceptance blockers; do not add scope.
 - Extend and integrate; do not rewrite working code.

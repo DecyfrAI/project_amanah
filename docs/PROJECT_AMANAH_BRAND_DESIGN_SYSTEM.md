@@ -6,6 +6,8 @@
 
 > **Open-datapack UI rule (2026-08-22):** For reviewed Kaggle/other open datapack records, label platform/source as `N/A`; show Dataset provider/name/version as separate provenance, never as a substitute platform source. See the authoritative root [`spec.md`](../spec.md).
 
+> **Authentication-scope UI rule (2026-08-22):** The public experience is the marketing homepage with Sign in to dashboard and optional Sign up actions. Dashboard navigation, data, resources, methodology, forum, reports, and item views appear only after session validation. See the authoritative root [`spec.md`](../spec.md).
+
 ## 1. Brand foundation
 
 ### Name

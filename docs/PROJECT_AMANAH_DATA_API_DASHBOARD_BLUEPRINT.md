@@ -8,6 +8,8 @@
 
 > **Seed-registry addendum (2026-08-22):** Use [`PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md`](../PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md) as the human-reviewed candidate catalog for initial Reddit/YouTube seeds and queries. Runtime jobs use only approved stable keys in versioned configuration, preserve sampling strata and caps, and never treat this enriched set as representative prevalence evidence.
 
+> **Authentication-scope addendum (2026-08-22):** The dashboard and all product-data APIs are authenticated. Only the static marketing homepage, authentication entry/callback routes, and health/readiness endpoints remain anonymous. Anonymous requests must not receive even redacted dashboard, item, resource, methodology, or connector data; see the authoritative root [`spec.md`](../spec.md).
+
 ## 1. Build decision in one page
 
 The hackathon system should support two ways to choose source content:

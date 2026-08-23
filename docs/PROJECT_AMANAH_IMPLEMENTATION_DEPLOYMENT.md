@@ -11,6 +11,8 @@
 
 > **Seed-registry addendum (2026-08-22):** [`PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md`](../PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md) supplies candidate Reddit/YouTube seeds and query families for review. Do not parse or schedule the Markdown directly: copy approved entries to versioned runtime configuration with stable keys, caps, language, sampling stratum, and approval metadata.
 
+> **Authentication-scope addendum (2026-08-22):** Only the marketing homepage, authentication entry/callback routes, and health/readiness endpoints are anonymous. Every `/v1` product endpoint and all dashboard/content/resource/report routes require server-verified authentication, with RLS denying anonymous product data. This supersedes public-frontend/public-dashboard wording below; see [`spec.md`](../spec.md).
+
 ## 0. Hackathon constraint: optimize for a convincing vertical slice
 
 There are only **48 hours**. Build one credible story end to end; do not attempt the full production architecture in this document during the hackathon.
@@ -258,7 +260,7 @@ project-amanah/
 Commit only `.env.example`. Separate browser-safe values from server secrets.
 
 ```dotenv
-# Frontend (public by design)
+# Frontend build-time values (publicly readable in browser bundles)
 VITE_API_BASE_URL=
 VITE_SUPABASE_URL=
 VITE_SUPABASE_ANON_KEY=

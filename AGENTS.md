@@ -57,6 +57,7 @@ If a listed command is not implemented yet, add or reconcile the smallest approp
 ```text
 .
 ├── AGENTS.md
+├── CHANGELOG.md
 ├── spec.md
 ├── frontend-implementation-plan.md
 ├── backend-implementation-plan.md
@@ -72,7 +73,7 @@ If a listed command is not implemented yet, add or reconcile the smallest approp
 │       │   ├── components/      # Focused shared UI, charts and state primitives
 │       │   ├── features/        # Dashboard, items, auth, contributions, reports
 │       │   ├── fixtures/        # Synthetic/redacted frontend fixtures
-│       │   ├── pages/           # Route-level public/protected/admin pages
+│       │   ├── pages/           # Marketing/auth-entry/protected/admin pages
 │       │   ├── styles/          # Global, responsive and print styles
 │       │   └── test/            # Test setup and shared safe factories
 │       ├── e2e/                 # Deterministic browser acceptance tests
@@ -175,6 +176,9 @@ This layout is the target architecture. Inspect the actual repository before act
 - Relevance and hate are separate classification stages. Never treat Muslim-related language as hateful by default.
 - Predictions and review events are immutable history. Reviewer corrections append events rather than overwriting model output.
 - Fixture, live, fallback, stale and unavailable states must remain explicit from storage through UI.
+- Only the marketing homepage and required authentication entry/callback/recovery routes are anonymous product surfaces. Dashboard, items, news, methodology, resources, forum, reports, contributions, reviewer and admin routes require a restored valid session.
+- Every `/v1` product endpoint requires server-verified authentication by default; only `/healthz` and `/readyz` are unauthenticated API routes. Frontend route guards are UX, never the security boundary.
+- Supabase RLS denies anonymous access to all product tables, views, functions and storage objects, including authenticated-safe projections.
 
 ## API conventions
 
@@ -217,7 +221,7 @@ This layout is the target architecture. Inspect the actual repository before act
 
 ## Security and data handling
 
-- Anonymous users may view only public-safe projections. All gated actions require server-side authentication and per-resource authorization.
+- Anonymous users may view only the static marketing page and authentication entry surfaces; they receive no product-data projection. Every application read and action requires server-side authentication, with per-resource authorization where applicable.
 - Users may read only their own contributions and reports; reviewers/admins receive least privilege.
 - Treat source text, articles, OCR, user URLs and model output as hostile input.
 - URL retrieval must defend against SSRF, private/reserved destinations, unsafe redirects, oversized responses and unsupported MIME types.

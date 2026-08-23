@@ -18,14 +18,14 @@ Every code-generation prompt below requires the coding LLM to read the applicabl
   - **Main components:** Vite app, router, providers, design tokens, API contracts, fixture provider, test harness.
   - **Expected artifacts:** Runnable app shell, route map, typed contracts, safe fixtures, unit/component test setup.
 
-- **Milestone 2: Public discovery experience**
-  - **Goal:** Deliver the anonymous homepage-to-dashboard-to-item journey with current headlines, transparent monitored-sample metrics, filtering, sorting, and item-level AI transparency.
+- **Milestone 2: Marketing and authenticated discovery experience**
+  - **Goal:** Deliver a public marketing page followed by an authenticated dashboard-to-item journey with current headlines, transparent monitored-sample metrics, filtering, sorting, and item-level AI transparency.
   - **Main components:** Homepage, application shell, dashboard, filters, headline/item cards, charts, item detail, content-safety controls.
-  - **Expected artifacts:** Public routes, query-state handling, reusable cards, confidence/review badges, detail pages, public-state tests.
+  - **Expected artifacts:** Public marketing/auth-entry routes, protected application routes, query-state handling, reusable cards, confidence/review badges, detail pages, access-boundary tests.
 
-- **Milestone 3: Authentication and onboarding**
-  - **Goal:** Gate contribution actions while preserving public viewing and returning users to their intended action after authentication.
-  - **Main components:** Supabase session provider, login/sign-up screens, action gate, onboarding guide, protected routing.
+- **Milestone 3: Authentication completion and onboarding**
+  - **Goal:** Complete the authentication experience for an already protected application and return users to a validated intended route after first-sign-in onboarding.
+  - **Main components:** Supabase session provider, login/sign-up screens, application route guard, onboarding guide, safe return routing.
   - **Expected artifacts:** Authentication UX, redirect restoration, onboarding persistence, route and authorization tests.
 
 - **Milestone 4: User contributions and reporting actions**
@@ -47,13 +47,13 @@ Every code-generation prompt below requires the coding LLM to read the applicabl
 
 - **F-S1 (Milestone 1) [frontend]: Audit and scaffold the frontend foundation.** Inspect the current workspace, preserve existing work, establish the Vite/React/TypeScript structure and test commands, and add only the dependencies required by `spec.md`. Dependencies: none.
 - **F-S2 (Milestone 1) [frontend]: Define the shared frontend API contracts and fixture provider.** Create Zod-validated response types, one provider interface, synthetic/redacted fixtures, open-datapack provenance fields, and fixture contract tests. Dependencies: F-S1; backend contract names in `spec.md`.
-- **F-S3 (Milestone 1) [frontend]: Build routing, providers, and the visual application shell.** Add public/protected/reviewer route groups, global providers, brand tokens, header/navigation, and placeholder pages without implementing feature content. Dependencies: F-S1–F-S2.
-- **F-S4 (Milestone 2) [frontend]: Implement the public homepage.** Build the mission, intended audience, monitored-sample disclosure, responsible-use summary, and primary View dashboard action. Dependencies: F-S3.
-- **F-S5 (Milestone 2) [frontend]: Implement dashboard coverage, headlines, and metric summaries.** Render the public data-freshness strip, current headlines, key monitored-sample metrics, and live/fixture/stale disclosure from the provider. Dependencies: F-S2–F-S3.
-- **F-S6 (Milestone 2) [frontend]: Add public filters, sorting, and URL state.** Implement validated filter controls, including separate source/platform and Dataset filters, active chips, reset, supported sorts, query-string persistence, and back/forward restoration. Dependencies: F-S5.
+- **F-S3 (Milestone 1) [frontend]: Build routing, providers, authentication boundary, and the visual application shell.** Add marketing/auth-entry and protected application/reviewer/admin route groups, Supabase session restoration, a deny-by-default route guard, global providers, brand tokens, header/navigation, and placeholder pages. Dependencies: F-S1–F-S2 and backend auth configuration.
+- **F-S4 (Milestone 2) [frontend]: Implement the public marketing homepage.** Build the mission, intended audience, monitored-sample disclosure, responsible-use summary, and primary Sign in to dashboard action without loading protected APIs. Dependencies: F-S3.
+- **F-S5 (Milestone 2) [frontend]: Implement dashboard coverage, headlines, and metric summaries.** Render authenticated data freshness, current headlines, key monitored-sample metrics, and live/fixture/stale disclosure from the provider. Dependencies: F-S2–F-S3.
+- **F-S6 (Milestone 2) [frontend]: Add authenticated filters, sorting, and URL state.** Implement validated filter controls, including separate source/platform and Dataset filters, active chips, reset, supported sorts, query-string persistence, and back/forward restoration. Dependencies: F-S5.
 - **F-S7 (Milestone 2) [frontend]: Add item cards and transparent AI states.** Render content-type-aware cards with High/Medium/Low confidence and distinct model/review states, using exact accessible text rather than color alone. Dependencies: F-S5–F-S6.
-- **F-S8 (Milestone 2) [frontend]: Implement public item detail and content-safety controls.** Add news/social variants, summaries, rationale, exact score/model metadata, deliberate content reveal, publisher/source links, and comments-coming-soon. Dependencies: F-S7.
-- **F-S9 (Milestone 3) [frontend]: Integrate authentication and action gating.** Add Supabase session handling, login/sign-up/logout, protected routes, and safe restoration of the intended action after authentication. Dependencies: F-S3 and backend auth configuration.
+- **F-S8 (Milestone 2) [frontend]: Implement authenticated item detail and content-safety controls.** Add news/social variants, summaries, rationale, exact score/model metadata, deliberate content reveal, publisher/source links, and comments-coming-soon. Dependencies: F-S7.
+- **F-S9 (Milestone 3) [frontend]: Complete authentication UX and safe return routing.** Complete login/sign-up/logout/recovery states and safely restore a validated intended application route after authentication. Dependencies: F-S3 and backend auth configuration.
 - **F-S10 (Milestone 3) [frontend]: Implement first-sign-in onboarding.** Create a skippable guide for dashboard concepts and primary actions, persist its state, and return the user to the pending destination. Dependencies: F-S9.
 - **F-S11 (Milestone 4) [frontend]: Implement Your Contributions.** Build the authenticated contributions list/detail, typed contribution variants, statuses, timestamps, links, and ownership-safe error states. Dependencies: F-S9 and backend contribution endpoints.
 - **F-S12 (Milestone 4) [frontend]: Implement URL submission.** Add a single-URL form, client-side UX validation, idempotent mutation, processing confirmation, duplicate/unsupported states, and contribution linkage. Dependencies: F-S11 and backend submission endpoint.
@@ -64,12 +64,12 @@ Every code-generation prompt below requires the coding LLM to read the applicabl
 - **F-S17 (Milestone 5) [frontend]: Add the declared social-sharing mock.** Provide clearly labelled demo controls for reports, news, and statistics with no external side effects. Dependencies: F-S5, F-S8, F-S16.
 - **F-S18 (Milestone 6) [frontend]: Complete loading, empty, error, stale, fixture, and offline states.** Apply consistent state components and error recovery across every P0 route and mutation. Dependencies: F-S4–F-S17.
 - **F-S19 (Milestone 6) [frontend]: Complete accessibility, responsive, and print QA.** Fix keyboard, focus, semantic, contrast, chart-summary, 375px layout, reduced-motion, and print issues. Dependencies: F-S18.
-- **F-S20 (Milestone 6) [frontend]: Add end-to-end demo coverage and freeze the frontend.** Automate the public journey, auth return, contribution, dispute/reporting, and PDF paths against deterministic fixtures, then document the demo mode. Dependencies: F-S1–F-S19.
+- **F-S20 (Milestone 6) [frontend]: Add end-to-end demo coverage and freeze the frontend.** Automate marketing→authentication→onboarding→dashboard, protected deep-link return, contribution, dispute/reporting, and PDF paths against deterministic fixtures, then document the demo mode. Dependencies: F-S1–F-S19.
 
 ### Coverage and sequencing verification
 
-- **Coverage:** Every public route, gated action, declared mock, and UX-quality requirement in `spec.md` maps to at least one step.
-- **Complexity ramp:** Contracts and shell precede features; read-only public views precede authentication; authentication precedes mutations; resilience follows working flows.
+- **Coverage:** Every marketing/auth-entry route, protected application route, declared mock, and UX-quality requirement in `spec.md` maps to at least one step.
+- **Complexity ramp:** Contracts precede the deny-by-default authentication shell; marketing and protected read views precede mutations; resilience follows working flows.
 - **No overlaps:** Each step owns a distinct observable behavior. Shared primitives are created only when the first real consumer needs them.
 - **Cross-track boundary:** F-S2 defines frontend contracts from `spec.md`; it does not invent backend schema. Live provider integration occurs through that boundary only.
 - **Pass 2 result:** Dashboard state, user actions, resilience, accessibility, and E2E work have been separated into session-sized changes; no further refinement is required.
@@ -122,7 +122,7 @@ Context:
 - The app must use one typed boundary for fixture and live data.
 
 Task:
-- Define frontend response contracts and a fixture-backed provider for the public dashboard and item-detail minimum needed by later steps.
+- Define frontend response contracts and a fixture-backed provider for the authenticated dashboard and item-detail minimum needed by later steps.
 
 Requirements:
 - Derive names and shapes from spec.md; do not create a competing API design.
@@ -155,18 +155,19 @@ Context:
 - Product pages have not yet been implemented.
 
 Task:
-- Build the route skeleton, global providers, brand tokens, and responsive application shell.
+- Build the route skeleton, session-aware deny-by-default application boundary, global providers, brand tokens, and responsive application shell.
 
 Requirements:
-- Add every public, authenticated, reviewer, and admin route from spec.md as a lazy-loadable placeholder where appropriate.
+- Add every marketing/auth-entry, authenticated, reviewer, and admin route from spec.md as a lazy-loadable placeholder where appropriate.
 - Create semantic header/navigation/footer and mobile navigation without inventing feature content.
 - Establish tokens from the existing Amanah brand documents; avoid a generic design-system abstraction.
 - Add route smoke tests, active-navigation tests, and a 404 route.
-- Keep authorization enforcement as a later step; mark protected route metadata now without fake security.
+- Restore the Supabase session before route resolution, deny application routes by default, redirect anonymous users to login with a validated internal return target, and keep `/`, auth entry/callback, and required static assets unauthenticated.
+- Ensure the marketing route does not request protected provider data; add route tests proving dashboard/items/news/resources/methodology/forum require a session.
 - Extend and integrate; do not rewrite working code.
 
 Output:
-- Routing, providers, shell, tokens, placeholders, and tests.
+- Routing, session restoration/guard, providers, shell, tokens, placeholders, and tests.
 - A short summary of changed routes and checks.
 
 If something is ambiguous, ask clarifying questions before producing code.
@@ -183,14 +184,15 @@ Mandatory first action:
 
 Context:
 - F-S3 provides the public shell and route.
-- The primary homepage action is View dashboard.
+- The primary homepage action is Sign in to dashboard.
 
 Task:
 - Implement the public homepage as the entry point for researchers and secondary public audiences.
 
 Requirements:
 - Explain the problem, monitored-sample value, AI/human-review boundary, responsible use, and Amanah meaning without overstating capabilities.
-- Make View dashboard the dominant CTA; link Resources, Methodology, Login, and Sign up.
+- Make Sign in to dashboard the dominant CTA and Sign up secondary when enabled. Describe Resources and Methodology without linking around their authentication boundary.
+- Do not call dashboard, item, news, resource, methodology, report, or connection-status APIs from the marketing page.
 - Use semantic sections and accessible responsive content.
 - Do not show real harmful content or claim unavailable integrations are live.
 - Add component tests for the primary CTA and mandatory disclosures.
@@ -213,11 +215,11 @@ Mandatory first action:
 - Read rules/general.md, rules/frontend.md, rules/api.md, rules/testing.md, and rules/security.md.
 
 Context:
-- Validated fixture dashboard data and the public shell exist.
+- Validated fixture dashboard data and the protected application shell exist.
 - Filters and item detail come later.
 
 Task:
-- Implement the first useful public dashboard view.
+- Implement the first useful authenticated dashboard view.
 
 Requirements:
 - Render freshness/coverage before or beside metrics, then headline-first content, monitored-sample metrics, and a restrained findings summary.
@@ -246,7 +248,7 @@ Mandatory first action:
 - Read rules/general.md, rules/frontend.md, rules/api.md, rules/testing.md, and rules/security.md.
 
 Context:
-- The dashboard renders provider data without public controls.
+- The authenticated dashboard renders provider data without filter controls.
 
 Task:
 - Add filter and sort controls whose state is encoded in the URL and passed through the typed provider.
@@ -287,7 +289,7 @@ Requirements:
 - Show Model only, Pending review, Confirmed, Corrected, Disputed, or Needs context distinctly using text and non-color cues.
 - Keep news and social variants explicit; do not create an over-general component with many mode flags.
 - Redact harmful excerpts by default and avoid author identifiers.
-- For datapack items, render source/platform as `N/A` and a separate Dataset label when provenance is public-safe.
+- For datapack items, render source/platform as `N/A` and a separate Dataset label when provenance is safe for the authenticated base role.
 - Add accessible names, stable keys, and tests for every confidence/review state.
 - Extend and integrate; do not rewrite working code.
 
@@ -298,7 +300,7 @@ Output:
 If something is ambiguous, ask clarifying questions before producing code.
 ```
 
-### Step F-S8 — Public item detail and content safety [frontend]
+### Step F-S8 — Authenticated item detail and content safety [frontend]
 
 ```text
 You are implementing frontend step F-S8 for Project Amanah.
@@ -311,15 +313,15 @@ Context:
 - Item cards link to the placeholder item-detail route.
 
 Task:
-- Implement public-safe news and social item detail views.
+- Implement authenticated-safe news and social item detail views.
 
 Requirements:
 - News: source metadata, Amanah summary/insight, tags, related context, and full-article link; never reproduce the full article by default.
 - Social: redacted preview, bounded context, classification, exact score, tier, rationale, model version, review state, and permitted source link.
-- Datapack: show source/platform `N/A` plus dataset provider, package name, version, license, and landing-page provenance when public-safe.
-- Registry-backed live/fixture items: show a public-safe sampling-purpose/stratum disclosure without exposing internal registry keys.
+- Datapack: show source/platform `N/A` plus dataset provider, package name, version, license, and landing-page provenance when safe for the authenticated base role.
+- Registry-backed live/fixture items: show a base-role-safe sampling-purpose/stratum disclosure without exposing internal registry keys.
 - Add deliberate reveal with content warning and focus-safe behavior.
-- Show gated action entry points without implementing their mutations yet.
+- Show authenticated action entry points without implementing their mutations yet.
 - Display “Comments coming soon” with no fake data or input.
 - Add route/data/error/content-reveal tests.
 - Extend and integrate; do not rewrite working code.
@@ -331,7 +333,7 @@ Output:
 If something is ambiguous, ask clarifying questions before producing code.
 ```
 
-### Step F-S9 — Authentication and action gating [frontend]
+### Step F-S9 — Authentication UX and safe return routing [frontend]
 
 ```text
 You are implementing frontend step F-S9 for Project Amanah.
@@ -341,19 +343,20 @@ Mandatory first action:
 - Read rules/general.md, rules/frontend.md, rules/security.md, rules/testing.md, and rules/api.md.
 
 Context:
-- Public viewing works; gated action buttons are present.
-- Supabase is the selected identity provider.
+- F-S3 already denies application routes without a restored valid session.
+- Auth-entry placeholders exist and Supabase is the selected identity provider.
 
 Task:
-- Integrate Supabase session handling and gate actions/protected routes while keeping public routes anonymous.
+- Complete the Supabase authentication UX and safe return behavior for the protected application.
 
 Requirements:
-- Add login, sign-up, logout, session restoration, and protected-route behavior.
-- Preserve the intended internal destination/action through authentication; prevent open redirects.
+- Complete login, sign-up, logout, optional recovery, callback, and expired-session behavior without weakening the F-S3 route guard.
+- Preserve only a validated internal application destination through authentication; default to `/dashboard` and prevent open redirects.
+- Keep only `/`, auth entry/callback/recovery, and required static assets unauthenticated; no product-data view may render or fetch before session validation.
 - Do not duplicate authentication state in unrelated stores.
 - Handle loading, expired session, failed login, and generic non-enumerating errors.
 - Treat frontend gating as UX only; rely on backend authorization for security.
-- Add tests for anonymous viewing, action redirect, safe return, and logout.
+- Add tests for marketing-only anonymous access, denial of every application route, protected deep-link return, default dashboard return, callback validation, and logout.
 - Extend and integrate; do not rewrite working code.
 
 Output:
@@ -379,7 +382,7 @@ Task:
 - Implement a skippable, persistent onboarding guide for first-time registered users.
 
 Requirements:
-- Explain dashboard navigation, coverage, monitored-sample metrics, confidence tiers, review labels, filters, and primary gated actions.
+- Explain dashboard navigation, coverage, monitored-sample metrics, confidence tiers, review labels, filters, and primary actions.
 - Use a short step sequence with semantic controls, focus management, Skip, Back, Next, and Finish.
 - Persist completion/skip through the profile API; handle save failure honestly.
 - Return to the pending internal destination after completion or skip.
@@ -411,7 +414,7 @@ Task:
 
 Requirements:
 - Support typed variants for URL submissions, classification disputes, and prepared platform reports.
-- Show title/URL, type, created/updated times, status, last public-safe event, and destination.
+- Show title/URL, type, created/updated times, status, last user-safe event, and destination.
 - Add cursor pagination if returned by the API.
 - Handle empty, loading, unauthorized, and partial states without exposing another user’s data.
 - Add component and provider-integration tests using deterministic fixtures.
@@ -529,10 +532,10 @@ Mandatory first action:
 - Read rules/general.md, rules/frontend.md, rules/testing.md, and rules/security.md.
 
 Context:
-- Public shell and item detail are complete.
+- The protected application shell and item detail are complete.
 
 Task:
-- Implement the public resource catalog and honest nonfunctional community placeholders.
+- Implement the authenticated resource catalog and honest nonfunctional community placeholders.
 
 Requirements:
 - Render reviewed resource entries by category and country/scope with organization, summary, URL, and last-reviewed date.
@@ -691,7 +694,8 @@ Task:
 - Add the minimal end-to-end suite and frontend runbook needed to freeze the hackathon demo.
 
 Requirements:
-- Cover homepage→dashboard→filter→item; anonymous action→auth→onboarding→return; URL contribution; dispute; prepared report; and research report print path.
+- Cover marketing homepage→auth→onboarding→dashboard→filter→item; anonymous protected deep-link→auth→safe return; URL contribution; dispute; prepared report; and research report print path.
+- Assert that dashboard, items, news, resources, methodology, forum, reports, contributions, reviewer, and admin routes deny anonymous access without issuing protected API requests.
 - Run deterministic fixtures in CI and a separate smoke mode against the deployed API.
 - Assert fixture/live/stale labels and prevent tests from calling production providers.
 - Fix only defects revealed by the acceptance path; do not add scope.

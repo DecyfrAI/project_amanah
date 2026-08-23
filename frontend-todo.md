@@ -28,26 +28,29 @@ Use this checklist in Step ID order. A parent step is complete only when its chi
   - [ ] **F-S2.6** Ensure provider selection never silently presents fixtures as live data.
   - [ ] **F-S2.7** Model datapack items with source/platform `N/A` and separate provider/name/version/license/import provenance.
 
-- [ ] **F-S3 — Build routes, global providers, and the application shell**
-  - [ ] **F-S3.1** Add the public, authenticated, reviewer, and admin route map from `spec.md`.
+- [ ] **F-S3 — Build routes, global providers, authentication boundary, and the application shell**
+  - [ ] **F-S3.1** Add the marketing/auth-entry, authenticated, reviewer, and admin route map from `spec.md`.
   - [ ] **F-S3.2** Add lazy-loaded placeholder pages where feature implementation belongs to later steps.
   - [ ] **F-S3.3** Add global query, API-provider, and application-context providers without duplicating state.
   - [ ] **F-S3.4** Implement semantic desktop/mobile navigation, footer, 404 route, and active-route behavior.
   - [ ] **F-S3.5** Establish Amanah brand tokens and base styles without building a speculative component library.
-  - [ ] **F-S3.6** Add route and shell smoke tests.
+  - [ ] **F-S3.6** Restore Supabase session state before resolving protected routes and add a deny-by-default application route guard.
+  - [ ] **F-S3.7** Keep only `/`, auth entry/callback/recovery, and required static assets unauthenticated.
+  - [ ] **F-S3.8** Test that every application route redirects anonymous users without issuing protected API requests.
 
-### Milestone 2 — Public discovery experience
+### Milestone 2 — Marketing and authenticated discovery experience
 
-- [ ] **F-S4 — Implement the public homepage**
+- [ ] **F-S4 — Implement the public marketing homepage**
   - [ ] **F-S4.1** Explain the problem, intended research audience, monitored-sample value, and product purpose in the first viewport.
-  - [ ] **F-S4.2** Make “View dashboard” the primary action.
+  - [ ] **F-S4.2** Make “Sign in to dashboard” the primary action and Sign up secondary when enabled.
   - [ ] **F-S4.3** Explain the AI/human-review boundary, responsible use, and key limitations.
-  - [ ] **F-S4.4** Link Resources, Methodology, Login, and Sign up.
+  - [ ] **F-S4.4** Link Login and Sign up; describe Resources and Methodology without bypassing their authentication boundary.
   - [ ] **F-S4.5** Explain Amanah as trust/responsibility without presenting the app as a religious authority.
-  - [ ] **F-S4.6** Test required content, disclosures, links, semantics, and responsive behavior.
+  - [ ] **F-S4.6** Test required content, disclosures, auth links, semantics, and responsive behavior.
+  - [ ] **F-S4.7** Prove the marketing page renders without a session and never calls a protected product API.
 
 - [ ] **F-S5 — Implement dashboard coverage, headlines, and metric summaries**
-  - [ ] **F-S5.1** Fetch dashboard data through the validated provider boundary.
+  - [ ] **F-S5.1** Fetch dashboard data through the validated provider boundary only after session validation.
   - [ ] **F-S5.2** Render freshness, observation window, monitored sources, coverage, and warnings before or beside metrics.
   - [ ] **F-S5.3** Render current major headlines before deeper analytics.
   - [ ] **F-S5.4** Render observed, Muslim-related, likely anti-Muslim, likely-hate rate, reviewed, and confirmed metrics.
@@ -72,32 +75,32 @@ Use this checklist in Step ID order. A parent step is complete only when its chi
   - [ ] **F-S7.2** Show High, Medium, or Low confidence on every AI-classified item card.
   - [ ] **F-S7.3** Show Model only, Pending review, Confirmed, Corrected, Disputed, and Needs context states distinctly.
   - [ ] **F-S7.4** Use text/non-color cues and accessible labels for confidence and review state.
-  - [ ] **F-S7.5** Redact harmful excerpts by default and omit public author identifiers.
+  - [ ] **F-S7.5** Redact harmful excerpts by default and omit author identifiers from base-role projections.
   - [ ] **F-S7.6** Use stable item IDs as keys and link cards to item detail.
   - [ ] **F-S7.7** Test every confidence/review combination and redaction behavior.
-  - [ ] **F-S7.8** Display source/platform `N/A` plus a separate public-safe Dataset label on datapack cards.
+  - [ ] **F-S7.8** Display source/platform `N/A` plus a separate base-role-safe Dataset label on datapack cards.
 
-- [ ] **F-S8 — Implement public item detail and content-safety controls**
+- [ ] **F-S8 — Implement authenticated item detail and content-safety controls**
   - [ ] **F-S8.1** Implement the item route and typed detail query.
   - [ ] **F-S8.2** For news, show metadata, Amanah summary/insight, tags, related context, and a full-publisher-article link.
   - [ ] **F-S8.3** For social content, show redacted context, classification, exact score, confidence tier, rationale, model version, and review state.
   - [ ] **F-S8.4** Add a content warning and deliberate reveal control with focus-safe behavior.
-  - [ ] **F-S8.5** Add gated action entry points for dispute and assisted reporting without bypassing auth.
+  - [ ] **F-S8.5** Add authenticated action entry points for dispute and assisted reporting.
   - [ ] **F-S8.6** Display “Comments coming soon” without fake input, users, counts, or engagement.
   - [ ] **F-S8.7** Test missing items, source-link safety, content reveal, and both item variants.
   - [ ] **F-S8.8** Show datapack provider, package, version, license, and landing-page provenance separately from source/platform `N/A`.
-  - [ ] **F-S8.9** Show a public-safe sampling-purpose/stratum disclosure for registry-backed items without exposing internal registry keys.
+  - [ ] **F-S8.9** Show a base-role-safe sampling-purpose/stratum disclosure for registry-backed items without exposing internal registry keys.
 
-### Milestone 3 — Authentication and onboarding
+### Milestone 3 — Authentication completion and onboarding
 
-- [ ] **F-S9 — Integrate authentication and action gating**
-  - [ ] **F-S9.1** Integrate Supabase session initialization and restoration.
-  - [ ] **F-S9.2** Implement Login, Sign up, Logout, and protected-route behavior.
-  - [ ] **F-S9.3** Keep homepage, dashboard, public items, resources, and methodology available anonymously.
-  - [ ] **F-S9.4** Preserve the intended internal action/destination through authentication.
+- [ ] **F-S9 — Complete authentication UX and safe return routing**
+  - [ ] **F-S9.1** Build on the F-S3 session boundary without creating a second authentication store.
+  - [ ] **F-S9.2** Complete Login, Sign up, Logout, optional recovery, callback, and expired-session behavior.
+  - [ ] **F-S9.3** Keep only the marketing homepage and required authentication routes available anonymously.
+  - [ ] **F-S9.4** Preserve a validated internal application destination through authentication and default to `/dashboard`.
   - [ ] **F-S9.5** Prevent external/open redirect destinations.
   - [ ] **F-S9.6** Handle pending, expired-session, generic authentication failure, and logout states.
-  - [ ] **F-S9.7** Test public viewing, gated action redirect, safe return, and logout.
+  - [ ] **F-S9.7** Test marketing-only anonymous access, denial of every application route, protected deep-link return, callback validation, default dashboard return, and logout.
 
 - [ ] **F-S10 — Implement first-sign-in onboarding**
   - [ ] **F-S10.1** Explain dashboard navigation, coverage, monitored-sample metrics, confidence tiers, and review labels.
@@ -112,7 +115,7 @@ Use this checklist in Step ID order. A parent step is complete only when its chi
 
 - [ ] **F-S11 — Implement Your Contributions**
   - [ ] **F-S11.1** Add typed variants for URL submissions, classification disputes, and prepared platform reports.
-  - [ ] **F-S11.2** Render type, title/URL, created time, update time, status, public-safe event, and destination.
+  - [ ] **F-S11.2** Render type, title/URL, created time, update time, status, user-safe event, and destination.
   - [ ] **F-S11.3** Implement contribution detail and cursor pagination when present.
   - [ ] **F-S11.4** Handle loading, empty, partial, unauthorized, and missing contribution states.
   - [ ] **F-S11.5** Ensure the UI never attempts to show another user’s contribution data.
@@ -193,27 +196,29 @@ Use this checklist in Step ID order. A parent step is complete only when its chi
   - [ ] **F-S19.7** Run automated accessibility checks and record required manual results.
 
 - [ ] **F-S20 — Add end-to-end demo coverage and freeze**
-  - [ ] **F-S20.1** Automate homepage → dashboard → filter → item.
-  - [ ] **F-S20.2** Automate anonymous action → authentication → onboarding → intended destination.
+  - [ ] **F-S20.1** Automate marketing homepage → authentication → onboarding → dashboard → filter → item.
+  - [ ] **F-S20.2** Automate anonymous protected deep link → authentication → validated intended destination.
   - [ ] **F-S20.3** Automate URL contribution, classification dispute, and prepared-report paths.
   - [ ] **F-S20.4** Automate research-report preview and print/PDF-ready path.
   - [ ] **F-S20.5** Assert fixture/live/stale labels and prevent production-provider calls.
   - [ ] **F-S20.6** Document demo startup, fixture fallback, and known limitations.
   - [ ] **F-S20.7** Run lint, format check, type check, unit/component tests, accessibility checks, production build, and E2E tests.
-  - [ ] **F-S20.8** Freeze feature scope and fix acceptance blockers only.
+  - [ ] **F-S20.8** Assert every application route denies anonymous access without issuing protected API requests.
+  - [ ] **F-S20.9** Freeze feature scope and fix acceptance blockers only.
 
 ## Cross-cutting gates
 
 ### Security review
 
 - [ ] **FE-GATE-SEC-01** Verify no provider, Gemini, Supabase service-role, or other secret is present in browser code, fixtures, logs, or committed environment files.
-- [ ] **FE-GATE-SEC-02** Verify every gated action is treated as UX gating only and the UI handles backend 401/403 responses safely.
+- [ ] **FE-GATE-SEC-02** Verify route guards are UX only, every product API still requires backend authentication, and the UI handles 401/403 responses safely.
 - [ ] **FE-GATE-SEC-03** Verify intended-destination restoration cannot create an open redirect.
 - [ ] **FE-GATE-SEC-04** Verify external content is escaped and no unreviewed `dangerouslySetInnerHTML` path exists.
 - [ ] **FE-GATE-SEC-05** Verify source/resource/reporting links use safe protocols and appropriate external-link handling.
 - [ ] **FE-GATE-SEC-06** Verify harmful content and personal identifiers are redacted/concealed by default.
 - [ ] **FE-GATE-SEC-07** Verify social-reporting/sharing mocks perform no external submission or sensitive-data disclosure.
 - [ ] **FE-GATE-SEC-08** Complete an adversarial review using the `AGENTS.md` persona and resolve or explicitly track every numbered finding.
+- [ ] **FE-GATE-SEC-09** Verify the marketing page cannot fetch or render dashboard, item, news, methodology, resource, report, connection, reviewer, or admin data.
 
 ### Testing gate
 
@@ -226,11 +231,12 @@ Use this checklist in Step ID order. A parent step is complete only when its chi
 - [ ] **FE-GATE-TEST-07** Print/report layout is visually verified in Chromium.
 - [ ] **FE-GATE-TEST-08** Production build and deterministic E2E suite pass.
 - [ ] **FE-GATE-TEST-09** No existing tests were deleted, weakened, disabled, or skipped to obtain a pass.
+- [ ] **FE-GATE-TEST-10** Anonymous-access tests cover every product route plus direct API denial, with no protected request emitted before session restoration completes.
 
 ### Documentation gate
 
 - [ ] **FE-GATE-DOC-01** Frontend README commands are accurate and verified.
-- [ ] **FE-GATE-DOC-02** Public route and environment-variable documentation match the implementation.
+- [ ] **FE-GATE-DOC-02** Marketing/auth-entry and protected-route documentation match the implementation and environment configuration.
 - [ ] **FE-GATE-DOC-03** API contract changes are synchronized with backend OpenAPI and contract tests.
 - [ ] **FE-GATE-DOC-04** Fixture, live, fallback, stale, mock, and coming-soon behavior is documented accurately.
 - [ ] **FE-GATE-DOC-05** Accessibility and manual QA notes are recorded.
