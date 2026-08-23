@@ -928,7 +928,7 @@ For open-datapack items, provenance MUST additionally retain dataset provider, n
 
 ## 16. Authentication and authorization
 
-This boundary is recorded in [ADR 0001: Require authentication for application access](./docs/adr/0001-require-authentication-for-application-access.md).
+This boundary is recorded in [ADR 0001: Require authentication for application access](./adr/0001-require-authentication-for-application-access.md).
 
 - Supabase Auth manages identity and sessions.
 - Anonymous users have no access to `/v1` product data. Only health/readiness endpoints and the frontend marketing/auth-entry surfaces are unauthenticated.
@@ -1305,6 +1305,10 @@ The hackathon build is done when:
 - [Kaggle datasets documentation](https://www.kaggle.com/docs/datasets)
 - [YouTube reporting guidance](https://support.google.com/youtube/answer/2802027)
 - [YouTube hate speech policy](https://support.google.com/youtube/answer/2801939)
+- [YouTube Community Guidelines](https://support.google.com/youtube/answer/9288567)
+- [Reddit Rules (content policy)](https://www.redditinc.com/policies/content-policy)
+- [Reddit: promoting hate based on identity or vulnerability](https://support.reddithelp.com/hc/en-us/articles/360045715951-Promoting-Hate-Based-on-Identity-or-Vulnerability)
+- [Reddit official report form](https://www.reddit.com/report)
 - [NCCM publications](https://nccm.ca/publications/)
 - [Georgetown Bridge Initiative Islamophobia Resource Center](https://bridge.georgetown.edu/projects/resource-center/)
 - [Tell MAMA resources](https://tellmamauk.org/resources/)

@@ -1,0 +1,14 @@
+{
+  "dataset_provider": "Project Amanah",
+  "dataset_name": "research-islamophobia-image-corpus",
+  "dataset_version": "fixture-0.2",
+  "landing_page_url": null,
+  "license_identifier": "internal-research-fixture-not-for-redistribution",
+  "license_url": null,
+  "retrieved_at": "2026-08-23T16:40:00.000Z",
+  "schema_mapping_version": "taxonomy-v2-spec-9.5",
+  "permitted_uses": ["ui_fixture", "eval_stub", "database_seed_preview"],
+  "reviewer": "Amanah editorial (fixture)",
+  "approval_state": "fixture_only",
+  "notes": "Sourced research examples of public Islamophobic memes, stored as files and served from the repo. Metadata titles and alt text describe form, not slogans. Dataset annotations are not Amanah predictions and not human review decisions. Do not redistribute. See docs/adr/0007-research-image-corpus.md."
+}

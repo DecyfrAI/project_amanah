@@ -1,0 +1,86 @@
+{
+  "note": "Metadata-only seed for later object storage and Postgres. Pixels stay in files. The API carries filename and byte size, never image bytes. Personal fields are omitted on purpose.",
+  "table": "evidence_images",
+  "items": [
+    {
+      "id": "itm_img_01",
+      "storage_path": "fixtures/memes/img-ex-01.png",
+      "sha256": "bb3f3d62a2e11ec6daee7370aa179b8e5d43efd8971bca488efcc0bb4cad4a60",
+      "mime": "image/png",
+      "byte_size": 70182,
+      "observed_at": "2026-08-14T12:00:00+00:00",
+      "platform": "reddit",
+      "container_title": "Image post: poster-style graphic in a local thread",
+      "dataset_annotation": {
+        "hate_types": ["derogation", "exclusion"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "prediction": {
+        "classification": "likely_hate",
+        "score": 0.86,
+        "review_required": true
+      }
+    },
+    {
+      "id": "itm_img_03",
+      "storage_path": "fixtures/memes/img-ex-03.png",
+      "sha256": "fd691c009b0d50664ebb473279770a53e73bfb01dbf4f418ca20ce765f0c8f20",
+      "mime": "image/png",
+      "byte_size": 913172,
+      "observed_at": "2026-08-13T12:00:00+00:00",
+      "platform": "reddit",
+      "container_title": "Image post: broadcast still paired with a generalised claim",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "derogation"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "prediction": {
+        "classification": "likely_hate",
+        "score": 0.81,
+        "review_required": true
+      }
+    },
+    {
+      "id": "itm_img_07",
+      "storage_path": "fixtures/memes/img-ex-07.jpg",
+      "sha256": "162a2ad5e0a9f3f3e092f8e704688281b4b6324859ac19dcab7861e62a8a8638",
+      "mime": "image/jpeg",
+      "byte_size": 172372,
+      "observed_at": "2026-08-12T12:00:00+00:00",
+      "platform": "youtube",
+      "container_title": "Image comment: collage attached under a news clip",
+      "dataset_annotation": {
+        "hate_types": ["exclusion"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "prediction": {
+        "classification": "likely_hate",
+        "score": 0.79,
+        "review_required": false
+      }
+    },
+    {
+      "id": "itm_img_12",
+      "storage_path": "fixtures/memes/img-ex-12.jpg",
+      "sha256": "037b90fb34ae040fa737ae598c8a134530e846f1da0139c0f8e6b05c1d420665",
+      "mime": "image/jpeg",
+      "byte_size": 93462,
+      "observed_at": "2026-08-11T12:00:00+00:00",
+      "platform": "reddit",
+      "container_title": "Image post: cartoon panel in a news thread",
+      "dataset_annotation": {
+        "hate_types": ["animosity"],
+        "severity": 1,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "prediction": {
+        "classification": "likely_hate",
+        "score": 0.68,
+        "review_required": true
+      }
+    }
+  ]
+}

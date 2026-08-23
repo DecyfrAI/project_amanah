@@ -1,0 +1,44 @@
+.cluster {
+  position: fixed;
+  z-index: var(--z-fab);
+  right: var(--layout-fab-offset);
+  bottom: var(--layout-fab-offset);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--layout-fab-gap);
+}
+
+.help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--layout-fab-size-sm);
+  height: var(--layout-fab-size-sm);
+  padding: 0;
+  background-color: color-mix(in srgb, var(--color-surface) 72%, transparent);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  color: var(--color-text-primary);
+  box-shadow: var(--shadow-card);
+  backdrop-filter: blur(0.5rem);
+  cursor: pointer;
+}
+
+.help:hover {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.helpGlyph {
+  font-family: var(--font-editorial);
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  line-height: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .help {
+    backdrop-filter: none;
+  }
+}

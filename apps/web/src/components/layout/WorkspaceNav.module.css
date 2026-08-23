@@ -1,0 +1,66 @@
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target-min);
+  padding-inline: var(--space-3);
+  border-radius: var(--radius-md);
+  border-left: 2px solid transparent;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-decoration: none;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard);
+}
+
+.link:hover {
+  background-color: var(--color-surface-sunken);
+  color: var(--color-text-primary);
+}
+
+/*
+ * The current tab carries a rule as well as a ground, so the selection does not
+ * rest on colour alone. NavLink also sets aria-current on it.
+ */
+.linkCurrent {
+  background-color: var(--color-accent-subtle);
+  border-left-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+/* Rail mode centres each icon in its own target. */
+.listNarrow .link {
+  justify-content: center;
+  padding-inline: 0;
+  border-left-width: 0;
+  border-inline-start: 2px solid transparent;
+}
+
+.listNarrow .linkCurrent {
+  border-inline-start-color: var(--color-accent);
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+  color: var(--color-accent);
+}
+
+.icon svg {
+  width: var(--icon-md);
+  height: var(--icon-md);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

@@ -1,0 +1,181 @@
+.figure {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin: 0;
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.title {
+  font-size: var(--text-lg);
+  color: var(--color-text-primary);
+}
+
+.summary {
+  max-width: var(--layout-prose-width);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+}
+
+.grid {
+  stroke: var(--color-chart-grid);
+  stroke-width: 1;
+}
+
+.axisLabel {
+  fill: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+/*
+ * A collection gap is marked, not smoothed over: a dashed rule stands where the
+ * day would have been, and the line stops either side of it.
+ */
+.gapMark {
+  stroke: var(--color-chart-gap);
+  stroke-width: 1;
+  stroke-dasharray: 3 4;
+}
+
+.line {
+  fill: none;
+  stroke: var(--color-chart-primary);
+  stroke-width: var(--chart-line-width);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.point {
+  fill: var(--color-chart-primary);
+}
+
+.pointButton {
+  fill: var(--color-chart-primary);
+  cursor: pointer;
+}
+
+.selectedPoint {
+  fill: none;
+  stroke: var(--color-chart-tertiary);
+  stroke-width: var(--chart-line-width);
+}
+
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.legend {
+  padding: 0;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.dayButton,
+.dayButtonGap {
+  min-width: var(--target-min);
+  min-height: var(--target-min);
+  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.dayButton:hover,
+.dayButtonGap:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+/* A gap day is dashed as well as dimmed, matching its mark on the chart. */
+.dayButtonGap {
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+
+.dayButton[aria-pressed='true'],
+.dayButtonGap[aria-pressed='true'] {
+  background-color: var(--color-accent-subtle);
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+  font-weight: var(--weight-semibold);
+}
+
+.readout {
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+
+.drillDown,
+.report {
+  align-self: flex-start;
+  color: var(--color-accent);
+  font-size: var(--text-sm);
+}
+
+.report {
+  min-height: var(--target-min);
+  padding-inline: var(--space-3);
+  background-color: transparent;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+}
+
+.report:hover {
+  border-color: var(--color-accent);
+}
+
+.disclosure {
+  border-top: var(--border-width) solid var(--color-border);
+  padding-top: var(--space-3);
+}
+
+.disclosureSummary {
+  min-height: var(--target-min);
+  display: flex;
+  align-items: center;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+}

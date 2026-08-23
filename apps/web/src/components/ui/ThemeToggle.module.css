@@ -1,0 +1,35 @@
+.toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding-inline: var(--space-3);
+  background-color: transparent;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.toggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+.toggleCompact {
+  justify-content: center;
+  padding-inline: 0;
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.icon svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}

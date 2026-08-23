@@ -1,0 +1,27 @@
+# Normalise line endings so contributors on Windows and macOS do not see whole
+# files reported as changed. Git stores text as LF and checks out the platform
+# convention. Without this, docs/ arrived CRLF and apps/web/ arrived LF, which
+# made every shared document look 100% rewritten in a diff.
+* text=auto
+
+# Lockfiles and generated manifests: LF everywhere, including on Windows, so a
+# checkout never rewrites a file the package manager owns.
+package-lock.json text eol=lf
+pnpm-lock.yaml text eol=lf
+uv.lock text eol=lf
+
+# Shell scripts must keep LF or they fail to execute.
+*.sh text eol=lf
+
+# Binary assets: never normalise, never diff as text.
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.woff binary
+*.woff2 binary
+*.ttf binary
+*.otf binary

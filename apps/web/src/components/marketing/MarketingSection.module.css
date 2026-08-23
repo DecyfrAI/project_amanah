@@ -1,0 +1,57 @@
+/*
+ * Sections alternate between a dark and a light ground, as in the reference
+ * house style. Each tone sets the --marketing-* custom properties, which every
+ * child primitive reads. Custom properties inherit, so a primitive never needs
+ * to know which ground it is sitting on.
+ */
+.section {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding-top: calc(var(--layout-header-height) + var(--space-5));
+  padding-bottom: var(--space-8);
+  scroll-margin-top: var(--layout-header-height);
+  background-color: var(--marketing-surface);
+  color: var(--marketing-body);
+}
+
+.dark {
+  --marketing-surface: var(--palette-navy-950);
+  --marketing-heading: var(--palette-ivory-50);
+  --marketing-heading-accent: var(--palette-teal-200);
+  --marketing-body: var(--palette-mist-300);
+  --marketing-label: var(--palette-teal-200);
+  --marketing-label-ordinal: var(--palette-gold-300);
+  --marketing-rule: var(--palette-navy-750);
+  --marketing-card: var(--palette-navy-850);
+}
+
+.light {
+  --marketing-surface: var(--palette-teal-100);
+  --marketing-heading: var(--palette-navy-950);
+  --marketing-heading-accent: var(--palette-teal-800);
+  --marketing-body: var(--palette-slate-600);
+  --marketing-label: var(--palette-teal-800);
+  --marketing-label-ordinal: var(--palette-gold-800);
+  --marketing-rule: var(--palette-teal-150);
+  --marketing-card: var(--palette-teal-50);
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding-inline: var(--space-5);
+}
+
+@media (min-width: 40em) {
+  .section {
+    padding-bottom: var(--space-9);
+  }
+
+  .inner {
+    padding-inline: var(--space-7);
+  }
+}

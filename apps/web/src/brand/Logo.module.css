@@ -1,0 +1,65 @@
+.logo {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+
+.image {
+  display: block;
+  width: auto;
+}
+
+/*
+ * The generated wordmark bakes in the brand system's clear-space rule, half
+ * the mark's height on every side, so the visible mark is only about half the
+ * box height. These values are sized for the mark, not the box.
+ *
+ * Brand system 3: minimum 96px wide without the tagline.
+ */
+.medium {
+  height: 3.5rem;
+}
+
+.small {
+  height: 2.75rem;
+}
+
+.large {
+  height: 5rem;
+}
+
+.splash {
+  height: var(--logo-height-splash);
+}
+
+.auth {
+  height: var(--logo-height-auth);
+}
+
+.header {
+  height: var(--logo-height-header);
+}
+
+.sidebar {
+  height: var(--logo-height-sidebar);
+}
+
+/*
+ * The stacked lockup is sized by width, since its height depends on two elements
+ * rather than one line of text.
+ */
+.stacked {
+  width: var(--logo-stacked-width);
+  height: auto;
+}
+
+.stackedAuth {
+  width: var(--logo-stacked-width-auth);
+  height: auto;
+}
+
+/* The mark is square, so it is sized rather than scaled by height alone. */
+.mark {
+  width: var(--logo-mark-size-sidebar);
+  height: var(--logo-mark-size-sidebar);
+}

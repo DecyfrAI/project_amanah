@@ -1,0 +1,292 @@
+/*
+ * Compact research workspace: flat surfaces, subtle borders, a light chrome
+ * wash on the sidebar and top bar. The reference dashboards this layout
+ * follows use neon glass; the structure is borrowed, the finish is not.
+ */
+/*
+ * The shell owns the viewport and the panel scrolls inside it, rather than the
+ * document scrolling and taking the sidebar with it. Without this, reading down a
+ * long dashboard pulled the theme toggle, the collapse control and the identity
+ * block off the bottom of the screen.
+ */
+.shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  overflow: hidden;
+  background-color: var(--color-page);
+  color: var(--color-text-primary);
+}
+
+.body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* Hidden below the large breakpoint, where the drawer takes over. */
+.sidebar {
+  display: none;
+}
+
+.brand {
+  display: flex;
+  flex: none;
+  justify-content: center;
+  max-width: 100%;
+  overflow: hidden;
+  padding: var(--space-4) var(--space-3) var(--space-6);
+}
+
+/*
+ * The scrolling region. `min-height: 0` is what allows a flex child to shrink
+ * below its content height, without which the list would push the identity block
+ * off the bottom instead of scrolling.
+ */
+.tabs {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.sidebarFooter {
+  display: flex;
+  flex-direction: column;
+  flex: none;
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: var(--border-width) solid var(--color-border);
+}
+
+.profileLink {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target-min);
+  padding: var(--space-2);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.profileLink:hover {
+  background-color: var(--color-surface-sunken);
+  border-color: var(--color-border-strong);
+}
+
+.profileText {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.profileName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.profileHint {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+
+.collapseToggle {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding-inline: var(--space-3);
+  background-color: transparent;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.collapseToggle:hover {
+  border-color: var(--color-accent);
+  color: var(--color-text-primary);
+}
+
+.collapseIcon {
+  display: inline-flex;
+  flex: none;
+}
+
+.collapseIcon svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.content {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.topbar {
+  display: flex;
+  flex: none;
+  z-index: var(--z-sticky);
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  padding: var(--layout-tour-top) var(--space-5);
+  background-color: var(--color-surface);
+  background-image: var(--gradient-chrome);
+  border-bottom: var(--border-width) solid var(--color-border-strong);
+}
+
+.menuToggle {
+  margin-inline-end: auto;
+}
+
+.viewer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--target-min);
+  padding-inline: var(--space-2);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  text-decoration: none;
+}
+
+.viewer:hover {
+  border-color: var(--color-border-strong);
+}
+
+.viewerText {
+  display: flex;
+  flex-direction: column;
+  text-align: end;
+}
+
+.viewerLabel {
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+.viewerName {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+}
+
+.menuToggle,
+.logout {
+  min-height: var(--target-min);
+  padding-inline: var(--space-3);
+  background-color: transparent;
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+}
+
+.menuToggle:hover,
+.logout:hover {
+  border-color: var(--color-accent);
+}
+
+.main {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  max-width: var(--layout-max-width);
+  padding: var(--space-6) var(--space-5);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.drawer {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: var(--space-5);
+  background-color: var(--color-surface);
+  background-image: var(--gradient-chrome);
+  color: var(--color-text-primary);
+  border: none;
+}
+
+.drawer[open] {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.drawerHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+@media (min-width: 64em) {
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    flex: none;
+    /* `auto` would let the tab list force the rail taller than the viewport and
+     * push the identity block off the bottom. Stretching to the shell and
+     * scrolling the list is what keeps those controls pinned. */
+    min-height: 0;
+    overflow: hidden;
+    width: var(--layout-sidebar-width);
+    padding: var(--space-4) var(--space-3);
+    background-color: var(--color-surface);
+    background-image: var(--gradient-chrome);
+    border-inline-end: var(--border-width) solid var(--color-border-strong);
+    transition: width var(--duration-base) var(--easing-standard);
+  }
+
+  /*
+   * Collapsed rail. Labels are hidden visually but stay in the accessibility
+   * tree, so every destination keeps its name for a screen reader and the icons
+   * are not the only thing carrying meaning.
+   */
+  .sidebarNarrow {
+    width: var(--layout-sidebar-width-collapsed);
+    padding-inline: var(--space-2);
+  }
+
+  .sidebarNarrow .brand,
+  .sidebarNarrow .profileLink,
+  .sidebarNarrow .collapseToggle {
+    justify-content: center;
+    padding-inline: 0;
+  }
+
+  .menuToggle {
+    display: none;
+  }
+
+  .topbar {
+    padding-inline: var(--space-6);
+  }
+
+  .main {
+    padding: var(--space-6);
+  }
+}

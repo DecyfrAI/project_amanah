@@ -1,0 +1,72 @@
+[
+  {
+    "stage": "capture",
+    "file": "media/stages/capture.webp",
+    "alt": "A camera lens, focused.",
+    "title": "Camera Lens Photograph - Credit to https://homethods.com/",
+    "creator": "homethods",
+    "license": "by",
+    "license_version": "2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "flickr",
+    "foreign_landing_url": "https://www.flickr.com/photos/146625745@N08/32534013500",
+    "original_url": "https://live.staticflickr.com/2922/32534013500_d7af2ff87b_b.jpg",
+    "openverse_id": "ef42a646-7911-431f-abe7-f4dec1cf9265"
+  },
+  {
+    "stage": "classify",
+    "file": "media/stages/classify.webp",
+    "alt": "Coloured pencils laid out in ordered rows.",
+    "title": "Colour Pencils-3",
+    "creator": "David Blaikie",
+    "license": "by",
+    "license_version": "2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "flickr",
+    "foreign_landing_url": "https://www.flickr.com/photos/12568962@N00/3267139809",
+    "original_url": "https://live.staticflickr.com/3062/3267139809_6a0bbaae07_b.jpg",
+    "openverse_id": "310dc52a-7724-4886-8006-4ab04963eee7"
+  },
+  {
+    "stage": "contextualize",
+    "file": "media/stages/contextualize.webp",
+    "alt": "A world map marked with pins.",
+    "title": "Free world map pins photo",
+    "creator": null,
+    "license": "cc0",
+    "license_version": "1.0",
+    "license_url": "https://creativecommons.org/publicdomain/zero/1.0/",
+    "source": "rawpixel",
+    "foreign_landing_url": "https://www.rawpixel.com/image/5926085/photo-image-public-domain-map-free",
+    "original_url": "https://images.rawpixel.com/editor_1024/czNmcy1wcml2YXRlL3Jhd3BpeGVsX2ltYWdlcy93ZWJzaXRlX2NvbnRlbnQvbHIvbnM3NjA1LWltYWdlLWt3dnlibDVkLmpwZw.jpg",
+    "openverse_id": "7e9f5a97-cfc7-48bc-b1ab-3e77f475a8a2"
+  },
+  {
+    "stage": "review",
+    "file": "media/stages/review.webp",
+    "alt": "A manuscript page marked up by hand.",
+    "title": "Manuscript",
+    "creator": "sidewalk flying",
+    "license": "by",
+    "license_version": "2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "flickr",
+    "foreign_landing_url": "https://www.flickr.com/photos/76994867@N00/5124506505",
+    "original_url": "https://live.staticflickr.com/4042/5124506505_3bc109af2c_b.jpg",
+    "openverse_id": "6687a902-f1af-4bd0-96df-e3c3c6f2727e"
+  },
+  {
+    "stage": "report",
+    "file": "media/stages/report.webp",
+    "alt": "Printed type, set and inked.",
+    "title": "Print Order Book, Holmes McDougall",
+    "creator": "edinburghcityofprint",
+    "license": "by",
+    "license_version": "2.0",
+    "license_url": "https://creativecommons.org/licenses/by/2.0/",
+    "source": "flickr",
+    "foreign_landing_url": "https://www.flickr.com/photos/30239838@N04/4268147953",
+    "original_url": "https://live.staticflickr.com/4060/4268147953_83abe7d5b8_b.jpg",
+    "openverse_id": "af95ad6d-d926-4ca1-a36d-445c44180e96"
+  }
+]

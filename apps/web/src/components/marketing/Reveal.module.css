@@ -1,0 +1,25 @@
+/*
+ * Scroll-in reveal. Content starts slightly low and transparent, then settles
+ * when it enters the viewport, once only, so the page never feels unstable on
+ * the way back up.
+ */
+.reveal {
+  opacity: 0;
+  transform: translateY(var(--space-5));
+  transition:
+    opacity 600ms var(--easing-standard) var(--reveal-delay, 0ms),
+    transform 600ms var(--easing-standard) var(--reveal-delay, 0ms);
+}
+
+.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

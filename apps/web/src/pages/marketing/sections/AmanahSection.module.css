@@ -1,0 +1,139 @@
+/*
+ * Generous separation between the prose and the verses. The verses are not
+ * supporting evidence for the paragraph above them; they are the ground the
+ * whole section stands on, and the spacing should say so.
+ */
+.verses {
+  display: grid;
+  gap: var(--space-5);
+  margin: var(--space-9) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.verse {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  height: 100%;
+  margin: 0;
+  padding: var(--space-6) var(--space-5);
+  background-color: var(--marketing-card);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-lg);
+  transition: border-color var(--duration-fast) var(--easing-standard);
+}
+
+.verse:hover {
+  border-color: var(--palette-teal-700);
+}
+
+.verseTheme {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+}
+
+.verseIcon {
+  display: inline-flex;
+  flex: none;
+  color: var(--marketing-heading-accent);
+}
+
+.verseIcon svg {
+  width: var(--icon-lg);
+  height: var(--icon-lg);
+  stroke-width: 1.25;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.verseText {
+  flex: 1;
+  margin: 0;
+  font-family: var(--font-editorial);
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-heading);
+}
+
+.verseReference {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--marketing-label);
+  text-decoration: none;
+}
+
+.verseReference:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.translationNote {
+  margin-top: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  color: var(--marketing-body);
+  opacity: 0.8;
+}
+
+/*
+ * Glossary for the two Arabic terms the page uses. The brand system requires
+ * every such term to be explained in plain English on first use, and requires
+ * that ghayrah is never presented as anger or as licence to police anyone.
+ */
+.glossary {
+  display: grid;
+  gap: var(--space-5);
+  margin-top: var(--space-8);
+  padding-top: var(--space-5);
+  border-top: var(--border-width) solid var(--marketing-rule);
+}
+
+.term {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.termName {
+  font-family: var(--font-editorial);
+  font-size: var(--text-lg);
+  font-style: italic;
+  color: var(--marketing-heading);
+}
+
+.termDefinition {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+}
+
+@media (min-width: 40em) {
+  .glossary {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-7);
+  }
+}
+
+@media (min-width: 64em) {
+  .verses {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-5);
+  }
+
+  .verses > li {
+    display: flex;
+  }
+
+  .verses > li > * {
+    width: 100%;
+  }
+}

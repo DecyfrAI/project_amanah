@@ -1,0 +1,130 @@
+.intro {
+  max-width: var(--layout-prose-width);
+}
+
+.features {
+  display: grid;
+  gap: var(--space-4);
+  margin: var(--space-7) 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.feature {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-5);
+  background-color: var(--marketing-card);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-lg);
+
+  /* Revealed on scroll; see .revealed. Staggered by --reveal-delay. */
+  opacity: 0;
+  transform: translateY(var(--space-4));
+  transition:
+    opacity var(--duration-base) var(--easing-standard) var(--reveal-delay, 0ms),
+    transform var(--duration-base) var(--easing-standard) var(--reveal-delay, 0ms);
+}
+
+.revealed .feature {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.featureIndex {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: var(--space-6);
+  height: var(--space-6);
+  border: var(--border-width) solid currentcolor;
+  border-radius: var(--radius-full);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--marketing-label);
+  flex-shrink: 0;
+}
+
+.featureName {
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-snug);
+  color: var(--marketing-heading);
+}
+
+.featureBody {
+  font-size: var(--text-base);
+  line-height: var(--leading-relaxed);
+  color: var(--marketing-body);
+}
+
+/*
+ * The boundary line. What the tool deliberately does not do is as much a
+ * feature as what it does, and the brand system requires stating it plainly
+ * rather than burying it.
+ */
+.boundary {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+  padding: var(--space-5);
+  border: var(--border-width) dashed var(--marketing-rule);
+  border-radius: var(--radius-lg);
+}
+
+.boundaryLabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+}
+
+.boundaryList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: var(--text-base);
+  color: var(--marketing-body);
+}
+
+.boundaryItem {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+}
+
+.boundaryMark {
+  color: var(--marketing-label);
+  flex-shrink: 0;
+}
+
+@media (min-width: 40em) {
+  .features {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .boundaryList {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-3) var(--space-6);
+  }
+}
+
+@media (min-width: 64em) {
+  .features {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .feature {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+}

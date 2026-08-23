@@ -1,0 +1,634 @@
+{
+  "items": [
+    {
+      "id": "img_ex_01",
+      "title": "Poster that forbids trust in a faith",
+      "image_src": "/media/fixtures/memes/img-ex-01.png",
+      "alt_text": "Harmful research example. Poster-style graphic targeting Muslims. Blurred until revealed.",
+      "form_note": "Keep-calm style poster that tells the reader never to trust a Muslim.",
+      "dataset_annotation": {
+        "hate_types": ["derogation", "exclusion"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.86,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely anti-Muslim hate. The annotation names derogation and exclusion. That is a model proposal, not a confirmed finding."
+    },
+    {
+      "id": "img_ex_02",
+      "title": "Person framed in a weapon sight",
+      "image_src": "/media/fixtures/memes/img-ex-02.png",
+      "alt_text": "Harmful research example. Photograph of a person inside a rifle sight. Blurred until revealed.",
+      "form_note": "Photograph of a man inside a sniper reticle with a profane caption aimed at Islam.",
+      "dataset_annotation": {
+        "hate_types": ["threat_or_incitement", "dehumanization"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.94,
+      "narrative_tags": ["violence_instruction"],
+      "rationale": "Classified as likely threat or incitement. Severity 3, so review is required. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_03",
+      "title": "Broadcast still used to allege everyday deceit",
+      "image_src": "/media/fixtures/memes/img-ex-03.png",
+      "alt_text": "Harmful research example. Broadcast still plus a claim that Muslims may lie. Blurred until revealed.",
+      "form_note": "MEMRI-style still paired with a generalised claim that a theological term licenses everyday lying.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "derogation"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.82,
+      "narrative_tags": ["treachery"],
+      "rationale": "Classified as likely collective blame. The annotation treats a theological term as proof of deceit. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_04",
+      "title": "Bruised face used as proof against a faith",
+      "image_src": "/media/fixtures/memes/img-ex-04.jpg",
+      "alt_text": "Harmful research example. Close portrait with a bruise and hostile overlay text. Blurred until revealed.",
+      "form_note": "Portrait of a veiled person with a visible bruise, captioned so that Islam is named a cult and denied religious status.",
+      "dataset_annotation": {
+        "hate_types": ["derogation", "collective_blame", "exclusion"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.88,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely derogation and collective blame. A single photograph is treated as proof about a whole faith. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_05",
+      "title": "Sacred site labeled a false religion",
+      "image_src": "/media/fixtures/memes/img-ex-05.jpg",
+      "alt_text": "Harmful research example. Painting of a pilgrimage site with a hostile overlay. Blurred until revealed.",
+      "form_note": "Painting of the Kaaba overlaid with a claim that Islam is a false religion.",
+      "dataset_annotation": {
+        "hate_types": ["derogation"],
+        "severity": 1,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.74,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely derogation. Medium confidence. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_06",
+      "title": "Elected official tied to religious law panic",
+      "image_src": "/media/fixtures/memes/img-ex-06.jpg",
+      "alt_text": "Harmful research example. Four-panel waiting meme with overlay text about a city and religious law. Blurred until revealed.",
+      "form_note": "Waiting-meme template that names an official and claims a city will be ruled by religious law.",
+      "dataset_annotation": {
+        "hate_types": ["animosity", "collective_blame"],
+        "severity": 1,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.66,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely animosity. The overlay ties a named official to a takeover claim. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_07",
+      "title": "Protest slogan recast as a concealed infection",
+      "image_src": "/media/fixtures/memes/img-ex-07.jpg",
+      "alt_text": "Harmful research example. Trojan-horse cartoon with hostile labels. Blurred until revealed.",
+      "form_note": "Trojan-horse cartoon that labels a protest slogan as cover for an Islamic virus entering the West.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "collective_blame"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.9,
+      "narrative_tags": ["invasion", "treachery"],
+      "rationale": "Classified as likely dehumanization. Severity 3 because a faith is labeled a virus. Review is required."
+    },
+    {
+      "id": "img_ex_08",
+      "title": "Faith named as the world's common problem",
+      "image_src": "/media/fixtures/memes/img-ex-08.jpg",
+      "alt_text": "Harmful research example. Black text card that names Islam as a global problem. Blurred until revealed.",
+      "form_note": "Centered text card that repeats that Islam is the problem in a list of countries, then everywhere.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "derogation"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.85,
+      "narrative_tags": ["invasion"],
+      "rationale": "Classified as likely collective blame. A whole faith is named as the single global problem. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_09",
+      "title": "Historical portrait paired with a disease metaphor",
+      "image_src": "/media/fixtures/memes/img-ex-09.jpg",
+      "alt_text": "Harmful research example. Historical portrait above a disease comparison. Blurred until revealed.",
+      "form_note": "Churchill portrait above a quotation that compares Islam in a person to rabies in a dog.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "derogation"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.91,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely dehumanization. A faith is compared to a disease. Severity 3. Review is required."
+    },
+    {
+      "id": "img_ex_10",
+      "title": "Patriotic acronym that calls for removal",
+      "image_src": "/media/fixtures/memes/img-ex-10.jpg",
+      "alt_text": "Harmful research example. Flag-letter acronym calling for Islam to go away. Blurred until revealed.",
+      "form_note": "Flag-styled acronym that expands to Make Islam Go Away, using a pork image as a letter.",
+      "dataset_annotation": {
+        "hate_types": ["exclusion", "animosity"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.8,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely exclusion. The graphic calls for a faith to be removed. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_11",
+      "title": "Prohibition mark over a religious symbol",
+      "image_src": "/media/fixtures/memes/img-ex-11.jpg",
+      "alt_text": "Harmful research example. Crescent and star under a prohibition mark. Blurred until revealed.",
+      "form_note": "Red prohibition overlay on a crescent and star, captioned that religious law has no place in civilised society.",
+      "dataset_annotation": {
+        "hate_types": ["exclusion", "animosity"],
+        "severity": 1,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.7,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely exclusion. Medium confidence. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_12",
+      "title": "Sacred book shown being desecrated",
+      "image_src": "/media/fixtures/memes/img-ex-12.jpg",
+      "alt_text": "Harmful research example. Photograph of a sacred book being desecrated. Blurred until revealed.",
+      "form_note": "Photograph of a pig urinating on a book labeled Quran.",
+      "dataset_annotation": {
+        "hate_types": ["derogation", "dehumanization"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.93,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely severe derogation. The act is designed to desecrate. Review is required."
+    },
+    {
+      "id": "img_ex_13",
+      "title": "Birth cartoon that desecrates a prophet",
+      "image_src": "/media/fixtures/memes/img-ex-13.jpg",
+      "alt_text": "Harmful research example. Cartoon that desecrates a prophet using an impure animal. Blurred until revealed.",
+      "form_note": "Cartoon that depicts the birth of a prophet from a pig marked with a divine name, in front of a mosque silhouette.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "derogation"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.95,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely dehumanization. Severity 3. Review is required."
+    },
+    {
+      "id": "img_ex_14",
+      "title": "Wholesome painter used to endorse a killing",
+      "image_src": "/media/fixtures/memes/img-ex-14.jpg",
+      "alt_text": "Harmful research example. Familiar painter meme with a bombing canvas and a slur caption. Blurred until revealed.",
+      "form_note": "Bob Ross meme whose canvas shows a desert convoy being bombed, captioned with a sexual slur aimed at Muslims.",
+      "dataset_annotation": {
+        "hate_types": ["threat_or_incitement", "derogation"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.94,
+      "narrative_tags": ["violence_instruction"],
+      "rationale": "Classified as likely threat or incitement. The caption celebrates killing. Review is required."
+    },
+    {
+      "id": "img_ex_15",
+      "title": "Four-term slide that alleges systematic deceit",
+      "image_src": "/media/fixtures/memes/img-ex-15.jpg",
+      "alt_text": "Harmful research example. Dark slide listing Arabic terms as methods of deceit. Blurred until revealed.",
+      "form_note": "Slide that lists four Arabic terms and defines each as a method Muslims use to deceive non-Muslims.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "derogation"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.83,
+      "narrative_tags": ["treachery"],
+      "rationale": "Classified as likely collective blame. Theological vocabulary is recast as a hidden plan. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_16",
+      "title": "Family photograph overlaid with a collective accusation",
+      "image_src": "/media/fixtures/memes/img-ex-16.jpg",
+      "alt_text": "Harmful research example. Formal photograph of an adult and a child with a hostile overlay. Blurred until revealed.",
+      "form_note": "Wedding-style photograph of an adult and a child, overlaid with a collective sexual accusation against Islam.",
+      "dataset_annotation": {
+        "hate_types": ["derogation", "collective_blame"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.9,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely severe derogation. A family photograph is used to accuse a whole faith. Review is required."
+    },
+    {
+      "id": "img_ex_17",
+      "title": "Call to ban worship and expel believers",
+      "image_src": "/media/fixtures/memes/img-ex-17.jpg",
+      "alt_text": "Harmful research example. Text overlay calling for mosques to close and a faith to be banned. Blurred until revealed.",
+      "form_note": "Text card that says America should shut down mosques, ban Islam, and send Muslims to other countries.",
+      "dataset_annotation": {
+        "hate_types": ["exclusion", "threat_or_incitement"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.92,
+      "narrative_tags": ["invasion"],
+      "rationale": "Classified as likely exclusion and incitement. The text calls for a ban and an expulsion. Review is required."
+    },
+    {
+      "id": "img_ex_18",
+      "title": "Peace gesture with a concealed blade",
+      "image_src": "/media/fixtures/memes/img-ex-18.jpg",
+      "alt_text": "Harmful research example. Illustration of a person flashing a peace sign while hiding a knife. Blurred until revealed.",
+      "form_note": "Rear-view illustration of a man in a kufi making a peace sign while holding a knife behind his back.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "collective_blame"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.84,
+      "narrative_tags": ["treachery"],
+      "rationale": "Classified as likely dehumanization. The graphic alleges inherent deceit once a group is a majority. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_19",
+      "title": "Navy poster that denies religious status",
+      "image_src": "/media/fixtures/memes/img-ex-19.jpg",
+      "alt_text": "Harmful research example. Navy and gold poster denying that Islam is a religion. Blurred until revealed.",
+      "form_note": "Branded poster that calls Islam an invasive political cult and treats Islamophobia as a semantic trick.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "exclusion"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.85,
+      "narrative_tags": ["religious_illegitimacy", "invasion"],
+      "rationale": "Classified as likely collective blame. Religious status is denied so that civil protections can be withdrawn. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_20",
+      "title": "Campaign poster that lists a ban programme",
+      "image_src": "/media/fixtures/memes/img-ex-20.jpg",
+      "alt_text": "Harmful research example. Flag-themed poster listing bans on worship and dress. Blurred until revealed.",
+      "form_note": "Campaign-style poster titled Abolish Islam, listing bans on scripture, mosques, dress, law, and slaughter, over a person at prayer.",
+      "dataset_annotation": {
+        "hate_types": ["exclusion", "threat_or_incitement"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.93,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely exclusion. The poster is a programme to erase public Muslim life. Review is required."
+    },
+    {
+      "id": "img_ex_21",
+      "title": "Street prayer recast as a political takeover",
+      "image_src": "/media/fixtures/memes/img-ex-21.jpg",
+      "alt_text": "Harmful research example. Aerial photograph of a crowded street with overlay text. Blurred until revealed.",
+      "form_note": "Aerial photograph of outdoor prayer overlaid with a claim that Islam is a political organisation trying to dominate the world.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "exclusion"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.84,
+      "narrative_tags": ["invasion"],
+      "rationale": "Classified as likely collective blame. A worship gathering is treated as proof of world domination. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_22",
+      "title": "Cracked-earth card that blames a faith for ruin",
+      "image_src": "/media/fixtures/memes/img-ex-22.jpg",
+      "alt_text": "Harmful research example. Cracked-earth graphic blaming Islam for ruining countries. Blurred until revealed.",
+      "form_note": "Text on cracked earth that says Islam turns every country it touches into a ruin, with a keffiyeh emoji.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "derogation"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.86,
+      "narrative_tags": ["invasion"],
+      "rationale": "Classified as likely collective blame. Fourteen centuries of history are collapsed into one insult. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_23",
+      "title": "Street sign answered with an armed family",
+      "image_src": "/media/fixtures/memes/img-ex-23.jpg",
+      "alt_text": "Harmful research example. Two-panel meme pairing a street sign with an armed family. Blurred until revealed.",
+      "form_note": "Split meme: a cardboard sign saying Islam will enter every home, answered by a family posing with rifles.",
+      "dataset_annotation": {
+        "hate_types": ["threat_or_incitement", "animosity"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.91,
+      "narrative_tags": ["violence_instruction"],
+      "rationale": "Classified as likely threat or incitement. The right panel answers a slogan with armed readiness. Review is required."
+    },
+    {
+      "id": "img_ex_24",
+      "title": "Evolution cartoon that animalises a worshipper",
+      "image_src": "/media/fixtures/memes/img-ex-24.jpg",
+      "alt_text": "Harmful research example. Two-panel cartoon comparing a caveman scene with a veiled woman on a leash. Blurred until revealed.",
+      "form_note": "French cartoon that places a man with a rifle and a woman in a niqab on a leash under a caveman dragging a woman.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "derogation"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.94,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely dehumanization. A worshipper is drawn as an animal. Review is required."
+    },
+    {
+      "id": "img_ex_25",
+      "title": "Sunset field held up as a model of resistance",
+      "image_src": "/media/fixtures/memes/img-ex-25.jpg",
+      "alt_text": "Harmful research example. Sunset illustration of mass impalement with a copy-this caption. Blurred until revealed.",
+      "form_note": "Impalement silhouettes against a red sky, captioned that Vlad resisted a Muslim invasion and the reader should be like him.",
+      "dataset_annotation": {
+        "hate_types": ["threat_or_incitement"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.96,
+      "narrative_tags": ["violence_instruction"],
+      "rationale": "Classified as likely threat or incitement. The caption instructs the reader to copy a massacre. Review is required."
+    },
+    {
+      "id": "img_ex_26",
+      "title": "Symbols paired as an unholy alliance",
+      "image_src": "/media/fixtures/memes/img-ex-26.jpg",
+      "alt_text": "Harmful research example. Hammer-and-sickle and crescent icons above a destruction claim. Blurred until revealed.",
+      "form_note": "Black card pairing a communist symbol with a crescent, claiming a shared goal of destroying the West.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "animosity"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.78,
+      "narrative_tags": ["invasion"],
+      "rationale": "Classified as likely collective blame. A faith is fused with a political enemy and assigned a civilisational goal. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_27",
+      "title": "Religion recast as a banned organisation",
+      "image_src": "/media/fixtures/memes/img-ex-27.jpg",
+      "alt_text": "Harmful research example. High-contrast text card denying religious status. Blurred until revealed.",
+      "form_note": "Black text card that calls Islam a hate group, not a religion, and demands its religious status be removed.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "derogation", "exclusion"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.87,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely collective blame and exclusion. Legal status is the target. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_28",
+      "title": "Trivia bait that turns into a slur list",
+      "image_src": "/media/fixtures/memes/img-ex-28.jpg",
+      "alt_text": "Harmful research example. White list that starts as wordplay and ends as a xenophobic rant. Blurred until revealed.",
+      "form_note": "A-B-C trivia card whose third item rearranges immigrant into a long slur list aimed at Muslims and migrants.",
+      "dataset_annotation": {
+        "hate_types": ["derogation", "dehumanization"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.84,
+      "narrative_tags": ["crime_generalisation"],
+      "rationale": "Classified as likely derogation. The bait-and-switch is the form. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_29",
+      "title": "Gold-ring infographic of attributed crimes",
+      "image_src": "/media/fixtures/memes/img-ex-29.jpg",
+      "alt_text": "Harmful research example. Crescent at the centre of a ring of crime icons. Blurred until revealed.",
+      "form_note": "Black infographic titled What Islam offers, ringing a crescent with icons labeled as crimes.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "collective_blame", "threat_or_incitement"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.92,
+      "narrative_tags": ["violence_instruction", "religious_illegitimacy"],
+      "rationale": "Classified as likely dehumanization. Violent crimes are presented as what a religion offers. Review is required."
+    },
+    {
+      "id": "img_ex_30",
+      "title": "Three-phase takeover list",
+      "image_src": "/media/fixtures/memes/img-ex-30.jpg",
+      "alt_text": "Harmful research example. Serif list of three immigration phases ending in violence. Blurred until revealed.",
+      "form_note": "Slide-style list that frames Muslim immigration as oppressed, then indignant, then dominant and lethal.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "exclusion"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.86,
+      "narrative_tags": ["great_replacement", "invasion"],
+      "rationale": "Classified as likely collective blame. Immigration is told as a staged conquest. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_31",
+      "title": "Firearm forced into a cleric's mouth",
+      "image_src": "/media/fixtures/memes/img-ex-31.jpg",
+      "alt_text": "Harmful research example. Photograph of a gun forced into a person's mouth. Blurred until revealed.",
+      "form_note": "Photograph of an elderly man in clerical dress with a pistol in his mouth, captioned as the only way to deal with Islam.",
+      "dataset_annotation": {
+        "hate_types": ["threat_or_incitement"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.97,
+      "narrative_tags": ["violence_instruction"],
+      "rationale": "Classified as likely threat or incitement. The caption endorses lethal violence. Review is required."
+    },
+    {
+      "id": "img_ex_32",
+      "title": "Help offered, knife concealed",
+      "image_src": "/media/fixtures/memes/img-ex-32.jpg",
+      "alt_text": "Harmful research example. Silhouette of a climber hiding a knife from a helper. Blurred until revealed.",
+      "form_note": "Black-and-white hillside silhouette labeled Humanity helping Islam, with a knife hidden on the climber.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "collective_blame"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.83,
+      "narrative_tags": ["treachery"],
+      "rationale": "Classified as likely dehumanization. A whole faith is drawn as inherently treacherous. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_33",
+      "title": "Cartoon sign that scares the reader about religious law",
+      "image_src": "/media/fixtures/memes/img-ex-33.jpg",
+      "alt_text": "Harmful research example. Comic character holding a sign about religious law. Blurred until revealed.",
+      "form_note": "Peanuts-style character holding a sign that tells the reader to fear religious law more than a domestic political movement.",
+      "dataset_annotation": {
+        "hate_types": ["animosity", "exclusion"],
+        "severity": 1,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.71,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely animosity. Medium confidence. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_34",
+      "title": "Street banner against a faith",
+      "image_src": "/media/fixtures/memes/img-ex-34.jpg",
+      "alt_text": "Harmful research example. Protest photograph with a banner against Islamification. Blurred until revealed.",
+      "form_note": "Photograph of a street protest whose banner reads Americans Against Islamification.",
+      "dataset_annotation": {
+        "hate_types": ["exclusion", "animosity"],
+        "severity": 1,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.68,
+      "narrative_tags": ["invasion"],
+      "rationale": "Classified as likely exclusion. A public banner names opposition to a faith as a national project. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_35",
+      "title": "Cartoon that pairs a kinship trope with a disability slur",
+      "image_src": "/media/fixtures/memes/img-ex-35.jpg",
+      "alt_text": "Harmful research example. Cartoon characters with overlay text attacking Muslims. Blurred until revealed.",
+      "form_note": "Simpsons-style Impact meme that asks why Muslims marry cousins and answers with a disability slur.",
+      "dataset_annotation": {
+        "hate_types": ["derogation", "dehumanization"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.89,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely derogation. The joke is a slur aimed at a faith. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_36",
+      "title": "Vermin photograph paired with people at prayer",
+      "image_src": "/media/fixtures/memes/img-ex-36.jpg",
+      "alt_text": "Harmful research example. Two-panel graphic pairing a pest with people at prayer. Blurred until revealed.",
+      "form_note": "Two panels: a cockroach captioned as what takes over a neglected house, then people at prayer captioned as what takes over a neglected country.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "exclusion"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.93,
+      "narrative_tags": ["invasion"],
+      "rationale": "Classified as likely dehumanization. Worshippers are paired with vermin. Review is required."
+    },
+    {
+      "id": "img_ex_37",
+      "title": "Historical massacre held up as a model",
+      "image_src": "/media/fixtures/memes/img-ex-37.jpg",
+      "alt_text": "Harmful research example. Historical illustration of mass impalement with a copy-this caption. Blurred until revealed.",
+      "form_note": "Illustration of Vlad the Impaler before a forest of poles, captioned that he ran poles through Muslims and the reader should do the same.",
+      "dataset_annotation": {
+        "hate_types": ["threat_or_incitement"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.95,
+      "narrative_tags": ["violence_instruction"],
+      "rationale": "Classified as likely threat or incitement. The caption instructs the reader to copy a massacre. Review is required."
+    },
+    {
+      "id": "img_ex_38",
+      "title": "Split panel of official portraits against a burial",
+      "image_src": "/media/fixtures/memes/img-ex-38.jpg",
+      "alt_text": "Harmful research example. Two photographs contrasting officials with a mass burial. Blurred until revealed.",
+      "form_note": "Split photograph: Muslim officials in Western countries above a mass-burial scene labeled as Christian life in Muslim countries.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "animosity"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.8,
+      "narrative_tags": ["false_equivalence"],
+      "rationale": "Classified as likely collective blame. Two unrelated photographs are bound as proof about a whole faith. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_39",
+      "title": "Firearm pointed at the viewer",
+      "image_src": "/media/fixtures/memes/img-ex-39.jpg",
+      "alt_text": "Harmful research example. Person pointing a handgun at the camera with overlay text. Blurred until revealed.",
+      "form_note": "Photograph of a masked person aiming a pistol at the viewer, captioned that Islam will not enter my house.",
+      "dataset_annotation": {
+        "hate_types": ["threat_or_incitement"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.94,
+      "narrative_tags": ["violence_instruction"],
+      "rationale": "Classified as likely threat or incitement. The weapon is aimed at the reader. Review is required."
+    },
+    {
+      "id": "img_ex_40",
+      "title": "Solidarity photograph recaptioned as a warning",
+      "image_src": "/media/fixtures/memes/img-ex-40.jpg",
+      "alt_text": "Harmful research example. Line of women at a landmark with a hostile caption below. Blurred until revealed.",
+      "form_note": "Westminster Bridge solidarity photograph recaptioned to claim feminists ignore sexual abuse by Muslim migrant men.",
+      "dataset_annotation": {
+        "hate_types": ["collective_blame", "derogation"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.81,
+      "narrative_tags": ["crime_generalisation"],
+      "rationale": "Classified as likely collective blame. A peace photograph is reused as evidence of group crime. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_41",
+      "title": "Flag that attacks a prophet and scripture",
+      "image_src": "/media/fixtures/memes/img-ex-41.jpg",
+      "alt_text": "Harmful research example. Two people on a mast holding a black flag with hostile text. Blurred until revealed.",
+      "form_note": "Photograph of two people on a high mast holding a black flag that claims a prophet spoke to Satan and that scripture was born from that.",
+      "dataset_annotation": {
+        "hate_types": ["derogation"],
+        "severity": 2,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.82,
+      "narrative_tags": ["religious_illegitimacy"],
+      "rationale": "Classified as likely derogation. The flag attacks a prophet and scripture. Not a confirmed finding."
+    },
+    {
+      "id": "img_ex_42",
+      "title": "White-ring infographic of attributed crimes",
+      "image_src": "/media/fixtures/memes/img-ex-42.jpg",
+      "alt_text": "Harmful research example. Green crescent ringed by crime icons with checkmarks. Blurred until revealed.",
+      "form_note": "White infographic titled Let's discuss what Islam offers, ringing a green crescent with crime icons and checkmarks.",
+      "dataset_annotation": {
+        "hate_types": ["dehumanization", "collective_blame", "threat_or_incitement"],
+        "severity": 3,
+        "note": "Annotation from a labeling brief. Not an Amanah prediction."
+      },
+      "score": 0.92,
+      "narrative_tags": ["violence_instruction", "religious_illegitimacy"],
+      "rationale": "Classified as likely dehumanization. The checkmarks present accusations as settled facts. Review is required."
+    }
+  ]
+}

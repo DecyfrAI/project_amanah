@@ -1,0 +1,180 @@
+.frame {
+  background-color: var(--color-surface);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.scroller {
+  overflow: auto;
+  max-height: var(--layout-table-max-height);
+}
+
+.table {
+  width: 100%;
+  min-width: var(--layout-table-min-width);
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+}
+
+.caption {
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  line-height: var(--leading-relaxed);
+  text-align: start;
+}
+
+.table th,
+.table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: var(--border-width) solid var(--color-border);
+  text-align: start;
+  vertical-align: top;
+}
+
+.table thead th {
+  position: sticky;
+  top: 0;
+  z-index: var(--z-sticky);
+  background-color: var(--color-surface);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.table thead th:first-child,
+.table tbody th:first-child {
+  /* Clears the frame’s rounded corner so the date is never clipped. */
+  padding-inline-start: var(--space-5);
+}
+
+.table thead th:last-child,
+.table tbody td:last-child {
+  padding-inline-end: var(--space-5);
+}
+
+.table tbody tr:hover th,
+.table tbody tr:hover td {
+  background-color: var(--color-surface-sunken);
+}
+
+.identity {
+  color: var(--color-text-primary);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+}
+
+.date {
+  display: block;
+}
+
+.itemId {
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-regular);
+}
+
+.context {
+  max-width: var(--layout-table-context-width);
+  color: var(--color-text-primary);
+  line-height: var(--leading-snug);
+}
+
+.classification {
+  max-width: var(--layout-table-context-width);
+  line-height: var(--leading-snug);
+}
+
+.severity {
+  max-width: 8rem;
+  line-height: var(--leading-snug);
+  white-space: normal;
+}
+
+.excerptCell {
+  max-width: var(--layout-table-context-width);
+}
+
+.excerpt {
+  margin: 0;
+  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+  line-height: var(--leading-relaxed);
+}
+
+.numeric {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.review {
+  min-width: 11rem;
+  max-width: 14rem;
+}
+
+.reviewBody {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.note {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-2xs);
+  line-height: var(--leading-snug);
+}
+
+.imageBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-2);
+}
+
+.imageMeta {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.imageMeta dt {
+  font-weight: var(--weight-medium);
+}
+
+.imageMeta dd {
+  margin: 0;
+}
+
+.reveal {
+  min-height: var(--target-min);
+  padding-inline: var(--space-3);
+  background-color: var(--color-surface-sunken);
+  border: var(--border-width) solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  color: var(--color-text-primary);
+  font-size: var(--text-xs);
+}
+
+.thumb {
+  display: block;
+  width: 100%;
+  max-width: 12rem;
+  background-color: var(--color-surface-sunken);
+  border: var(--border-width) solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.thumbBlurred {
+  filter: blur(var(--media-blur));
+}

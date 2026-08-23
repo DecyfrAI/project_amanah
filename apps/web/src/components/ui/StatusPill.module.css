@@ -1,0 +1,57 @@
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  max-width: 100%;
+  padding: var(--space-1) var(--space-3);
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-snug);
+  white-space: nowrap;
+}
+
+.icon {
+  display: inline-flex;
+  flex: none;
+}
+
+.icon svg {
+  width: var(--icon-sm);
+  height: var(--icon-sm);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.ok {
+  background-color: var(--color-status-confirmed-surface);
+  border-color: var(--color-status-confirmed);
+  color: var(--color-status-confirmed);
+}
+
+.pending {
+  background-color: var(--color-status-review-surface);
+  border-color: var(--color-status-review);
+  color: var(--color-status-review);
+}
+
+.degraded {
+  background-color: var(--color-status-emerging-surface);
+  border-color: var(--color-status-emerging);
+  color: var(--color-status-emerging);
+}
+
+.blocked {
+  background-color: var(--color-surface-sunken);
+  border-color: var(--color-border-strong);
+  color: var(--color-text-primary);
+}
+
+.absent {
+  background-color: var(--color-surface-sunken);
+  border-style: dashed;
+  border-color: var(--color-border-strong);
+  color: var(--color-text-secondary);
+}

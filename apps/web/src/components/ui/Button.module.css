@@ -1,0 +1,58 @@
+/*
+ * Pill buttons, matching the house style. Minimum height comes from the
+ * --target-min token so every button clears the WCAG 2.5.8 target size.
+ */
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  min-height: var(--target-min);
+  padding-inline: var(--space-5);
+  border-radius: var(--radius-full);
+  border: var(--border-width) solid transparent;
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  text-decoration: none;
+  white-space: nowrap;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard),
+    transform var(--duration-fast) var(--easing-standard);
+}
+
+.button:hover {
+  transform: translateY(-1px);
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+/* Solid gold. Used for the single primary action on a marketing surface. */
+.primary {
+  background-color: var(--palette-gold-300);
+  color: var(--palette-navy-950);
+}
+
+.primary:hover {
+  background-color: var(--palette-gold-500);
+}
+
+/* Outline, inheriting the section's own text colour. */
+.secondary {
+  background-color: transparent;
+  border-color: var(--marketing-rule, var(--color-border-strong));
+  color: currentcolor;
+}
+
+.secondary:hover {
+  border-color: currentcolor;
+}
+
+.button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}

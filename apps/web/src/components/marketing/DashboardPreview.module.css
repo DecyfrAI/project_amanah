@@ -1,0 +1,235 @@
+.preview {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background-color: var(--marketing-card);
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-lg);
+}
+
+.caption {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.kicker {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+}
+
+.title {
+  font-family: var(--font-editorial);
+  font-size: var(--text-xl);
+  color: var(--marketing-heading);
+}
+
+.kpi {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: var(--text-lg);
+  font-variant-numeric: tabular-nums;
+  color: var(--marketing-heading);
+}
+
+.kpiHint {
+  font-size: var(--text-xs);
+  color: var(--marketing-body);
+}
+
+/*
+ * Metric toggle. Two mutually exclusive views of the same window, so the
+ * pressed state carries the selection and the label carries the meaning.
+ */
+.toggle {
+  display: flex;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.toggleButton {
+  min-height: var(--target-min);
+  padding-inline: var(--space-4);
+  background-color: transparent;
+  border: var(--border-width) solid var(--marketing-rule);
+  border-radius: var(--radius-full);
+  color: var(--marketing-body);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard),
+    border-color var(--duration-fast) var(--easing-standard);
+}
+
+.toggleButton:hover {
+  border-color: var(--marketing-heading-accent);
+  color: var(--marketing-heading);
+}
+
+.toggleButton[aria-pressed='true'] {
+  background-color: var(--marketing-heading-accent);
+  border-color: var(--marketing-heading-accent);
+  color: var(--marketing-surface);
+}
+
+.chart {
+  width: 100%;
+  height: auto;
+}
+
+.grid {
+  fill: none;
+  stroke: var(--marketing-rule);
+  stroke-width: var(--border-width);
+}
+
+.line {
+  fill: none;
+  stroke: var(--marketing-heading-accent);
+  stroke-width: var(--chart-line-width);
+  stroke-linejoin: round;
+  stroke-linecap: round;
+}
+
+.point {
+  fill: var(--marketing-heading-accent);
+  r: var(--chart-point-radius);
+}
+
+/* Selected day. A ruled line plus a ringed point, so the selection is legible
+ * without depending on colour alone. */
+.marker {
+  stroke: var(--marketing-rule);
+  stroke-width: var(--border-width);
+}
+
+.highlight {
+  fill: var(--marketing-surface);
+  stroke: var(--marketing-heading-accent);
+  stroke-width: var(--chart-line-width);
+  r: calc(var(--chart-point-radius) * 2);
+}
+
+.days {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  border: none;
+}
+
+.dayButton {
+  flex: 1 1 auto;
+  min-height: var(--target-min);
+  padding-inline: var(--space-2);
+  background-color: transparent;
+  border: var(--border-width) solid transparent;
+  border-radius: var(--radius-md);
+  color: var(--marketing-body);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-variant-numeric: tabular-nums;
+  transition:
+    background-color var(--duration-fast) var(--easing-standard),
+    color var(--duration-fast) var(--easing-standard);
+}
+
+.dayButton:hover {
+  color: var(--marketing-heading);
+}
+
+.dayButton[aria-pressed='true'] {
+  background-color: var(--marketing-surface);
+  border-color: var(--marketing-heading-accent);
+  color: var(--marketing-heading);
+}
+
+.readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background-color: var(--marketing-surface);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  font-variant-numeric: tabular-nums;
+  color: var(--marketing-body);
+}
+
+.readoutDate {
+  font-family: var(--font-mono);
+  color: var(--marketing-heading);
+}
+
+.axis {
+  fill: var(--marketing-label);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+}
+
+.note {
+  margin: 0;
+  color: var(--marketing-label);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+}
+
+.disclosure {
+  border-top: var(--border-width) solid var(--marketing-rule);
+  padding-top: var(--space-3);
+}
+
+.disclosureSummary {
+  display: flex;
+  align-items: center;
+  min-height: var(--target-min);
+  color: var(--marketing-heading-accent);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  cursor: pointer;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+.tableCaption {
+  caption-side: bottom;
+  padding-top: var(--space-3);
+  color: var(--marketing-label);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-wide);
+  text-align: start;
+}
+
+.table th,
+.table td {
+  padding: var(--space-2) 0;
+  border-top: var(--border-width) solid var(--marketing-rule);
+  text-align: start;
+  font-variant-numeric: tabular-nums;
+  color: var(--marketing-body);
+}
+
+.table th {
+  font-weight: var(--weight-medium);
+  color: var(--marketing-heading);
+}

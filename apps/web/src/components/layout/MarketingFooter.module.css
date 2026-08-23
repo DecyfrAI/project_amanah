@@ -1,0 +1,300 @@
+.footer {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background-color: var(--palette-navy-950);
+  color: var(--palette-mist-300);
+
+  --marketing-rule: var(--palette-navy-750);
+  --marketing-label: var(--palette-teal-200);
+}
+
+/*
+ * Closing block. Full-bleed photograph with the copy laid over it, the image
+ * drifting gently against the scroll.
+ */
+.closing {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  min-height: var(--layout-closing-min-height);
+  padding-block: var(--space-8);
+}
+
+.closingMedia {
+  position: absolute;
+  inset: -22% 0;
+  z-index: -1;
+}
+
+/*
+ * Parallax lives on the wrapper and the Ken Burns zoom on the image itself, so
+ * the two transforms compose instead of overwriting one another. The photograph
+ * is centred on the dome cluster; the origin holds that point as it zooms.
+ */
+.closingParallax {
+  width: 100%;
+  height: 100%;
+  transform: translate3d(0, var(--parallax-offset, 0), 0);
+  will-change: transform;
+}
+
+.closingImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: 50% 42%;
+  transform-origin: 50% 42%;
+  will-change: transform;
+  animation: ken-burns var(--duration-cinematic) var(--easing-cinematic) infinite alternate;
+}
+
+@keyframes ken-burns {
+  from {
+    transform: scale(var(--scale-ken-burns-start));
+  }
+  to {
+    transform: scale(var(--scale-ken-burns-end));
+  }
+}
+
+/*
+ * Dark enough on the left for the invitation to stay readable, open enough on
+ * the right that the courtyard, domes and minarets remain visible.
+ */
+.closingScrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to right,
+      rgb(var(--palette-navy-950-channels) / 86%) 0%,
+      rgb(var(--palette-navy-950-channels) / 56%) 44%,
+      rgb(var(--palette-navy-950-channels) / 24%) 100%
+    ),
+    linear-gradient(
+      to bottom,
+      rgb(var(--palette-navy-950-channels) / 42%) 0%,
+      transparent 40%,
+      rgb(var(--palette-navy-950-channels) / 70%) 100%
+    );
+}
+
+.closingContent {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding-inline: var(--space-5);
+}
+
+.closingHeading {
+  font-family: var(--font-editorial);
+  font-size: var(--text-3xl);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+  color: var(--palette-ivory-50);
+}
+
+.closingAccent {
+  display: block;
+  font-style: italic;
+  font-weight: var(--weight-regular);
+  color: var(--palette-teal-200);
+}
+
+.closingBody {
+  max-width: 46ch;
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--palette-mist-250);
+}
+
+.closingActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+.inner {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: var(--layout-max-width);
+  margin-inline: auto;
+  padding: var(--space-8) var(--space-5);
+}
+
+.columns {
+  display: grid;
+  gap: var(--space-6);
+  padding-bottom: var(--space-7);
+}
+
+.brandColumn {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  max-width: 34rem;
+}
+
+.statement {
+  font-family: var(--font-editorial);
+  font-size: var(--text-lg);
+  font-style: italic;
+  line-height: var(--leading-snug);
+  color: var(--palette-ivory-50);
+}
+
+.sectionNav {
+  display: flex;
+  flex-direction: column;
+}
+
+.navHeading {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-widest);
+  text-transform: uppercase;
+  color: var(--marketing-label);
+  margin-bottom: var(--space-3);
+}
+
+.linkList {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--space-6);
+  color: inherit;
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transition: color var(--duration-fast) var(--easing-standard);
+}
+
+.link:hover {
+  color: var(--palette-teal-200);
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+.baseline {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding-top: var(--space-5);
+  padding-bottom: var(--space-9);
+  border-top: var(--border-width) solid var(--marketing-rule);
+  font-size: var(--text-sm);
+}
+
+.builtBy {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.builtByLink {
+  color: var(--palette-teal-200);
+  text-decoration: none;
+}
+
+.builtByLink:hover {
+  text-decoration: underline;
+  text-underline-offset: 0.25em;
+}
+
+/*
+ * Repeating mosque silhouette along the base, drifting slowly.
+ *
+ * The strip is one tile wider than the footer and travels exactly one tile
+ * width before restarting, so the loop is continuous rather than snapping back
+ * at the end of each cycle. Ornament only.
+ */
+.silhouette {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: var(--silhouette-height);
+  overflow: hidden;
+  opacity: 0.16;
+  pointer-events: none;
+  mask-image: linear-gradient(to right, transparent, #000 12%, #000 88%, transparent);
+}
+
+.silhouetteStrip {
+  width: calc(100% + var(--silhouette-tile-width));
+  height: 100%;
+  background-image: url('/media/mosque-silhouette.webp');
+  background-repeat: repeat-x;
+  background-position: 0 bottom;
+  background-size: var(--silhouette-tile-width) var(--silhouette-height);
+  will-change: transform;
+  animation: drift-silhouette 90s linear infinite;
+}
+
+@keyframes drift-silhouette {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(calc(-1 * var(--silhouette-tile-width)), 0, 0);
+  }
+}
+
+@media (min-width: 40em) {
+  .closing {
+    min-height: var(--layout-closing-min-height-medium);
+  }
+
+  .closingContent,
+  .inner {
+    padding-inline: var(--space-7);
+  }
+
+  .closingHeading {
+    font-size: var(--text-4xl);
+  }
+
+  .linkList {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .baseline {
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+  }
+}
+
+@media (min-width: 64em) {
+  .columns {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    gap: var(--space-8);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .silhouetteStrip,
+  .closingImage {
+    animation: none;
+  }
+
+  .closingImage,
+  .closingParallax {
+    transform: none;
+    will-change: auto;
+  }
+}
