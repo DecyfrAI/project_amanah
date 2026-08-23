@@ -10,15 +10,15 @@ Run commands from the repository root unless noted otherwise. The repository is 
 ## Run tests
 
 - Frontend tests: `pnpm --dir apps/web test --run`
-- Backend tests: `uv run --project backend pytest`
+- Backend tests: `uv run --project backend pytest backend/tests`
 - Full safe test suite: run both commands above; do not call live providers from tests.
 
 ## Run a single test
 
 - Frontend test file: `pnpm --dir apps/web test --run src/path/to/example.test.tsx`
 - Frontend test by name: `pnpm --dir apps/web test --run -t "test name"`
-- Backend test file: `uv run --project backend pytest tests/path/to/test_example.py`
-- Backend test by node ID: `uv run --project backend pytest tests/path/to/test_example.py::test_name`
+- Backend test file: `uv run --project backend pytest backend/tests/path/to/test_example.py`
+- Backend test by node ID: `uv run --project backend pytest backend/tests/path/to/test_example.py::test_name`
 
 ## Lint
 

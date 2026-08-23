@@ -1,0 +1,62 @@
+[project]
+name = "amanah"
+version = "0.1.0"
+description = "Project Amanah backend API for authenticated Islamophobia research monitoring."
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi==0.141.1",
+    "pydantic==2.13.4",
+    "pydantic-settings==2.15.0",
+    "pyjwt==2.13.0",
+    "uvicorn[standard]==0.52.4",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/amanah"]
+
+[dependency-groups]
+dev = [
+    "httpx2==2.12.0",
+    "mypy==2.3.1",
+    "pytest==9.1.1",
+    "ruff==0.16.4",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src", "."]
+addopts = "--strict-markers --strict-config"
+filterwarnings = ["error"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+target-version = "py313"
+
+[tool.ruff.lint]
+select = [
+    "E",    # pycodestyle errors
+    "F",    # pyflakes
+    "I",    # import sorting
+    "N",    # pep8 naming
+    "UP",   # pyupgrade
+    "B",    # bugbear
+    "S",    # bandit security checks
+    "ANN",  # missing annotations
+    "RUF",
+]
+
+[tool.ruff.lint.per-file-ignores]
+# Tests assert on values and construct throwaway credentials for negative cases.
+"tests/**" = ["S101", "S105", "S106", "ANN401"]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unreachable = true
+mypy_path = "src"
