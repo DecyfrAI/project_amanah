@@ -8,7 +8,13 @@ import pytest
 from pydantic import ValidationError
 
 from amanah.api.schemas.common import CoverageSummary, MetricRate, ResponseMeta
-from amanah.api.schemas.dashboard import DashboardMetrics, DashboardResponse, HeadlineCard
+from amanah.api.schemas.dashboard import (
+    DashboardMetrics,
+    DashboardResponse,
+    DashboardTrend,
+    HeadlineCard,
+    TrendPoint,
+)
 from amanah.api.schemas.items import DatasetProvenance, ItemDetail, ItemSummary
 from amanah.api.schemas.resources import ResourceEntry
 from amanah.domain.enums import (
@@ -17,6 +23,7 @@ from amanah.domain.enums import (
     ContentKind,
     DataMode,
     HateType,
+    MetricInterval,
     PublicPlatform,
     Relevance,
     ResourceCategory,
@@ -111,12 +118,36 @@ def test_platform_display_uses_the_platform_value_for_real_platforms() -> None:
     assert make_item_summary(platform=PublicPlatform.youtube).platform_display == "youtube"
 
 
-def test_item_detail_requires_the_full_model_disclosure() -> None:
+def test_item_detail_requires_a_sampling_disclosure() -> None:
+    """The model disclosure is optional only because an item may be unclassified;
+    the sampling disclosure is not, because it qualifies the item either way."""
     with pytest.raises(ValidationError) as exc_info:
         ItemDetail(**summary_fields(), score=0.42)
 
     missing = {error["loc"][0] for error in exc_info.value.errors()}
-    assert {"model_name", "model_version", "prompt_version", "taxonomy_version"} <= missing
+    assert "sampling_disclosure" in missing
+
+
+def test_an_unclassified_item_reports_no_labels_rather_than_defaults() -> None:
+    """A collected-but-not-yet-analysed item is a real state. Defaulting it to
+    `uncertain` would put a label in the model's mouth that it never produced."""
+    unclassified = make_item_summary(
+        relevance=None,
+        stance=None,
+        severity=None,
+        confidence_tier=None,
+        review_state=ReviewState.model_only,
+    )
+
+    assert unclassified.is_classified is False
+    assert unclassified.relevance is None
+    assert unclassified.stance is None
+    assert unclassified.severity is None
+    assert unclassified.requires_review is False
+
+
+def test_a_classified_item_reports_that_it_is_classified() -> None:
+    assert make_item_summary().is_classified is True
 
 
 def test_item_detail_score_is_bounded() -> None:
@@ -192,6 +223,19 @@ def test_dashboard_response_carries_coverage_and_a_sampling_disclosure() -> None
             reviewed_count=1,
             likely_anti_muslim_rate=make_rate(),
         ),
+        trend=DashboardTrend(
+            interval=MetricInterval.daily,
+            points=[
+                TrendPoint(
+                    bucket_start=WINDOW_START,
+                    is_gap=False,
+                    observed_count=4,
+                    muslim_related_count=4,
+                    likely_anti_muslim_count=1,
+                ),
+                TrendPoint(bucket_start=OBSERVED_AT, is_gap=True),
+            ],
+        ),
         headlines=[
             HeadlineCard(
                 item_id=uuid4(),
@@ -211,6 +255,20 @@ def test_dashboard_response_carries_coverage_and_a_sampling_disclosure() -> None
     assert response.coverage.is_stale is True
     assert response.metrics.likely_anti_muslim_rate.denominator == 10
     assert response.sampling_disclosure
+    # The uncollected day stays a gap with no counts, never a zero.
+    gap = response.trend.points[1]
+    assert gap.is_gap is True
+    assert gap.observed_count is None
+
+
+def test_a_trend_gap_must_not_carry_counts() -> None:
+    with pytest.raises(ValidationError):
+        TrendPoint(bucket_start=WINDOW_START, is_gap=True, observed_count=0)
+
+
+def test_a_trend_bucket_that_is_not_a_gap_must_carry_counts() -> None:
+    with pytest.raises(ValidationError):
+        TrendPoint(bucket_start=WINDOW_START, is_gap=False)
 
 
 def test_resource_entry_requires_review_provenance() -> None:

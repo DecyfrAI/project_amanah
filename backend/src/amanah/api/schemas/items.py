@@ -61,13 +61,23 @@ class ItemSummary(ResponseModel):
     is_fixture: bool
     dataset: DatasetProvenance | None = None
 
-    relevance: Relevance
-    stance: Stance
+    # Classification fields are null until an item has a successful prediction.
+    # An item that has not been classified is a real state — collected, not yet
+    # analysed — and it is reported as such rather than defaulted to `uncertain`,
+    # which would put words in the model's mouth.
+    relevance: Relevance | None = None
+    stance: Stance | None = None
     hate_types: list[HateType] = Field(default_factory=list)
-    severity: Severity
-    confidence_tier: ConfidenceTier
+    severity: Severity | None = None
+    confidence_tier: ConfidenceTier | None = None
     review_state: ReviewState
-    requires_review: bool
+    requires_review: bool = False
+
+    @computed_field  # type: ignore[prop-decorator]
+    @property
+    def is_classified(self) -> bool:
+        """Whether a successful prediction currently stands for this item."""
+        return self.relevance is not None
 
     @computed_field  # type: ignore[prop-decorator]
     @property
@@ -86,11 +96,11 @@ class ItemDetail(ItemSummary):
     rationale, and the stated limitations.
     """
 
-    score: float = Field(ge=0.0, le=1.0)
-    model_name: str
-    model_version: str
-    prompt_version: str
-    taxonomy_version: str
+    score: float | None = Field(default=None, ge=0.0, le=1.0)
+    model_name: str | None = None
+    model_version: str | None = None
+    prompt_version: str | None = None
+    taxonomy_version: str | None = None
     inferred_at: UtcDatetime | None
     rationale: str | None
     narrative_tags: list[NarrativeTag] = Field(default_factory=list)

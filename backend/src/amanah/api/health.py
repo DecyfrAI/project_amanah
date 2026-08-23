@@ -8,10 +8,11 @@ versions, or build identifiers.
 from enum import StrEnum
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, Response
+from fastapi import APIRouter, Depends, Request, Response
 
 from amanah.api.dependencies import get_settings
 from amanah.api.schemas.base import ResponseModel
+from amanah.db.session import Database
 from amanah.settings import Settings
 
 router = APIRouter(tags=["operations"])
@@ -49,21 +50,29 @@ class ReadinessResponse(ResponseModel):
     checks: dict[str, CheckStatus]
 
 
-def build_readiness_response(settings: Settings) -> ReadinessResponse:
+def build_readiness_response(
+    settings: Settings, database: Database | None = None
+) -> ReadinessResponse:
     """Evaluate readiness dependencies.
 
     Optional connectors are excluded deliberately: a missing connector key
     disables that connector, it does not make the service unready.
 
-    The database check confirms that a connection target is configured. A live
-    connectivity probe is added with the database layer in step B-S3; until then
-    this reports configuration readiness only.
+    The database check is a real round trip when a pool exists, because a
+    configured but unreachable database is exactly the case readiness has to
+    catch. The probe swallows the driver error and reports only `unavailable`;
+    the reason goes to the logs, where it cannot name an internal host to a
+    caller.
     """
+    if settings.database_url is None:
+        database_status = CheckStatus.unavailable
+    elif database is None:
+        database_status = CheckStatus.unavailable
+    else:
+        database_status = CheckStatus.ok if database.check_connection() else CheckStatus.unavailable
     checks = {
         "configuration": CheckStatus.ok,
-        "database": (
-            CheckStatus.ok if settings.database_url is not None else CheckStatus.unavailable
-        ),
+        "database": database_status,
     }
     status = (
         ReadinessStatus.ready
@@ -81,11 +90,13 @@ def read_liveness() -> LivenessResponse:
 
 @router.get("/readyz", summary="Dependency readiness")
 def read_readiness(
+    request: Request,
     response: Response,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ReadinessResponse:
     """Report whether the service is ready to accept product traffic."""
-    readiness = build_readiness_response(settings)
+    database: Database | None = getattr(request.app.state, "database", None)
+    readiness = build_readiness_response(settings, database)
     if readiness.status is ReadinessStatus.degraded:
         response.status_code = 503
     return readiness

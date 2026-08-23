@@ -6,17 +6,24 @@ someone forgetting to add a dependency.
 """
 
 import logging
+from collections.abc import Iterator
 from datetime import UTC, datetime
 from typing import Annotated
 from uuid import UUID
 
 from fastapi import Depends, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
+from sqlalchemy.orm import Session
 
-from amanah.api.errors import AuthenticationRequiredError, PermissionDeniedError
+from amanah.api.errors import (
+    AuthenticationRequiredError,
+    PermissionDeniedError,
+    ServiceUnavailableError,
+)
 from amanah.api.schemas.common import ResponseMeta
 from amanah.auth.principal import AuthenticatedUser, satisfies_role
 from amanah.auth.tokens import TokenVerificationError, verify_access_token
+from amanah.db.session import Database, DatabaseUnavailableError
 from amanah.domain.enums import Role
 from amanah.observability.request_context import current_request_id, new_request_id
 from amanah.settings import Settings
@@ -105,10 +112,54 @@ def ensure_resource_owner(user: AuthenticatedUser, owner_id: UUID) -> None:
         raise PermissionDeniedError
 
 
-def build_response_meta(settings: Settings) -> ResponseMeta:
+def get_database(request: Request) -> Database:
+    """Return the connection pool, or refuse the request.
+
+    A service with no `DATABASE_URL` still starts and still answers `/healthz`
+    and `/readyz`; it simply cannot answer a product read, and says so with a
+    retryable `503` instead of a confusing empty result.
+    """
+    database: Database | None = request.app.state.database
+    if database is None:
+        logger.warning("product read refused", extra={"reason": "database_not_configured"})
+        raise ServiceUnavailableError
+    return database
+
+
+def get_session(
+    user: CurrentUser,
+    database: Annotated[Database, Depends(get_database)],
+) -> Iterator[Session]:
+    """Yield a transaction scoped to the verified caller.
+
+    Depending on `CurrentUser` is what makes the scoping unavoidable: a route
+    cannot obtain a session without the server having decided who is calling, so
+    the owner and role predicates in the projections always have an identity to
+    evaluate.
+    """
+    try:
+        with database.session_for(user) as session:
+            yield session
+    except DatabaseUnavailableError as exc:
+        # Converted once, here at the boundary. The driver message stays in the
+        # logs because it can name internal hosts.
+        raise ServiceUnavailableError from exc
+
+
+DatabaseSession = Annotated[Session, Depends(get_session)]
+
+
+def build_response_meta(
+    settings: Settings,
+    *,
+    is_stale: bool = False,
+    warnings: list[str] | None = None,
+) -> ResponseMeta:
     """Build the metadata envelope attached to product responses."""
     return ResponseMeta(
         request_id=current_request_id() or new_request_id(),
         generated_at=datetime.now(UTC),
         data_mode=settings.data_mode,
+        is_stale=is_stale,
+        warnings=warnings or [],
     )

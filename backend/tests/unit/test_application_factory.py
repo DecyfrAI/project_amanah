@@ -13,7 +13,19 @@ def test_factory_builds_an_application_with_its_routes_mounted() -> None:
 
     assert isinstance(app, FastAPI)
     assert app.version == API_VERSION
-    assert set(app.openapi()["paths"]) == {"/healthz", "/readyz", "/v1/me"}
+    assert set(app.openapi()["paths"]) == {
+        "/healthz",
+        "/readyz",
+        "/v1/me",
+        "/v1/dashboard",
+        "/v1/items",
+        "/v1/items/{item_id}",
+        "/v1/news",
+        "/v1/filters",
+        "/v1/resources",
+        "/v1/methodology",
+        "/v1/connections",
+    }
 
 
 def test_factory_stores_the_validated_settings_for_dependencies() -> None:

@@ -82,6 +82,13 @@ class Settings(BaseSettings):
     # ready to serve product traffic until this is configured.
     database_url: SecretStr | None = Field(default=None)
 
+    # Explicit, configurable bounds on both halves of a database call: how long
+    # opening a connection may take, and how long a query that already started
+    # may run. Neither may fall back to a driver default of "forever".
+    database_connect_timeout_seconds: int = Field(default=5, ge=1, le=60)
+    database_statement_timeout_ms: int = Field(default=5000, ge=100, le=60_000)
+    database_pool_size: int = Field(default=5, ge=1, le=50)
+
     gemini_api_key: SecretStr | None = Field(default=None)
     gemini_model: str | None = Field(default=None)
     youtube_api_key: SecretStr | None = Field(default=None)

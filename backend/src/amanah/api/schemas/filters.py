@@ -11,7 +11,13 @@ from typing import Annotated, Self
 
 from pydantic import Field, StringConstraints, model_validator
 
-from amanah.api.schemas.base import RequestModel, UtcDatetime
+from amanah.api.schemas.base import RequestModel, ResponseModel, UtcDatetime
+from amanah.api.schemas.common import (
+    DEFAULT_PAGE_LIMIT,
+    MAX_CURSOR_LENGTH,
+    MAX_PAGE_LIMIT,
+    ResponseMeta,
+)
 from amanah.domain.enums import (
     ConfidenceTier,
     ContentKind,
@@ -78,3 +84,49 @@ class ItemFilters(RequestModel):
         if self.date_to - self.date_from > MAX_FILTER_WINDOW:
             raise ValueError(f"date range must not exceed {MAX_FILTER_WINDOW.days} days")
         return self
+
+
+class ItemListQuery(ItemFilters):
+    """Query parameters accepted by the paginated item and news collections.
+
+    Extends the filters with the documented sort and the cursor page controls.
+    Unknown parameters are still rejected, so a mistyped filter name is a client
+    error rather than a wider result set.
+    """
+
+    sort: ItemSort = ItemSort.newest
+    cursor: str | None = Field(default=None, max_length=MAX_CURSOR_LENGTH)
+    limit: int = Field(default=DEFAULT_PAGE_LIMIT, ge=1, le=MAX_PAGE_LIMIT)
+
+
+class DatasetOption(ResponseModel):
+    """One dataset present in the data, as a filterable triple.
+
+    Returned separately from `platforms` because a datapack row publishes `N/A`
+    as its platform; the display value must not erase which dataset it came from.
+    """
+
+    provider: DatasetIdentifier
+    name: DatasetIdentifier
+    version: DatasetIdentifier
+
+
+class FilterOptionsResponse(ResponseModel):
+    """`GET /v1/filters` payload.
+
+    Every list is derived from stored rows, so the interface cannot offer a
+    filter value that would return an empty page and read as a finding.
+    """
+
+    content_kinds: list[ContentKind] = Field(default_factory=list)
+    platforms: list[PublicPlatform] = Field(default_factory=list)
+    datasets: list[DatasetOption] = Field(default_factory=list)
+    country_codes: list[CountryCode] = Field(default_factory=list)
+    narrative_tags: list[NarrativeTag] = Field(default_factory=list)
+    severities: list[Severity] = Field(default_factory=list)
+    review_states: list[ReviewState] = Field(default_factory=list)
+    confidence_tiers: list[ConfidenceTier] = Field(default_factory=list)
+    sorts: list[ItemSort] = Field(default_factory=list)
+    max_window_days: int = Field(ge=1)
+    max_page_limit: int = Field(ge=1)
+    meta: ResponseMeta

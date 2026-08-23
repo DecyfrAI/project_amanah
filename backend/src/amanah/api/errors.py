@@ -80,6 +80,34 @@ class PermissionDeniedError(ApiError):
         )
 
 
+class ResourceNotFoundError(ApiError):
+    """The resource does not exist, or is not visible to this caller.
+
+    Both cases share one response deliberately: distinguishing them would let a
+    caller confirm that a record they cannot read exists.
+    """
+
+    def __init__(self, message: str = "The requested resource was not found.") -> None:
+        super().__init__(
+            code=ErrorCode.resource_not_found,
+            status_code=404,
+            message=message,
+        )
+
+
+class ServiceUnavailableError(ApiError):
+    """A dependency this request needs is not configured or not reachable."""
+
+    def __init__(
+        self, message: str = "This service is temporarily unable to answer the request."
+    ) -> None:
+        super().__init__(
+            code=ErrorCode.service_unavailable,
+            status_code=503,
+            message=message,
+        )
+
+
 def build_error_response(
     *, code: ErrorCode, status_code: int, message: str, details: ErrorDetails | None = None
 ) -> JSONResponse:

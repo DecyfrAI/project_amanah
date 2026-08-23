@@ -5,10 +5,13 @@ description = "Project Amanah backend API for authenticated Islamophobia researc
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
+    "alembic==1.17.1",
     "fastapi==0.141.1",
+    "psycopg[binary]==3.2.13",
     "pydantic==2.13.4",
     "pydantic-settings==2.15.0",
     "pyjwt==2.13.0",
+    "sqlalchemy==2.0.46",
     "uvicorn[standard]==0.52.4",
 ]
 
@@ -54,6 +57,9 @@ select = [
 [tool.ruff.lint.per-file-ignores]
 # Tests assert on values and construct throwaway credentials for negative cases.
 "tests/**" = ["S101", "S105", "S106", "ANN401"]
+# Database tests compose DDL and DML from table names read out of the schema
+# metadata, never from input, and every value is still a bound parameter.
+"tests/db/**" = ["S101", "S105", "S106", "ANN401", "S608"]
 
 [tool.mypy]
 python_version = "3.13"
