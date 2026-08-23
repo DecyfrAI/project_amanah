@@ -59,22 +59,26 @@ Every code-generation prompt below requires the coding LLM to read the applicabl
 - **B-S6 (Milestone 2) [backend]: Implement authenticated methodology, resources, and connection-status reads.** Add protected curated resources, methodology disclosures, and safe connector state without secrets. Dependencies: B-S3–B-S5.
 - **B-S7 (Milestone 3) [backend]: Implement collection-run and background-job state machines.** Add idempotent run/job persistence, claims, retries, checkpoints, dead-letter/policy-blocked states, and admin run reads. Dependencies: B-S3–B-S4.
 - **B-S8 (Milestone 3) [backend]: Implement the canonical adapter contract and fixture adapter.** Define discovery/fetch/canonicalize/checkpoint/health interfaces, approved seed-configuration provenance, the `N/A` source semantics for datapack items, and prove them with safe deterministic fixtures. Dependencies: B-S2, B-S7.
-- **B-S9 (Milestone 3) [backend]: Implement bounded news ingestion.** Add GDELT and/or reviewed RSS retrieval, metadata-only storage, canonical-URL deduplication, coverage, and provider failure handling. Dependencies: B-S8.
+- **B-S9 (Milestone 3) [backend]: Implement bounded news ingestion.** Add GDELT and/or reviewed RSS retrieval using the `docs/news-rss-sources.md` allowlist and its per-feed topical relevance filters, metadata-only storage, database-checked canonical-URL deduplication, the context news stream contract for `GET /v1/news`, coverage, and provider failure handling. Dependencies: B-S8.
 - **B-S9A (Milestone 3) [backend]: Implement reviewed open-datapack ingestion.** Add manifest-validated CSV/JSONL imports for Kaggle and other open datasets, source/platform `N/A` mapping, dataset package/version/license/row provenance, hash verification, and fail-before-write validation. Dependencies: B-S3, B-S8.
 - **B-S10 (Milestone 3) [backend]: Implement bounded YouTube ingestion.** Add approved registry-backed query/seed discovery, video/comment retrieval, quota-aware checkpoints, sampling-stratum provenance, comment coverage states, and official-API-only behavior. Dependencies: B-S8.
 - **B-S11 (Milestone 3) [backend]: Implement safe user-URL retrieval.** Validate public HTTP(S) URLs, prevent SSRF and unsafe redirects, extract permitted metadata/excerpts, and return explicit unsupported/inaccessible states. Dependencies: B-S7–B-S8.
-- **B-S12 (Milestone 3) [backend]: Implement normalization and deduplication.** Produce versioned normalized/model text, context, exact hashes, canonical URL handling, language checks, datapack row deduplication, and idempotent content upserts. Dependencies: B-S8–B-S11, including B-S9A.
+- **B-S12 (Milestone 3) [backend]: Implement normalization and deduplication.** Produce versioned normalized/model text, context, exact hashes, canonical URL handling, language checks, datapack row deduplication, and idempotent content upserts. Stored text is never profanity-filtered or censored; redaction is a display/report concern. Dependencies: B-S8–B-S11, including B-S9A.
 - **B-S13 (Milestone 4) [ml]: Implement the controlled Gemini client.** Add configurable model access, structured-output validation, prompt/version registry, caching keys, token budgets, timeouts, and policy gating. Dependencies: B-S2, B-S12.
 - **B-S14 (Milestone 4) [ml]: Implement staged classification and confidence.** Separate relevance/stance/type/severity/narrative, store predictions, map configurable confidence tiers, and route uncertain items to review. Dependencies: B-S13.
 - **B-S15 (Milestone 4) [ml]: Implement deterministic metrics and cached insights.** Compute monitored-sample rates/coverage/trends in code or SQL, keep enriched/control/ordinary strata distinct, and allow Gemini only to explain cited fact bundles. Dependencies: B-S5, B-S14.
 - **B-S16 (Milestone 5) [backend]: Implement URL submissions and contribution history.** Add authenticated idempotent submission/status APIs, pipeline enqueueing, contribution events, and ownership-safe reads. Dependencies: B-S4, B-S7, B-S11–B-S12.
 - **B-S17 (Milestone 5) [backend]: Implement disputes and reviewer decisions.** Add one-open-dispute constraint, review tasks/claims/append-only decisions, effective labels, user-visible resolutions, and training-candidate quarantine. Dependencies: B-S14, B-S16.
-- **B-S18 (Milestone 5) [backend]: Implement platform-policy assistance and prepared reports.** Add versioned policy catalog, constrained Gemini matching, human confirmation, prepared text persistence, status/outcome tracking, and anti-abuse limits. Dependencies: B-S13–B-S17.
+- **B-S18 (Milestone 5) [backend]: Implement platform-policy assistance and prepared reports.** Add versioned policy catalog, constrained Gemini matching, human confirmation, prepared text persistence, status/outcome tracking, and anti-abuse limits. Platforms without an official reporting form get an email-style draft to an allow-listed address, never auto-sent (FR-TOS-010). Dependencies: B-S13–B-S17.
 - **B-S19 (Milestone 6) [backend]: Implement curated resource administration and governance.** Add reviewer/admin resource mutations, review dates/status, authenticated base-role projections, and safe external-link validation. Dependencies: B-S4, B-S6.
 - **B-S20 (Milestone 6) [backend]: Implement research-report snapshots and aggregate export.** Resolve authorized filters, freeze coverage/findings/citations, redact, create immutable snapshots, and optionally emit aggregate CSV. Dependencies: B-S5, B-S15–B-S17.
 - **B-S21 (Milestone 7) [devops]: Assemble the idempotent ETL command and eight-hour workflow.** Orchestrate connector and reviewed-datapack stages, checkpoints, manual dispatch, credential-based connector enablement, redacted run artifacts, and safe concurrency. Dependencies: B-S7–B-S15, including B-S9A.
 - **B-S22 (Milestone 7) [backend]: Add production resilience and observability.** Implement structured redacted logs, request/run correlation, metrics, timeouts, retries, rate limits, stale/partial coverage, and dependency isolation. Dependencies: B-S4–B-S21.
 - **B-S23 (Milestone 7) [devops]: Complete CI, AI evals, security gates, deployment, and smoke runbooks.** Add deterministic fixture CI, migration/RLS tests, eval workflows, secret/dependency scans, Render configuration, and deployed smoke checks. Dependencies: B-S1–B-S22.
+- **B-S24 (Milestone 3) [backend]: Implement bounded historical backfill.** Backfill roughly five years through the existing canonical pipeline: reviewed datapacks first, GDELT/RSS historical windows where terms permit, official-API YouTube seed queries with explicit date windows; resumable windowed runs with backfill provenance and per-bucket coverage so sparse history stays a gap. Dependencies: B-S9–B-S12. See `frontend-backend-reconciliation.md` §2.8.
+- **B-S25 (Milestone 4) [ml]: Implement the grounded dashboard assistant.** Add `POST /v1/assistant/query` answering only from stored fact bundles and methodology through the controlled Gemini client, with citations, limitations, typed abstention, coincidence-only association language, and per-user rate limits. Requires an additive spec §13 amendment. Dependencies: B-S13, B-S15. See reconciliation G7.
+- **B-S26 (Milestone 4) [ml]: Implement the image-evidence catalog and classification.** Object-storage bytes with signed URLs, Postgres metadata/annotation/prediction rows, server-side staged image classification per ADR 0007; live image ingestion stays gated on provider approval. Requires an additive spec §13 amendment. Dependencies: B-S13, B-S14, B-S9A. See reconciliation G8.
+- **B-S27 (Milestone 5) [backend]: Implement insight snapshots, discussion, captures, and profile persistence.** `PATCH /v1/me`, snapshot insights over `insight_snapshots`, invite-only discussion with non-ranking reactions and row-preserving retraction, first-party dashboard captures, and viewer-post reads per ADR 0004. Requires an additive spec §13 amendment. Dependencies: B-S4, B-S5, B-S15. See reconciliation G6/G10.
 
 ### Coverage and sequencing verification
 
@@ -350,12 +354,14 @@ Context:
 - The adapter contract and fixture pipeline work.
 
 Task:
-- Implement one bounded live news path using GDELT and/or a reviewed RSS allowlist.
+- Implement one bounded live news path using GDELT and/or the reviewed RSS allowlist in docs/news-rss-sources.md.
 
 Requirements:
+- Use only feeds from the allowlist; apply its per-feed topical relevance filters through configuration (keep religion/hate-crime/public-affairs coverage, drop sport/celebrity) and never treat Muslim-related vocabulary as a harm signal.
+- Serve GET /v1/news as the context news stream contract from that hand-off document (window, applied, coverage, data_mode, next_cursor, publisher-metadata items with no hate label or review state), updating OpenAPI and contract tests together.
 - Store headline, publisher, canonical URL, short permitted description/excerpt, publication/retrieval time, language, scope, and explicit location only.
 - Do not store full articles by default or bypass paywalls/robots/terms.
-- Deduplicate canonical URLs and normalized provider/headline combinations.
+- Deduplicate canonical URLs and normalized provider/headline combinations, checking the database before insert.
 - Add timeouts, response limits, rate handling, checkpoints, and coverage warnings.
 - Mock provider HTTP only at the boundary in tests; include malformed/partial/duplicate/outage cases.
 - Extend and integrate; do not rewrite working code.
@@ -675,7 +681,8 @@ Requirements:
 - Use Gemini only to rank candidate policies and draft bounded evidence/suggested wording; validate structured output.
 - Require client/user confirmation of a policy before creating the prepared record.
 - Store exact policy version, item, evidence summary, wording, status, and later submitted/outcome event.
-- Do not call reporting APIs, arbitrary URLs, or claim platform receipt.
+- Apply FR-TOS-010 (spec v2.2): platforms with an official reporting form use the policy-catalog flow; a platform without one gets an email-style draft addressed only to a reviewer-approved allow-listed address, never auto-sent.
+- Do not call reporting APIs, arbitrary URLs, send email, or claim platform receipt.
 - Add per-user/item limits and anti-brigading/duplicate controls.
 - Test stale policy versions, low confidence, confirmation, ownership, outcome transitions, and absence of external side effects.
 - Extend and integrate; do not rewrite working code.
@@ -841,6 +848,133 @@ Requirements:
 Output:
 - CI/eval/security workflows, deployment config, smoke tests, and runbooks.
 - A short final verification report with exact pass/fail results.
+
+If something is ambiguous, ask clarifying questions before producing code.
+```
+
+### Step B-S24 — Bounded historical backfill [backend]
+
+```text
+You are implementing backend step B-S24 for Project Amanah.
+
+Mandatory first action:
+- Read spec.md sections 10.2–10.6 and docs/frontend-backend-reconciliation.md section 2.8.
+- Read rules/general.md, rules/backend.md, rules/security.md, and rules/testing.md.
+
+Context:
+- The canonical pipeline, news, datapack, and YouTube adapters exist (B-S9–B-S12).
+- The product owner asked for roughly five years of historical data to populate the dashboard.
+
+Task:
+- Implement bounded historical backfill through the existing canonical pipeline only.
+
+Requirements:
+- Reviewed open datapacks are the primary historical source; GDELT/RSS historical windows only where provider terms permit; YouTube only via official-API seed/query discovery with explicit date windows and per-window caps.
+- No scraping, no source outside approved configuration, and the registry/strata rules apply unchanged.
+- Run backfill as resumable windowed runs with checkpoints and distinct run provenance (backfill vs incremental).
+- Dedupe against already-ingested content before insert.
+- Carry per-bucket coverage so sparse historical windows render as gaps or low coverage, never as a real zero or a prevalence claim.
+- Test window slicing, resume after interruption, dedupe, cap enforcement, and coverage provenance.
+- Extend and integrate; do not rewrite working code.
+
+Output:
+- Backfill command/config, run provenance, coverage handling, and tests.
+- A short verification summary.
+
+If something is ambiguous, ask clarifying questions before producing code.
+```
+
+### Step B-S25 — Grounded dashboard assistant [ml]
+
+```text
+You are implementing backend step B-S25 for Project Amanah.
+
+Mandatory first action:
+- Confirm the additive spec.md section 13 amendment for POST /v1/assistant/query is agreed (reconciliation G7).
+- Read rules/ml.md, rules/agentic.md, rules/api.md, rules/security.md, and rules/testing.md.
+
+Context:
+- The controlled Gemini client (B-S13) and deterministic fact bundles (B-S15) exist.
+- The frontend ships Ask Amanah with starter queries and the AssistantAskInput/AssistantReply contract in apps/web/src/api/contracts.ts.
+
+Task:
+- Implement POST /v1/assistant/query answering questions about the current filtered window.
+
+Requirements:
+- Accept the question plus the exact dashboard filters; the reply must describe that sample and no other.
+- Answer only from stored fact bundles and methodology text; Gemini never computes a number, sees the database, or gains tools.
+- Return answer, typed citations for every quantitative claim, limitations, and grounded_in (figures/methodology/none); abstain with a typed result rather than inventing an answer.
+- Describe association as coincidence only; refuse causal phrasing.
+- Treat the question as untrusted prompt-injection input; apply B-S13 budgets and caching; rate-limit per user.
+- Test citation fidelity, causal refusal, injection, abstention, filter fidelity, budgets, and Gemini-unavailable degradation.
+- Extend and integrate; do not rewrite working code.
+
+Output:
+- Assistant endpoint, grounding service, prompt registry entries, and tests.
+- A short verification summary.
+
+If something is ambiguous, ask clarifying questions before producing code.
+```
+
+### Step B-S26 — Image-evidence catalog and classification [ml]
+
+```text
+You are implementing backend step B-S26 for Project Amanah.
+
+Mandatory first action:
+- Read docs/adr/0007-research-image-corpus.md and confirm the additive spec.md section 13 amendment (reconciliation G8).
+- Read rules/ml.md, rules/database.md, rules/security.md, and rules/testing.md.
+
+Context:
+- The controlled Gemini client and staged text classification exist (B-S13–B-S14).
+- The frontend ships an image catalog and classify-evidence flow whose live provider intentionally returns 501.
+
+Task:
+- Implement the authenticated image-example catalog and server-side image classification.
+
+Requirements:
+- Bytes live in object storage only; Postgres holds path, sha256, mime, byte size, dataset annotation JSON, and prediction JSON. Never base64 in the database; pixels never cross the browser API boundary.
+- Serve the catalog with manifest provenance and short-lived signed URLs; blur-by-default stays a frontend concern but projections must support it.
+- Classify server-side through the controlled Gemini boundary using the staged taxonomy; dataset annotations remain separate from Amanah predictions.
+- Live image ingestion stays gated: Reddit disabled/fixture until Reddit-for-Researchers approval; any YouTube thumbnail/frame capture is a separate reviewed decision.
+- No person indexing, search, or ranking. Authenticated surfaces only.
+- Test signed-URL expiry, annotation/prediction separation, schema validity, anonymous denial, and absence of image bytes in responses and logs.
+- Extend and integrate; do not rewrite working code.
+
+Output:
+- Storage/schema/migration changes (with explicit authorization), catalog and classification endpoints, and tests.
+- A short verification summary.
+
+If something is ambiguous, ask clarifying questions before producing code.
+```
+
+### Step B-S27 — Insight snapshots, discussion, captures, and profile persistence [backend]
+
+```text
+You are implementing backend step B-S27 for Project Amanah.
+
+Mandatory first action:
+- Read docs/adr/0004-insight-discussion.md and confirm the additive spec.md section 13 amendment (reconciliation G6/G10).
+- Read rules/backend.md, rules/api.md, rules/database.md, rules/security.md, and rules/testing.md.
+
+Context:
+- The Milestone 2 schema already includes insight_snapshots; the frontend ships /app/insights against the contracts in apps/web/src/api/contracts.ts.
+
+Task:
+- Implement PATCH /v1/me, insight snapshots, invite-only discussion, captures, and viewer-post reads.
+
+Requirements:
+- PATCH /v1/me persists profile/onboarding state (spec 13.2).
+- A snapshot freezes claim, numerator/denominator, metric, window, coverage, and the Explorer filter state at capture time; GET/POST /v1/insights and GET /v1/insights/{id}.
+- Discussion posts attach to an insight; reactions are useful/needs_context counts that never rank authors; retraction replaces the body and removes the capture while leaving the row.
+- POST /v1/captures stores first-party dashboard figure captures (alt text, filter hash, Explorer deep link); GET /v1/me/posts is caller-scoped.
+- Invite-only participation, anonymous denial everywhere, RLS ownership boundaries, posting rate limits.
+- Test snapshot immutability, retraction semantics, reaction idempotency, ownership/anonymous denial, and that no free-floating board or person ranking exists.
+- Extend and integrate; do not rewrite working code.
+
+Output:
+- Endpoints, repositories, migration changes (with explicit authorization), and tests.
+- A short verification summary.
 
 If something is ambiguous, ask clarifying questions before producing code.
 ```

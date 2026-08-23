@@ -1,7 +1,7 @@
 # Project Amanah — Developer-Ready Product Specification
 
-**Version:** 2.1  
-**Date:** 2026-08-22  
+**Version:** 2.2  
+**Date:** 2026-08-23  
 **Status:** Approved product direction; ready for hackathon implementation  
 **Delivery constraint:** 48-hour hackathon  
 **Primary language:** English  
@@ -15,8 +15,8 @@ This specification is the implementation source of truth for the hackathon versi
 Earlier documents remain useful technical references, but the following decisions in this file take precedence:
 
 - Research-oriented users are the primary audience.
-- Only the marketing homepage is public product content; authentication entry/callback routes remain reachable solely to establish a session.
-- The dashboard, news, findings, item pages, methodology, resources, forum placeholder, reports, contributions, and all other application surfaces require authentication.
+- Only the marketing homepage and the static education lesson library are public product content; authentication entry/callback routes remain reachable solely to establish a session (v2.2, ADR 0008).
+- The dashboard, news, findings, item pages, methodology, the reviewed resource catalog data, forum placeholder, reports, contributions, and all other application surfaces require authentication.
 - Current events and researcher-facing insights are the core experience.
 - Education/resources, user contributions, classification disputes, assisted platform reporting, PDF reports, filters, and transparent AI-confidence displays are in scope.
 - Social sharing is a mock in the hackathon.
@@ -214,6 +214,7 @@ Mock actions MUST be labelled “Demo” or “Coming soon” and MUST NOT imply
 | `/signup` | Account creation |
 | `/auth/callback` | Authentication provider callback; validates safe internal return state |
 | `/recover` | Password-recovery entry if enabled |
+| `/resources`, `/resources/:lessonId` | Static education lesson library (v2.2, ADR 0008). Editorial content only; MUST NOT fetch any `/v1` product API. The reviewed resource catalog (`/v1/resources`) remains authenticated and is surfaced inside the workspace |
 
 ### 7.2 Authenticated routes
 
@@ -223,7 +224,7 @@ Mock actions MUST be labelled “Demo” or “Coming soon” and MUST NOT imply
 | `/dashboard` | Current headlines, aggregate metrics, findings, filters, and sorting |
 | `/items/:id` | Authenticated-safe item detail, summary, AI analysis, provenance, and actions |
 | `/news` | Filterable news/current-events listing; MAY be integrated into the dashboard for P0 |
-| `/resources` | Education, research, reporting, support, and getting-involved resources |
+| `/resources` (catalog data) | Reviewed research, reporting, support, and getting-involved resource catalog served by `/v1/resources`; the static lesson library at the same path is public per §7.1 |
 | `/methodology` | Sources, sampling, taxonomy, models, confidence, limitations, and disclosures |
 | `/forum` | “Coming soon” page |
 | `/contributions` | Submitted URLs, disputes, prepared reports, and future comments/posts |
@@ -444,6 +445,7 @@ The interface MUST NOT label this value as the sentiment of all Western users or
 - **FR-TOS-007:** A prepared report record MUST store item, platform, policy version, selected rule, generated wording, creation time, and user.
 - **FR-TOS-008:** The user MAY mark it submitted and record an outcome such as `no_response | content_removed | content_restricted | no_violation | other`.
 - **FR-TOS-009:** The interface MUST discourage brigading and duplicate mass reporting.
+- **FR-TOS-010 (v2.2):** Platforms with an official reporting form MUST use the policy-catalog flow above. For a platform without an official reporting form, the assistant MAY instead produce an email-style draft (subject, body, evidence summary) addressed only to a reviewer-approved allow-listed address; the application MUST NOT send the email or claim it was sent, and FR-TOS-006 through FR-TOS-009 still apply.
 
 ### 9.10 Contributions
 
@@ -688,6 +690,24 @@ No `/v1` product-data endpoint is anonymous. The marketing page is a static fron
 | POST | `/v1/research-reports` | Create filtered report snapshot |
 | GET | `/v1/research-reports/{id}` | Own/authorized report preview |
 | GET | `/v1/research-reports/{id}/summary.csv` | Aggregate CSV if implemented |
+
+The following rows were added in v2.2 (23 August 2026) per
+`frontend-backend-reconciliation.md` and ADRs 0004/0007. They are additive:
+nothing above changes meaning.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET/POST | `/v1/insights` | List snapshot insights; create one from a figure that already carries its numerator and denominator (ADR 0004) |
+| GET | `/v1/insights/{id}` | One snapshot insight |
+| GET | `/v1/insights/{id}/discussion` | Invite-only discussion thread for an insight |
+| POST | `/v1/insights/{id}/discussion/posts` | Add a discussion note |
+| POST | `/v1/posts/{id}/reactions` | React `useful`/`needs_context`; counts only, never author ranking |
+| POST | `/v1/posts/{id}/retract` | Retract own note: body replaced, capture removed, row preserved |
+| POST | `/v1/captures` | Store a first-party dashboard figure capture (alt text, filter hash, Explorer deep link) |
+| GET | `/v1/me/posts` | The caller's own discussion notes |
+| POST | `/v1/assistant/query` | Grounded question about the current filtered window; answers only from stored fact bundles and methodology, cites every number, and refuses causal claims |
+| GET | `/v1/image-examples` | Authenticated image-evidence catalog with manifest provenance and short-lived signed URLs (ADR 0007) |
+| POST | `/v1/image-classifications` | Server-side staged classification of a catalog or uploaded image; pixels never cross the browser API boundary |
 
 ### 13.3 Reviewer/admin endpoints
 

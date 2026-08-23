@@ -7,6 +7,8 @@
 
 Use this checklist in Step ID order. A parent step is complete only when its child checks and applicable cross-cutting gates are complete. Preserve working code, keep each change reviewable, and record any intentionally deferred check with a reason.
 
+> **Status note (23 Aug 2026):** the boxes below describe scope, not progress. F-S1–F-S3 and much of F-S5–F-S7 are built; the live build state is in git, [`apps/web/HANDOFF.md`](../apps/web/HANDOFF.md), and [`apps/web/todo.md`](../apps/web/todo.md). Contract gaps against the shipped backend are enumerated in [`frontend-backend-reconciliation.md`](./frontend-backend-reconciliation.md) (G1–G11) and tracked here as F-S21.
+
 ## TRACK: frontend
 
 ### Milestone 1 — Frontend foundation and contracts
@@ -205,6 +207,19 @@ Use this checklist in Step ID order. A parent step is complete only when its chi
   - [ ] **F-S20.7** Run lint, format check, type check, unit/component tests, accessibility checks, production build, and E2E tests.
   - [ ] **F-S20.8** Assert every application route denies anonymous access without issuing protected API requests.
   - [ ] **F-S20.9** Freeze feature scope and fix acceptance blockers only.
+
+### Milestone 7 — Live-backend contract reconciliation
+
+- [ ] **F-S21 — Reconcile the live provider with the shipped backend API** (see [`frontend-backend-reconciliation.md`](./frontend-backend-reconciliation.md))
+  - [ ] **F-S21.1** Attach the Supabase access token to every live request and treat 401 as expired-session with refresh/re-login; never persist the token outside the Supabase client (G1; lands with F-S9).
+  - [ ] **F-S21.2** Adopt `GET /v1/dashboard` and its snake_case `DashboardResponse` shape in place of `/v1/overview`; record which Overview widgets need additive backend fields (per-source daily stacks, breakdowns) rather than keeping a parallel endpoint (G2).
+  - [ ] **F-S21.3** Adopt the backend `/v1/items` parameter names (`date_from`, `date_to`, `platforms`, …), snake_case item shape, and cursor pagination; stop promising a `matched` total keyset pagination cannot supply; resolve `hate_type`/`q` as additive backend filters or visible client-side-only behavior (G3).
+  - [ ] **F-S21.4** Adopt the backend `/v1/filters` response; request available-window and per-option counts as additive backend work if the calendar needs them (G4).
+  - [ ] **F-S21.5** Keep `NewsListSchema` as-is — the backend aligns `/v1/news` to it in B-S9 (G5); verify against the deployed contract when it lands.
+  - [ ] **F-S21.6** Split the ~535 kB main bundle below Vite's 500 kB warning before the demo.
+  - [ ] **F-S21.7** Implement the hybrid assisted-report flow when B-S18 lands (FR-TOS-010, spec v2.2): policy-catalog flow for platforms with an official reporting form, email-style draft to an allow-listed address otherwise; the screen stays a declared mock until then (G9 resolved).
+  - [x] **F-S21.8** Public `/resources` resolved: the static lesson library is a marketing surface (product-owner decision, ADR 0008, spec v2.2 §7.1). No code change; extend FE-GATE-SEC-09 tests to the lesson pages (G11).
+  - [ ] **F-S21.9** Run one coordinated line-ending renormalization commit agreed with the backend contributor.
 
 ## Cross-cutting gates
 
