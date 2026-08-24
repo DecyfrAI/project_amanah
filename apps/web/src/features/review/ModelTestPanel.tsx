@@ -1,9 +1,15 @@
 import { useCallback, useEffect, useState, type ChangeEvent, type DragEvent } from 'react';
+import { useMutation } from '@tanstack/react-query';
 
-import { ApiRequestError, readDataMode, type ImageClassification } from '@/api';
+import {
+  ApiRequestError,
+  readDataMode,
+  type EvidenceClassifyRequest,
+  type ImageClassification,
+} from '@/api';
+import { fixtureProvider } from '@/api/fixture-provider';
 import { EvidencePreview } from '@/features/reports/EvidencePreview';
 import { EVIDENCE_MAX_BYTES, validateEvidenceFile } from '@/features/reports/evidence-file';
-import { useClassifyEvidence } from '@/features/reports/useClassifyEvidence';
 
 import {
   HATE_TYPE_PLAIN,
@@ -31,7 +37,9 @@ function errorMessage(error: unknown): string {
  * anything. Labelling is the other path, and it is deliberately separate.
  */
 export function ModelTestPanel() {
-  const classify = useClassifyEvidence();
+  const classify = useMutation({
+    mutationFn: (input: EvidenceClassifyRequest) => fixtureProvider.classifyEvidence(input),
+  });
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -156,7 +164,7 @@ export function ModelTestPanel() {
           {fileError}
         </p>
       )}
-      {classify.isPending && <p className={styles.pending}>Asking the model.</p>}
+      {classify.isPending && <p className={styles.pending}>Preparing the fixture rehearsal.</p>}
       {classify.isError && (
         <p className={styles.error} role="alert">
           {errorMessage(classify.error)}

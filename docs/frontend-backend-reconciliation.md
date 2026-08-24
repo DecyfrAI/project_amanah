@@ -13,7 +13,7 @@ Date: 23 August 2026. Gap status updated 24 August 2026.
 | G5 `/v1/news` contract | **Closed.** Nullable `published_at` and `scope` absorbed; an absent publication time renders as "Publication time not stated", never the retrieval time. |
 | G6 Insights, discussion, captures | **Closed.** All routes wired; the composer respects the server's `can_participate` (ADR 0004 invite-only). |
 | G7 Grounded assistant | **Closed.** `POST /v1/assistant/query` wired with filters, citations, limitations, and `grounded_in`. |
-| G8 Image catalogue and classification | **Partly closed.** The catalogue and classification of a catalogued image are wired. **Upload of a user's own file has no backend route** (`B-S28`); the live path refuses visibly. |
+| G8 Image catalogue and classification | **Closed for the demo flow.** The catalogue is wired, `POST /v1/image-uploads` stores a cleaned owner-only image, and the Review **Label an image** path classifies the returned `upload_id`. Retention deletion/expiry hardening remains tracked in `B-S28.10`–`.11`. |
 | G9 Assisted-report flow | **Closed.** `PolicyReportFlow` implements the policy-catalogue path with explicit version confirmation and the allow-listed email-draft split. |
 | G10 `PATCH /v1/me` | **Closed.** Used by the PA-01 media preference. |
 | G11 Public `/resources` | **Closed** by decision; no code change. |

@@ -280,7 +280,7 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [x] **B-S25.7** Test citation fidelity, causal refusal, injection resistance, insufficient-data abstention, filter fidelity, budget exhaustion, and Gemini-unavailable degradation.
 
 - [x] **B-S26 — Implement the image-evidence catalog and classification (ADR 0007)**
-  - **Scope correction (24 Aug 2026):** B-S26 covers classification of an image *already in the reviewed catalogue*. Authenticated **user upload is not implemented**: no route accepts a multipart file, so the frontend picker has no live path and refuses visibly rather than pretending. Tracked as B-S28 below; see completion guide step 8.
+  - **Scope correction (24 Aug 2026):** B-S26 covers classification of an image *already in the reviewed catalogue*. Authenticated user upload was implemented separately under B-S28 so the catalogue and user-owned upload lifecycles remain distinct.
   - [x] **B-S26.1** Land the additive `spec.md` §13 amendment for the image routes (reconciliation G8). *(Done 23 Aug 2026: spec v2.2 adds `GET /v1/image-examples` and `POST /v1/image-classifications`.)*
   - [x] **B-S26.2** Store image bytes in object storage only; Postgres holds path, sha256, mime, byte size, dataset annotation JSON, and prediction JSON. Never base64 in the database and never pixels across the browser API boundary.
   - [x] **B-S26.3** Serve the authenticated image-example catalog with manifest provenance and short-lived signed URLs.
@@ -291,17 +291,20 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [x] **B-S26.6 amendment (24 Aug 2026)** Blur-by-default is superseded by ADR 0010: images are visible by default to an authenticated viewer, blurring is a persisted profile preference, and every image keeps a Show/Hide control. Authentication, signed URLs, private storage, safe alt text, and the no-person-indexing rule are unchanged.
 
 - [ ] **B-S28 — Implement authenticated multipart image upload (completion guide step 8)**
-  - [ ] **B-S28.1** Define the upload contract and update `spec.md` §13, OpenAPI, contract tests, and the frontend schemas together.
-  - [ ] **B-S28.2** Accept one bounded JPEG/PNG/WebP; document exact byte and dimension limits.
-  - [ ] **B-S28.3** Validate MIME from bytes; reject malformed, polyglot, and decompression-bomb files; never trust the filename.
-  - [ ] **B-S28.4** Strip EXIF and other unnecessary personal metadata before storage.
-  - [ ] **B-S28.5** Compute SHA-256 and enforce a documented duplicate policy.
-  - [ ] **B-S28.6** Write bytes to the private first-party bucket; store owner, path, hash, MIME, size, timestamps, retention state, and classification references in PostgreSQL. Never base64 in the database.
-  - [ ] **B-S28.7** Replace the Supabase JWT signing secret used as a Storage credential with a dedicated server-only provider credential, and replace custom HMAC URLs with official Storage API signed URLs or an authenticated backend stream.
-  - [ ] **B-S28.8** Fetch stored bytes server-side and classify through the controlled Gemini boundary; keep upload, dataset annotation, model prediction, and human review as separate concepts.
-  - [ ] **B-S28.9** Obtain explicit migration authorization before adding any schema the upload needs.
+  - [x] **B-S28.1** Define the upload contract and update `spec.md` §13, OpenAPI, contract tests, and the frontend schemas together. *(The v2.4 amendment records the already implemented route and limits.)*
+  - [x] **B-S28.2** Accept one bounded JPEG/PNG/WebP; document exact byte and dimension limits.
+  - [x] **B-S28.3** Validate MIME from bytes; reject malformed, polyglot, and decompression-bomb files; never trust the filename.
+  - [x] **B-S28.4** Strip EXIF and other unnecessary personal metadata before storage.
+  - [x] **B-S28.5** Compute SHA-256 and enforce a documented duplicate policy.
+  - [x] **B-S28.6** Write bytes to the private first-party bucket; store owner, path, hash, MIME, size, timestamps, retention state, and classification references in PostgreSQL. Never base64 in the database.
+  - [x] **B-S28.7** Replace the Supabase JWT signing secret used as a Storage credential with a dedicated server-only provider credential, and replace custom HMAC URLs with official Storage API signed URLs or an authenticated backend stream.
+  - [x] **B-S28.8** Fetch stored bytes server-side and classify through the controlled Gemini boundary; keep upload, dataset annotation, model prediction, and human review as separate concepts.
+  - [x] **B-S28.9** Obtain explicit migration authorization before adding any schema the upload needs. *(Migration `0008_user_image_uploads` is present under the product-owner-authorized image completion request.)*
   - [ ] **B-S28.10** Define demo retention and deletion for user uploads.
+    - **Partial:** the default retention is 30 days and the service can owner-delete; an API/operator expiry sweep and its runbook are still missing.
   - [ ] **B-S28.11** Rate limit, and test anonymous denial, ownership, wrong MIME, oversized body, malformed image, metadata stripping, duplicate hash, missing object, signed-URL expiry, Gemini failure, logging redaction, and deletion.
+    - **Partial:** the global API limiter plus denial, ownership, MIME, size, malformed-image, metadata, duplicate, signed-URL, and log-redaction tests exist. Missing-object, provider-failure, and end-to-end deletion/expiry coverage remain.
+  - [x] **B-S28.12** Connect the Review tab's **Label an image** picker to multipart upload, then classify the stored owner-scoped `upload_id`; show upload and classification failures honestly. *(Focused frontend tests pass 24 Aug 2026.)*
 
 ## TRACK: devops
 
@@ -348,6 +351,7 @@ checked because a test file exists.
 | `uv run --project backend ruff format --check backend/src backend/tests backend/migrations` | 247 files already formatted. |
 | `uv run --project backend mypy backend/src backend/tests` | Success: no issues found in 236 source files. |
 | `uv run --project backend --env-file backend/.env python -c "from amanah.main import create_app; create_app()"` | Starts; reports `disabled_connectors: [news]`. Local YouTube and Gemini credentials are detected; connector detection is not evidence of a successful Gemini generation. |
+| `uv run --project backend --env-file backend/.env alembic -c backend/alembic.ini upgrade head`, after reviewing `0006_policy_channel_checks:head --sql` | Configured Supabase database upgraded transactionally through the two outstanding branches, merge revision, and B-S28 upload schema. Follow-up `alembic current` reports **`0008_user_image_uploads (head)`**. |
 | Read-only official YouTube API preflight through the configured adapter | Connector health `ok`; all five reviewed video IDs expose comment threads. A one-item discovery returned exactly one video without unnecessary comment pagination; a fuller comment check correctly reported omitted replies as a lower-bound coverage warning. No provider content was stored or printed. |
 | OpenAPI enumeration from `create_app().openapi()` | 45 paths; `/healthz` and `/readyz` are the only unauthenticated ones. Every path the frontend live provider calls exists. |
 | `npm --prefix apps/web run verify` | Format check, lint, type check, **345 tests passed**. |

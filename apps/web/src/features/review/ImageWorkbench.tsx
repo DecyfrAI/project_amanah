@@ -12,7 +12,7 @@ type ImagePath = 'label' | 'test';
 /**
  * The two things a person does with an image here, kept apart on purpose.
  *
- * Labelling records a training annotation; testing records nothing. Collapsing
+ * Labelling keeps a session annotation; testing records nothing. Collapsing
  * them into one screen would mean someone trying the model out to see what it
  * does could leave a training label behind without having chosen to, so the
  * choice is made before the upload rather than after it.
@@ -31,8 +31,9 @@ export function ImageWorkbench() {
           Work with an image
         </h2>
         <InfoTip label="Work with an image">
-          Two separate paths. Labelling saves a training annotation. Testing saves nothing and
-          exists only to show what the classifier does.
+          Two separate paths. Labelling uploads and classifies an image, then keeps your demo label
+          for this session. Testing saves nothing and exists only to show the fixture response
+          shape.
         </InfoTip>
       </div>
 
@@ -51,7 +52,7 @@ export function ImageWorkbench() {
           <span>
             <span className={styles.pathName}>Label an image</span>
             <span className={styles.pathDetail}>
-              Record a training annotation for later fine-tuning. This is saved.
+              Upload and classify an image, then keep a demo annotation in this browser session.
             </span>
           </span>
         </label>
@@ -68,7 +69,7 @@ export function ImageWorkbench() {
           <span>
             <span className={styles.pathName}>Test the model</span>
             <span className={styles.pathDetail}>
-              See how the classifier reads an image, in ordinary words. Nothing is saved.
+              Rehearse the classifier response in ordinary words. Nothing is saved.
             </span>
           </span>
         </label>

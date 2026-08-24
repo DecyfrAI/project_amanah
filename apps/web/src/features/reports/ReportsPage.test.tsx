@@ -214,15 +214,16 @@ describe('ReportsPage', () => {
     expect(screen.getByText(/not a prevalence estimate for any platform/i)).toBeVisible();
   });
 
-  it('states that CSV carries aggregates only and that item-level export is gated', async () => {
+  it('states that CSV carries aggregates only without implying a frontend permission gate', async () => {
     const user = userEvent.setup();
     renderReports();
 
     await user.type(screen.getByLabelText('Report title'), 'August monitored sample');
     await user.click(screen.getByRole('button', { name: 'Generate report' }));
 
-    const note = await screen.findByText(/carries counts and denominators only/i);
-    expect(note).toHaveTextContent(/item-level export needs elevated permission/i);
+    const note = await screen.findByText(/contains the aggregate counts and denominators/i);
+    expect(note).toHaveTextContent(/does not include item-level content or personal identifiers/i);
+    expect(note).not.toHaveTextContent(/elevated permission/i);
   });
 
   it('lists what the report will contain, including its limitations', () => {
