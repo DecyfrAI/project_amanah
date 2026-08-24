@@ -1,8 +1,9 @@
 import { fixtureProvider } from './fixture-provider';
 import { liveProvider } from './live-provider';
-import { readDataMode } from './env';
+import { readSelectedDataMode } from './data-mode-preference';
 import { ApiRequestError } from './errors';
 import type { ApiClient } from './client';
+import type { DataMode } from './env';
 
 export { FIXTURE_VIEWER, queryKeys } from './client';
 export type {
@@ -74,6 +75,11 @@ export { hateTypeLabel, platformLabel, reviewLabel, severityLabel } from './fixt
 export { ApiRequestError } from './errors';
 export { isFixtureVisible, readDataMode, usesLiveAuthentication } from './env';
 export type { DataMode } from './env';
+export {
+  clearMockDataPreference,
+  readSelectedDataMode,
+  writeMockDataPreference,
+} from './data-mode-preference';
 export { isSupabaseConfigured } from './supabase';
 
 let fallbackActive = false;
@@ -181,8 +187,7 @@ function createDemoProvider(live: ApiClient): ApiClient {
   };
 }
 
-export function createApiClient(): ApiClient {
-  const mode = readDataMode();
+export function createApiClient(mode = readSelectedDataMode()): ApiClient {
   if (mode === 'live') {
     return liveProvider;
   }
@@ -195,4 +200,15 @@ export function createApiClient(): ApiClient {
   return fixtureProvider;
 }
 
-export const apiClient = createApiClient();
+/**
+ * Shared request boundary used by feature hooks.
+ *
+ * ESM imports are live bindings, so replacing this client makes existing query
+ * functions use the newly selected provider on their next request.
+ */
+export let apiClient = createApiClient();
+
+export function selectApiDataMode(mode: DataMode): void {
+  fallbackActive = false;
+  apiClient = createApiClient(mode);
+}

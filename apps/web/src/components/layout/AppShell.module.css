@@ -174,7 +174,7 @@
 }
 
 .viewerText {
-  display: flex;
+  display: none;
   flex-direction: column;
   text-align: end;
 }
@@ -241,6 +241,12 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+}
+
+@media (min-width: 40em) {
+  .viewerText {
+    display: flex;
+  }
 }
 
 @media (min-width: 64em) {

@@ -4,6 +4,7 @@ import type { ReactNode } from 'react';
 import { SessionProvider } from '@/features/auth/SessionProvider';
 
 import { ThemeProvider } from './ThemeProvider';
+import { DataModeProvider } from './DataModeProvider';
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -18,9 +19,11 @@ const queryClient = new QueryClient({
 export function AppProviders({ children }: { children: ReactNode }) {
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <ThemeProvider>{children}</ThemeProvider>
-      </SessionProvider>
+      <DataModeProvider>
+        <SessionProvider>
+          <ThemeProvider>{children}</ThemeProvider>
+        </SessionProvider>
+      </DataModeProvider>
     </QueryClientProvider>
   );
 }

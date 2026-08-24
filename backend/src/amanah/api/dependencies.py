@@ -73,7 +73,21 @@ def require_authenticated_user(
 CurrentUser = Annotated[AuthenticatedUser, Depends(require_authenticated_user)]
 
 
-def _require_role(user: AuthenticatedUser, required: Role, path: str) -> AuthenticatedUser:
+def _require_role(
+    user: AuthenticatedUser, required: Role, path: str, settings: Settings
+) -> AuthenticatedUser:
+    if not settings.auth_enforce_role_gates:
+        logger.warning(
+            "role gate bypassed",
+            extra={
+                "user_id": str(user.user_id),
+                "role": user.role.value,
+                "required_role": required.value,
+                "path": path,
+                "reason": "auth_enforce_role_gates is off",
+            },
+        )
+        return user
     if not satisfies_role(user.role, required):
         logger.warning(
             "authorization denied",
@@ -88,14 +102,22 @@ def _require_role(user: AuthenticatedUser, required: Role, path: str) -> Authent
     return user
 
 
-def require_reviewer(request: Request, user: CurrentUser) -> AuthenticatedUser:
-    """Allow reviewers and administrators only."""
-    return _require_role(user, Role.reviewer, request.url.path)
+def require_reviewer(
+    request: Request,
+    user: CurrentUser,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> AuthenticatedUser:
+    """Allow reviewers and administrators only, unless role gates are off."""
+    return _require_role(user, Role.reviewer, request.url.path, settings)
 
 
-def require_administrator(request: Request, user: CurrentUser) -> AuthenticatedUser:
-    """Allow administrators only."""
-    return _require_role(user, Role.administrator, request.url.path)
+def require_administrator(
+    request: Request,
+    user: CurrentUser,
+    settings: Annotated[Settings, Depends(get_settings)],
+) -> AuthenticatedUser:
+    """Allow administrators only, unless role gates are off."""
+    return _require_role(user, Role.administrator, request.url.path, settings)
 
 
 def ensure_resource_owner(user: AuthenticatedUser, owner_id: UUID) -> None:

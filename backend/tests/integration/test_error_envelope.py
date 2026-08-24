@@ -131,6 +131,44 @@ def test_privileged_roles_reach_a_reviewer_route(
     assert response.status_code == 200
 
 
+@pytest.fixture
+def open_client(settings: Settings) -> Iterator[TestClient]:
+    """A service running with role gates switched off, as a demo does."""
+    app = create_app(make_settings(auth_enforce_role_gates=False))
+    app.include_router(build_testing_router())
+    with TestClient(app, raise_server_exceptions=False) as test_client:
+        yield test_client
+
+
+def test_role_gates_off_admits_the_base_role_to_a_reviewer_route(
+    open_client: TestClient, settings: Settings
+) -> None:
+    response = open_client.get(
+        "/v1/testing/reviewer-only", headers=authorized(settings, Role.registered_user)
+    )
+
+    assert response.status_code == 200
+    assert response.json()["role"] == Role.registered_user.value
+
+
+def test_role_gates_off_still_requires_authentication(open_client: TestClient) -> None:
+    """The switch relaxes authorization only; an anonymous caller is still refused."""
+    response = open_client.get("/v1/testing/reviewer-only")
+
+    assert response.status_code == 401
+
+
+def test_role_gates_off_does_not_relax_ownership(
+    open_client: TestClient, settings: Settings
+) -> None:
+    """`ensure_resource_owner` is a different control and the switch must not reach it."""
+    response = open_client.get(
+        f"/v1/testing/owned/{uuid4()}", headers=authorized(settings, Role.administrator)
+    )
+
+    assert response.status_code == 403
+
+
 def test_owner_scoped_route_denies_another_user(
     failing_client: TestClient, settings: Settings
 ) -> None:

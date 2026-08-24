@@ -55,6 +55,11 @@ def test_allowed_origins_splits_a_comma_separated_list() -> None:
     assert settings.allowed_origins == ("https://amanah.example", "http://localhost:5173")
 
 
+def test_a_trailing_slash_is_normalised_away() -> None:
+    settings = make_settings(app_origin="https://amanah.example/, http://localhost:5173/")
+    assert settings.allowed_origins == ("https://amanah.example", "http://localhost:5173")
+
+
 @pytest.mark.parametrize(
     "origin",
     ["https://amanah.example/dashboard", "amanah.example", "ftp://amanah.example", ""],
@@ -62,6 +67,12 @@ def test_allowed_origins_splits_a_comma_separated_list() -> None:
 def test_invalid_origin_is_rejected(origin: str) -> None:
     with pytest.raises(ValidationError):
         make_settings(app_origin=origin)
+
+
+def test_role_gates_are_enforced_unless_switched_off() -> None:
+    """An environment that never sets the switch keeps its authorization checks."""
+    assert make_settings().auth_enforce_role_gates is True
+    assert make_settings(auth_enforce_role_gates=False).auth_enforce_role_gates is False
 
 
 def test_invalid_log_level_is_rejected() -> None:

@@ -99,6 +99,7 @@ application. Every variable is documented in
 | `DATABASE_CONNECT_TIMEOUT_SECONDS`, `DATABASE_STATEMENT_TIMEOUT_MS`, `DATABASE_POOL_SIZE` | no | Explicit connection and query bounds, and pool size |
 | `API_RATE_LIMIT_REQUESTS`, `API_RATE_LIMIT_WINDOW_SECONDS` | no | Per-instance IP ceiling; user mutations also have durable database-backed per-user limits |
 | `APP_ENV`, `LOG_LEVEL`, `DATA_MODE` | no | Environment name, log level, fixture/live/fallback mode |
+| `AUTH_ENFORCE_ROLE_GATES` | no | Defaults to `true`. `false` drops the reviewer and administrator checks so any signed-in account reaches those endpoints; sign-in and ownership checks still apply. For demos and local runs only |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | no | Enables the Gemini connector when both are set |
 | `YOUTUBE_API_KEY`, `NEWS_API_KEY` | no | Enable their connectors within the reviewed source/seed catalogue; the YouTube key currently permits only the five approved, capped demo seeds |
 | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | no | Reserved; Reddit stays disabled pending approval |

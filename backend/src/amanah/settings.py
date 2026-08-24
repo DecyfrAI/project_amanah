@@ -14,10 +14,9 @@ from __future__ import annotations
 
 from functools import cached_property
 from pathlib import Path
-from typing import Self
 from urllib.parse import urlparse
 
-from pydantic import Field, SecretStr, ValidationError, field_validator, model_validator
+from pydantic import Field, SecretStr, ValidationError, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 from amanah.domain.enums import DataMode
@@ -72,6 +71,16 @@ class Settings(BaseSettings):
     app_origin: str = Field(
         description="Comma-separated browser origins allowed to call this API.",
     )
+    # Every role gate in the API consults this one switch. It exists so a demo
+    # or a local run can exercise reviewer and administrator screens without an
+    # operator first setting `app_metadata.role` on each Supabase account. It
+    # defaults to enforcing, so an environment that never sets it is safe, and
+    # turning it off is logged at startup and at every bypassed request.
+    auth_enforce_role_gates: bool = Field(
+        default=True,
+        description="Enforce reviewer and administrator role checks on the API.",
+    )
+
     supabase_url: str = Field(description="Base URL of the Supabase project.")
     supabase_jwt_secret: SecretStr = Field(
         min_length=MINIMUM_JWT_SECRET_LENGTH,
@@ -214,17 +223,26 @@ class Settings(BaseSettings):
             raise ValueError("must be one of DEBUG, INFO, WARNING, ERROR, CRITICAL")
         return level
 
-    @model_validator(mode="after")
-    def _check_allowed_origins(self) -> Self:
-        if not self.allowed_origins:
-            raise ValueError("app_origin must list at least one origin")
-        for origin in self.allowed_origins:
+    @field_validator("app_origin")
+    @classmethod
+    def _check_app_origin(cls, value: str) -> str:
+        origins: list[str] = []
+        for entry in value.split(","):
+            # Dashboards and address bars render an origin with a trailing
+            # slash, but an Origin header never carries one, so normalise it
+            # away instead of rejecting a value that means the right thing.
+            origin = entry.strip().rstrip("/")
+            if not origin:
+                continue
             parsed = urlparse(origin)
             if parsed.scheme not in _ALLOWED_ORIGIN_SCHEMES or not parsed.netloc:
-                raise ValueError(f"app_origin entry is not a valid origin: {origin}")
+                raise ValueError(f"entry is not a valid origin: {origin}")
             if parsed.path or parsed.query or parsed.fragment:
-                raise ValueError(f"app_origin entry must not include a path: {origin}")
-        return self
+                raise ValueError(f"entry must not include a path: {origin}")
+            origins.append(origin)
+        if not origins:
+            raise ValueError("must list at least one origin")
+        return ",".join(origins)
 
     @cached_property
     def allowed_origins(self) -> tuple[str, ...]:
@@ -279,7 +297,14 @@ def load_settings() -> Settings:
     try:
         return Settings()  # type: ignore[call-arg]  # values come from the environment
     except ValidationError as exc:
-        variables = sorted({str(error["loc"][0]).upper() for error in exc.errors()})
+        # A model-level validator reports an empty `loc`. Naming no variable is
+        # a worse message than naming one, but far better than an IndexError
+        # raised while reporting the real problem.
+        variables = sorted({str(error["loc"][0]).upper() for error in exc.errors() if error["loc"]})
+        if not variables:
+            raise ConfigurationError(
+                "Invalid configuration; see the chained validation error for details."
+            ) from exc
         raise ConfigurationError(
             "Invalid or missing required configuration: " + ", ".join(variables)
         ) from exc

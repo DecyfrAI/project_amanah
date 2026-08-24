@@ -6,6 +6,8 @@ import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { ThemeProvider } from '@/app/ThemeProvider';
+import { DataModeProvider } from '@/app/DataModeProvider';
+import { clearMockDataPreference } from '@/api';
 import { endFixtureSession, hasFixtureSession, startFixtureSession } from '@/features/auth/session';
 import { SessionProvider } from '@/features/auth/SessionProvider';
 import { TOUR_STORAGE_KEY, writeTourCompletion } from '@/features/tour/tour-storage';
@@ -19,9 +21,11 @@ function withProviders(ui: ReactElement) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>
-        <ThemeProvider>{ui}</ThemeProvider>
-      </SessionProvider>
+      <DataModeProvider>
+        <SessionProvider>
+          <ThemeProvider>{ui}</ThemeProvider>
+        </SessionProvider>
+      </DataModeProvider>
     </QueryClientProvider>
   );
 }
@@ -32,6 +36,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+  clearMockDataPreference();
   endFixtureSession();
   document.documentElement.removeAttribute('data-theme');
   localStorage.removeItem(TOUR_STORAGE_KEY);
@@ -107,6 +112,12 @@ describe('AppShell', () => {
 
     // Named in the sidebar identity block, the top bar, and the mobile drawer.
     expect(screen.getAllByText('Amina R.').length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('puts the mock-data switch in the top bar', () => {
+    renderShell();
+
+    expect(screen.getByRole('switch', { name: 'Mock data' })).toBeVisible();
   });
 
   it('moves between tabs without leaving the shell', async () => {

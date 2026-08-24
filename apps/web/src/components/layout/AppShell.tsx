@@ -5,6 +5,7 @@ import { useTheme } from '@/app/ThemeProvider';
 import { Logo } from '@/brand/Logo';
 import { FabCluster } from '@/components/layout/FabCluster';
 import { Avatar } from '@/components/ui/Avatar';
+import { DataModeToggle } from '@/components/ui/DataModeToggle';
 import { FixtureBanner } from '@/components/ui/FixtureBanner';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
@@ -142,7 +143,13 @@ export function AppShell() {
                 Menu
               </button>
 
-              <Link className={styles.viewer} to="/app/profile">
+              <DataModeToggle />
+
+              <Link
+                className={styles.viewer}
+                to="/app/profile"
+                aria-label={`${displayName} profile and account`}
+              >
                 <span className={styles.viewerText}>
                   <span className={styles.viewerLabel}>Signed in as</span>
                   <span className={styles.viewerName}>{displayName}</span>

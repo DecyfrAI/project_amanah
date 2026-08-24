@@ -1,4 +1,5 @@
-import { isFallbackActive, isFixtureVisible, readDataMode } from '@/api';
+import { isFallbackActive, isFixtureVisible } from '@/api';
+import { useDataMode } from '@/app/DataModeProvider';
 
 import styles from './FixtureBanner.module.css';
 
@@ -9,7 +10,7 @@ import styles from './FixtureBanner.module.css';
  * mistaken for a live reading.
  */
 export function FixtureBanner() {
-  const mode = readDataMode();
+  const { mode } = useDataMode();
   const visible = isFixtureVisible(mode, isFallbackActive());
 
   if (!visible) {

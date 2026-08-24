@@ -102,6 +102,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     app.include_router(health.router)
     app.include_router(v1_router)
 
+    if not resolved.auth_enforce_role_gates:
+        # Loud on purpose: this is the one setting that makes an authorization
+        # control stop applying, so it must never be discoverable only by
+        # noticing that a screen unexpectedly works.
+        logger.warning(
+            "role gates disabled",
+            extra={
+                "app_env": resolved.app_env,
+                "impact": "every signed-in user reaches reviewer and administrator endpoints",
+            },
+        )
+
     disabled = [connector.name for connector in resolved.connectors if not connector.is_configured]
     logger.info(
         "application started",
