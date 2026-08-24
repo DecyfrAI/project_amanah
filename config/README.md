@@ -55,10 +55,17 @@ later by the classifier, and neutral reporting is deliberately in scope.
 1. Review the source or feed by hand: does it resolve, what do its terms permit,
    what language and geography does it cover?
 2. Add the entry with its approval, purpose, stratum, and cap.
-3. Bump `config_version` in **both** files. They are one reviewed artifact, and
-   `amanah-etl sync-config` refuses to run when the two versions disagree.
+3. Bump `config_version` in `sources.example.yml`,
+   `source-seeds.example.yml`, and `datapacks.example.yml`. They are one reviewed
+   dispatch artifact; validation refuses to run when their versions disagree.
 4. Run `uv run --project backend --env-file backend/.env amanah-etl sync-config`
    to project the approved entries into the database.
 
 Do not re-add a feed `docs/news-rss-sources.md` recorded as checked and rejected
 — Reuters, AP, the old CTV path — and do not invent a replacement for one.
+
+The current YouTube demo projection maps five video IDs from
+`docs/planning/PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md` into stable runtime keys:
+four enriched discussion seeds and one boundary/control counterspeech seed. Each
+is capped at 100 items and was preflighted through the official API on
+24 August 2026. This is a purposive hackathon sample, not a representative frame.

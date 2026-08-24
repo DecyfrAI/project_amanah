@@ -13,9 +13,10 @@ product made.
 
 from __future__ import annotations
 
+from typing import Self
 from uuid import UUID
 
-from pydantic import Field
+from pydantic import Field, model_validator
 
 from amanah.api.schemas.base import RequestModel, ResponseModel, UtcDatetime
 from amanah.api.schemas.common import ResponseMeta
@@ -91,14 +92,56 @@ class ImageExampleListResponse(ResponseModel):
     meta: ResponseMeta
 
 
-class ImageClassificationRequest(RequestModel):
-    """Ask for one catalogued image to be classified server-side.
+class ImageUploadResponse(ResponseModel):
+    """`POST /v1/image-uploads` payload (B-S28).
 
-    The client names an example; it does not upload pixels. ADR 0007 keeps image
-    bytes off this boundary in both directions.
+    Carries no storage path, no bucket, and no filename. The identifier is how a
+    client refers to the image afterwards; the bytes are reachable only through a
+    short-lived signed URL minted per request.
+
+    `is_new` is false when the same picture was already stored for this owner.
+    Re-uploading converges rather than duplicating, and saying so lets the
+    interface avoid claiming it saved something twice.
     """
 
-    example_id: UUID
+    upload_id: UUID
+    mime_type: str
+    byte_size: int = Field(ge=1)
+    pixel_width: int = Field(ge=1)
+    pixel_height: int = Field(ge=1)
+    sha256: str = Field(pattern=r"^[0-9a-f]{64}$")
+    is_new: bool
+    retention_expires_at: UtcDatetime | None = None
+    image_url: str = Field(description="Short-lived signed URL. Expires; never store it.")
+    image_url_expires_at: UtcDatetime
+    disclosure: str = Field(
+        default=(
+            "Your upload is stored privately and readable only by you. Metadata such as "
+            "EXIF and GPS is removed before storage. Classification sends the image to "
+            "an automated model; do not upload personal photographs or identifiable "
+            "material about other people."
+        )
+    )
+    meta: ResponseMeta
+
+
+class ImageClassificationRequest(RequestModel):
+    """Ask for one image to be classified server-side.
+
+    The client names either a catalogued example or one of its own uploads, and
+    exactly one of the two. It does not send pixels: ADR 0007 keeps image bytes
+    off this boundary in both directions, and B-S28 keeps it that way by giving
+    upload its own multipart route.
+    """
+
+    example_id: UUID | None = None
+    upload_id: UUID | None = None
+
+    @model_validator(mode="after")
+    def _check_exactly_one_subject(self) -> Self:
+        if (self.example_id is None) == (self.upload_id is None):
+            raise ValueError("name exactly one of example_id or upload_id")
+        return self
 
 
 class ImageClassificationResponse(ResponseModel):
@@ -110,7 +153,9 @@ class ImageClassificationResponse(ResponseModel):
     label as a confirmed one.
     """
 
-    example_id: UUID
+    #: Whichever subject was classified. Exactly one is set, matching the request.
+    example_id: UUID | None = None
+    upload_id: UUID | None = None
     data_mode: DataMode
     relevance: Relevance
     stance: Stance

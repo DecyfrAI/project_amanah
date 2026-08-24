@@ -1,6 +1,6 @@
 # Deploying and recovering the Amanah backend
 
-Last reviewed: 2026-08-23
+Last reviewed: 2026-08-24
 
 This runbook covers the Render API and GitHub Actions ETL defined by
 `render.yaml` and `.github/workflows/etl.yml`. Netlify deploys the frontend
@@ -13,6 +13,31 @@ connector/encryption credentials as Render secrets, never in Git or browser
 variables. Set `APP_ORIGIN` to the exact frontend HTTPS origin. Missing optional
 connector keys leave only that connector disabled.
 
+For image upload and classification, also configure these server-side Render
+values:
+
+- `SUPABASE_STORAGE_SECRET_KEY`: a dedicated Supabase secret/service-role key,
+  never the JWT signing secret and never a browser variable.
+- `SUPABASE_STORAGE_BUCKET=research-images`: the private bucket created by the
+  reviewed migration/setup process.
+- `GEMINI_API_KEY` and `GEMINI_MODEL`: use a model that the key can currently
+  access, then verify one safe synthetic request after deployment.
+- `ALLOW_THIRD_PARTY_CONTENT_INFERENCE=true`: set this only after deliberately
+  approving transfer of a signed-in user's uploaded pixels to Gemini. With it
+  absent or false, private upload works but classification is refused.
+
+For live YouTube collection, add `YOUTUBE_API_KEY` to the GitHub
+`etl-production` environment secrets. The browser and Netlify must never receive
+this key. The reviewed runtime catalogue, not possession of the key, determines
+which video IDs may run.
+
+Set the same GitHub environment's non-secret variables to
+`ETL_DEFAULT_SOURCE=youtube`, `ETL_CONFIG_VERSION=2026.08.24.1`, and
+`ETL_MAX_ITEMS=500` before relying on the scheduled run. This is the aggregate
+ceiling for five seeds that are each capped at 100 items. A manually dispatched
+workflow still defaults to fixtures, so explicitly select `youtube` while
+testing.
+
 In Netlify, set `VITE_DATA_MODE=live`, `VITE_API_BASE_URL` to the Render HTTPS
 origin, and the public Supabase project URL and anon key as
 `VITE_SUPABASE_URL`/`VITE_SUPABASE_ANON_KEY`. Every `VITE_*` value is public;
@@ -22,6 +47,24 @@ allow only the exact Netlify authentication callback/recovery origins.
 
 The pre-deploy command applies Alembic migrations separately from application
 startup. Review the generated SQL before the first production deploy.
+
+## Prepare the reviewer demo account
+
+The frontend intentionally has no role-based Review-page gate; every signed-in
+person can navigate there. The API remains the security boundary and accepts
+queue reads and decisions only from `reviewer` or `administrator` tokens.
+
+1. In Supabase Authentication, locate the dedicated hackathon demo user and
+   copy its user ID.
+2. Using a trusted server-side admin operation, set that user's Auth
+   `app_metadata.role` to `reviewer`. Do not use user-editable `user_metadata`
+   and never run the admin credential in the browser.
+3. Sign the demo user out and back in so Supabase issues a JWT containing the
+   new `app_metadata.role` claim.
+4. Open `/app/profile` and confirm the effective role is Reviewer.
+5. Open `/app/review`, claim one item, and record one safe fixture/synthetic
+   decision. A claim is still required because it is the concurrency lease, not
+   a frontend permission gate.
 
 ## Deploy and smoke check
 
@@ -39,6 +82,23 @@ performs no mutation and calls no provider.
 Use the **Amanah ETL** workflow. Seed keys must match the selected source and
 exact reviewed config version. Datapack inputs are stable IDs from
 `config/datapacks.example.yml`, never paths or URLs. Dry-run a new live source.
+
+For the current YouTube demo catalogue:
+
+1. Confirm the `etl-production` environment has `YOUTUBE_API_KEY` and the normal
+   database/Supabase secrets.
+2. Dispatch **Amanah ETL** with source `youtube`, config version
+   `2026.08.24.1`, maximum items `500`, and dry run enabled. Leave registry keys
+   blank to exercise the full five-video shortlist, or supply one stable key
+   from `config/source-seeds.example.yml` for a smaller smoke test.
+3. Inspect the redacted run-summary artifact. Unavailable videos, disabled
+   comments, omitted replies, and quota exhaustion must appear as coverage
+   warnings; they must not appear as zero activity or trigger scraping.
+4. Repeat the dispatch with dry run disabled. The workflow synchronizes the
+   reviewed configuration before collecting and then schedules analysis.
+5. Verify the resulting dashboard coverage names YouTube, config version
+   `2026.08.24.1`, and the applicable sampling stratum. Do not describe results
+   from this deliberately enriched shortlist as YouTube-wide prevalence.
 
 For the repository-owned demo datapack, set `ETL_DATAPACK_IDS` (or the manual
 workflow's `datapack_ids` input) to `amanah-synthetic-demo-v1`. It is an approved
@@ -66,8 +126,10 @@ silently substituted for failed live data.
 - No database makes readiness degraded and product reads return `503`, never an
   empty result.
 - No Gemini key defers AI while stored items and deterministic metrics remain.
-- YouTube remains disabled until reviewed approval and credentials exist. Reddit
-  has no runnable adapter.
+- YouTube has a reviewed, preflighted five-video demo shortlist. Missing or
+  invalid `YOUTUBE_API_KEY` disables the connector; quota, deleted videos, and
+  disabled comments become typed coverage gaps. There is no scraping fallback.
+  Reddit has no runnable adapter.
 - The API's global IP ceiling is per instance; configure the same ceiling at the
   Render edge for multi-instance enforcement. Mutations also retain durable
   database-backed per-user limits.
@@ -79,7 +141,7 @@ silently substituted for failed live data.
 |---|---|---|
 | API/Postgres reads | Live when ready | `503`, never fixture substitution |
 | Reviewed RSS | Live bounded metadata/excerpts | Last success plus coverage warning |
-| YouTube | Access-required/disabled | No scraping fallback |
+| YouTube | Live, bounded official API for five reviewed seeds when `YOUTUBE_API_KEY` is configured | Typed access/quota/coverage gap; no scraping fallback |
 | Reddit | Disabled; no adapter | No scraping fallback |
 | Gemini | Optional live connector | Typed deferral; deterministic metrics stay |
 | Fixtures | Explicit fixture mode only | Every row/response remains labelled |

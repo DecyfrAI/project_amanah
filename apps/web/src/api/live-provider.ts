@@ -1,6 +1,5 @@
 import {
   type ApiClient,
-  type CreateResearchReportInput,
   type ItemSearchFilters,
   type NewsFilters,
   type OverviewFilters,
@@ -16,6 +15,12 @@ import {
   NewsListSchema,
   EvidenceClassifyRequestSchema,
   ReportDraftRequestSchema,
+  CreateResearchReportRequestSchema,
+  ResearchReportSchema,
+  AppendDecisionRequestSchema,
+  ReviewQueuePageSchema,
+  ReviewTaskDetailSchema,
+  ReviewTaskSchema,
   type AssistantAskInput,
   type AssistantReply,
   type CreateCaptureInput,
@@ -25,6 +30,7 @@ import {
   type Discussion,
   type DiscussionPost,
   type ExplorerItem,
+  type ExplorerItemDetail,
   type ExplorerPage,
   type FilterOptions,
   type Insight,
@@ -37,8 +43,14 @@ import {
   type EvidenceClassifyRequest,
   type ImageClassification,
   type ImageExampleList,
+  type ImageUpload as ImageUploadResult,
   type ReportDraft,
   type ReportDraftRequest,
+  type CreateResearchReportRequest,
+  type ResearchReport,
+  type AppendDecisionRequest,
+  type ReviewQueuePage,
+  type ReviewTaskDetail,
   type ViewerPostList,
 } from './contracts';
 import { readApiBaseUrl } from './env';
@@ -56,13 +68,14 @@ import {
   WireFilterOptionsSchema,
   WireImageClassificationSchema,
   WireImageExampleListSchema,
+  WireImageUploadSchema,
   WireInsightResponseSchema,
   WireInsightsPageSchema,
+  WireItemDetailResponseSchema,
   WireItemsPageSchema,
   WirePolicyAnalysisSchema,
   WirePostResponseSchema,
   WirePreparedReportResponseSchema,
-  WireResearchReportResponseSchema,
   WireViewerPostsPageSchema,
   type WireContributionsPage,
   type WireDashboardResponse,
@@ -72,7 +85,6 @@ import {
   type WirePolicyAnalysis,
   type WirePreparedReport,
   type WireProfile,
-  type WireResearchReport,
 } from './wire';
 
 /**
@@ -107,9 +119,13 @@ const REQUEST_TIMEOUT_MS = 60_000;
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
   const token = await readAccessToken();
+  // `FormData` sets its own `Content-Type`, including the multipart boundary the
+  // server needs to parse the body. Declaring JSON over it would make every
+  // upload unreadable.
+  const isMultipart = init?.body instanceof FormData;
   const headers: Record<string, string> = {
     Accept: 'application/json',
-    ...(init?.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+    ...(init?.body !== undefined && !isMultipart ? { 'Content-Type': 'application/json' } : {}),
     ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
   };
 
@@ -545,6 +561,25 @@ export const liveProvider: ApiClient = {
     };
   },
 
+  async getItem(itemId: string): Promise<ExplorerItemDetail> {
+    const wire = WireItemDetailResponseSchema.parse(await requestJson(`/v1/items/${itemId}`));
+    const item = wire.item;
+    return {
+      ...toExplorerItem(item),
+      // The summary mapper has no score to read; the detail response does.
+      modelScore: item.score,
+      modelName: item.model_name,
+      modelVersion: item.model_version,
+      promptVersion: item.prompt_version,
+      taxonomyVersion: item.taxonomy_version,
+      inferredAt: item.inferred_at,
+      rationale: item.rationale,
+      narrativeTags: item.narrative_tags,
+      limitations: item.limitations,
+      samplingDisclosure: item.sampling_disclosure,
+    };
+  },
+
   async listInsights(): Promise<InsightList> {
     const wire = WireInsightsPageSchema.parse(await requestJson('/v1/insights'));
     return { insights: wire.items.map(toInsight) };
@@ -693,6 +728,82 @@ export const liveProvider: ApiClient = {
     );
   },
 
+  /**
+   * Freeze a snapshot server-side. The response carries the report nested under
+   * `report`, alongside the standard response meta.
+   */
+  async createResearchReport(input: CreateResearchReportRequest): Promise<ResearchReport> {
+    const body = CreateResearchReportRequestSchema.parse(input);
+    const payload = await requestJson('/v1/research-reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return ResearchReportSchema.parse((payload as { report: unknown }).report);
+  },
+
+  /**
+   * Fetch the server's own CSV rendering rather than re-deriving it here, so the
+   * bytes a reader receives are the ones the service audited handing out.
+   *
+   * Goes through `request` rather than a bare `fetch`: every `/v1` route needs a
+   * bearer token, and this one is no exception — an unauthenticated download
+   * would simply `401`. The shared helper also maps a `409` onto the
+   * "no CSV in this snapshot" message the panel already handles.
+   */
+  async downloadResearchReportCsv(report: ResearchReport): Promise<string> {
+    const response = await request(`/v1/research-reports/${report.id}/summary.csv`, {
+      headers: { Accept: 'text/csv' },
+    });
+    return response.text();
+  },
+
+  /**
+   * The reviewer queue.
+   *
+   * The service returns a cursor page of tasks and no queue-wide totals, so the
+   * counts are derived from the page rather than invented. `classified_in_window`
+   * has no live source yet and is reported as zero, which the queue reads as
+   * "unknown" rather than as a real denominator.
+   */
+  async listReviewTasks(): Promise<ReviewQueuePage> {
+    const payload = (await requestJson('/v1/review/tasks')) as {
+      items: unknown[];
+      page: { next_cursor: string | null };
+    };
+    const items = ReviewTaskSchema.array().parse(payload.items);
+    return ReviewQueuePageSchema.parse({
+      items,
+      next_cursor: payload.page.next_cursor,
+      totals: {
+        open: items.filter((task) => task.status !== 'completed').length,
+        decided: items.filter((task) => task.status === 'completed').length,
+        confirmed: 0,
+        classified_in_window: 0,
+      },
+    });
+  },
+
+  async claimReviewTask(taskId: string): Promise<ReviewTaskDetail> {
+    const payload = await requestJson(`/v1/review/tasks/${taskId}/claim`, { method: 'POST' });
+    return ReviewTaskDetailSchema.parse(payload);
+  },
+
+  /**
+   * Append a decision, then re-read the task so the caller receives the full
+   * decision history rather than only the row just written.
+   */
+  async appendReviewDecision(
+    taskId: string,
+    input: AppendDecisionRequest,
+  ): Promise<ReviewTaskDetail> {
+    const body = AppendDecisionRequestSchema.parse(input);
+    await requestJson(`/v1/review/tasks/${taskId}/decisions`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return ReviewTaskDetailSchema.parse(await requestJson(`/v1/review/tasks/${taskId}`));
+  },
+
   async listImageExamples(): Promise<ImageExampleList> {
     const wire = WireImageExampleListSchema.parse(await requestJson('/v1/image-examples'));
     return {
@@ -712,26 +823,49 @@ export const liveProvider: ApiClient = {
     };
   },
 
+  async uploadImage(file: File): Promise<ImageUploadResult> {
+    // `FormData` rather than JSON: the bytes go to the backend, which cleans and
+    // stores them. The browser never talks to object storage directly, and it
+    // never sends base64 (ADR 0007, B-S28).
+    const form = new FormData();
+    form.append('file', file, file.name);
+    const wire = WireImageUploadSchema.parse(
+      await requestJson('/v1/image-uploads', { method: 'POST', body: form }),
+    );
+    return {
+      uploadId: wire.upload_id,
+      mimeType: wire.mime_type,
+      byteSize: wire.byte_size,
+      pixelWidth: wire.pixel_width,
+      pixelHeight: wire.pixel_height,
+      isNew: wire.is_new,
+      imageSrc: wire.image_url,
+      retentionExpiresAt: wire.retention_expires_at,
+      disclosure: wire.disclosure,
+    };
+  },
+
   async classifyEvidence(input: EvidenceClassifyRequest): Promise<ImageClassification> {
     const body = EvidenceClassifyRequestSchema.parse(input);
-    if (body.example_id === undefined) {
-      // Direct file upload has no live backend yet (completion guide step 8);
-      // the picker is hidden outside fixture mode, and reaching here anyway is
-      // a visible failure rather than a silent fixture substitution.
-      throw new ApiRequestError(
-        'Live classification currently supports catalogued research images only. Pick an image from the catalog.',
-        501,
-      );
+    if (body.example_id === undefined && body.upload_id === undefined) {
+      // The service classifies something already stored. A caller that named
+      // neither has not uploaded yet, and inventing a subject would produce a
+      // label about nothing.
+      throw new ApiRequestError('Upload the image first, then ask for a classification.', 400);
     }
+    const subject =
+      body.upload_id !== undefined
+        ? { upload_id: body.upload_id }
+        : { example_id: body.example_id };
     const wire = WireImageClassificationSchema.parse(
       await requestJson('/v1/image-classifications', {
         method: 'POST',
-        body: JSON.stringify({ example_id: body.example_id }),
+        body: JSON.stringify(subject),
       }),
     );
     return {
       data_mode: wire.data_mode,
-      example_id: wire.example_id,
+      example_id: wire.example_id ?? wire.upload_id ?? '',
       relevance: wire.relevance,
       stance: wire.stance,
       classification: wire.stance === 'likely_anti_muslim' ? 'likely_hate' : 'not_hate',
@@ -815,48 +949,6 @@ export const liveProvider: ApiClient = {
 
   async listContributions(): Promise<WireContributionsPage> {
     return WireContributionsPageSchema.parse(await requestJson('/v1/me/contributions'));
-  },
-
-  async createResearchReport(input: CreateResearchReportInput): Promise<WireResearchReport> {
-    const filters: Record<string, unknown> = {};
-    if (input.filters.from !== undefined) {
-      filters.date_from = toUtcInstant(input.filters.from, 'start');
-    }
-    if (input.filters.to !== undefined) {
-      filters.date_to = toUtcInstant(input.filters.to, 'end');
-    }
-    if (input.filters.platforms !== undefined && input.filters.platforms.length > 0) {
-      filters.platforms = input.filters.platforms;
-    }
-    if (input.filters.severityBands !== undefined && input.filters.severityBands.length > 0) {
-      filters.severities = input.filters.severityBands.map((band) => Number(band));
-    }
-    if (input.filters.reviewStates !== undefined && input.filters.reviewStates.length > 0) {
-      filters.review_states = input.filters.reviewStates;
-    }
-    const wire = WireResearchReportResponseSchema.parse(
-      await requestJson('/v1/research-reports', {
-        method: 'POST',
-        body: JSON.stringify({
-          title: input.title,
-          filters,
-          include_aggregate_csv: input.includeAggregateCsv,
-        }),
-      }),
-    );
-    return wire.report;
-  },
-
-  async getResearchReport(reportId: string): Promise<WireResearchReport> {
-    const wire = WireResearchReportResponseSchema.parse(
-      await requestJson(`/v1/research-reports/${reportId}`),
-    );
-    return wire.report;
-  },
-
-  async downloadResearchReportCsv(reportId: string): Promise<Blob> {
-    const response = await request(`/v1/research-reports/${reportId}/summary.csv`);
-    return response.blob();
   },
 };
 

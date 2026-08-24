@@ -3,7 +3,7 @@
 # Add a package only after its manifest, licence, permitted uses, file hash, and
 # repository data-policy decision have been reviewed. Workflow inputs accept the
 # stable manifest_id only; they never accept arbitrary paths or URLs.
-config_version: "2026.08.23"
+config_version: "2026.08.24.1"
 packages:
   - manifest_id: amanah-synthetic-demo-v1
     manifest_path: datapacks/manifests/amanah-synthetic-demo-v1.yml

@@ -17,7 +17,7 @@ export const TOUR_STEPS: readonly TourStep[] = [
     id: 'workspace',
     title: 'The workspace',
     to: '/app',
-    body: 'The left rail is every tab, in this order: Overview, Explorer, Insights, Lessons, Review, Reports, Connections, then Settings. Collapse it to icons when you need width. Theme and your name sit at the foot of the rail. Signed-in identity and Log out live in the top bar. The Tour control and Ask Amanah sit in the bottom-right. You can replay this walk from Tour or from Settings.',
+    body: 'The left rail is every tab, in this order: Overview, Explorer, Insights, Lessons, Review, Reports, Contributions, Connections, then Settings. Collapse it to icons when you need width. Theme and your name sit at the foot of the rail. Signed-in identity and Log out live in the top bar. The Tour control and Ask Amanah sit in the bottom-right. You can replay this walk from Tour or from Settings.',
   },
   {
     id: 'overview',
@@ -54,6 +54,12 @@ export const TOUR_STEPS: readonly TourStep[] = [
     title: 'Reports',
     to: '/app/reports',
     body: 'Prepare a platform report for a person to send. Upload a screenshot or describe what you saw, choose the platform, and generate a draft. You copy, download, or open it in mail. Amanah never submits the report. Research-export controls below the draft are still illustrations.',
+  },
+  {
+    id: 'contributions',
+    title: 'Contributions',
+    to: '/app/contributions',
+    body: 'Everything you submitted, disputed, or prepared, in one owner-scoped history. Only you can read your own rows. A prepared report shows as prepared until you record that you filed it yourself: Amanah never submits one, so no status here is a platform acknowledgement.',
   },
   {
     id: 'connections',

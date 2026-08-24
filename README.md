@@ -1,4 +1,4 @@
-# Project Amanah
+﻿# Project Amanah
 
 A human-in-the-loop research observatory for public anti-Muslim hate online.
 
@@ -110,14 +110,17 @@ screen.
 | Surface | State |
 |---|---|
 | Supabase sign-in, session restore, bearer tokens, logout | **Live** |
-| News (`/v1/news`) | **Live**, needs one reviewed feed ingested |
+| News (`/v1/news`) | **Live** — 32 articles ingested from 4 reviewed publishers |
 | Dashboard, items, filters | **Live** |
+| Item detail with full model disclosure | **Live** |
 | Grounded assistant | **Live**, needs `GEMINI_API_KEY` |
 | Insights, discussion, reactions, captures | **Live** |
-| Policy analysis, prepared reports, contributions | **Live** |
+| Policy analysis, prepared reports | **Live** |
+| Contributions history | **Live** |
 | Research-report snapshot, aggregate CSV, print/PDF | **Live** |
-| Image catalogue and classification of a catalogued image | **Live**, needs Storage credentials |
-| Direct file upload for classification | **Fixture** — no backend upload route yet (see below) |
+| Image catalogue and classification of a catalogued image | **Live**, needs `SUPABASE_STORAGE_SECRET_KEY`; reports itself unavailable without one |
+| Authenticated image upload to private storage | **Live** - cleaned, EXIF-stripped, owner-only |
+| Gemini classification of an upload | **Live**, needs `ALLOW_THIRD_PARTY_CONTENT_INFERENCE=true` and a Gemini key |
 | Review queue, Connections walkthrough | **Mock**, labelled in place |
 | Settings table density | **Mock**, labelled; the media preference beside it is real |
 
@@ -128,17 +131,22 @@ visible banner).
 
 ### Known gaps
 
-- **Authenticated multipart image upload is not implemented.** The backend
-  classifies images already in the reviewed catalogue; there is no route that
-  accepts a user's file. The picker is therefore fixture-only, and the live path
-  refuses visibly rather than pretending.
-- **Discussion attachments are not implemented.** Text notes work on both viewer
-  snapshots and machine-generated insights. Uploaded attachments would change
-  ADR 0004 and need a schema migration, which requires explicit authorization.
-- **PostgreSQL-backed tests skip without a scratch server.** 532 backend tests
-  pass; 401 database, migration, constraint, and RLS tests skip unless
-  `AMANAH_TEST_DATABASE_URL` points at a Postgres the suite may create and drop
-  databases on.
+- **Discussion attachments were deliberately excluded** (PA-05, descoped 24
+  August 2026). Text notes work on both viewer snapshots and machine-generated
+  insights, and first-party chart captures can be attached. Arbitrary uploads
+  into a shared thread were left out for **safety, not time**: they would need
+  malware scanning, safe download handling, and per-attachment authorization,
+  and ADR 0004 refused a screenshot board because it would redistribute the
+  material this product exists to measure. The reasoning is recorded in
+  `docs/completion-guide.md`.
+- **Gemini is not configured**, so classification and the assistant report
+  themselves unavailable rather than guessing. News is ingested but unclassified:
+  items show `is_classified: false` and no hate label, which is the honest state.
+- **Uploaded images are not sent to the model unless the deployment opts in.**
+  `ALLOW_THIRD_PARTY_CONTENT_INFERENCE` is off by default, so upload and private
+  storage work while classification of an upload reports itself unavailable. An
+  upload is the uploader's material, not this product's, so forwarding it is a
+  deliberate choice rather than a default.
 
 ---
 
@@ -194,14 +202,15 @@ With no `.env` at all the frontend runs entirely on committed fixtures.
 npm --prefix apps/web run verify
 ```
 
-That is format check, lint, type check, and the 345-test frontend suite.
+That is format check, lint, type check, and the 354-test frontend suite.
 
 ```bash
 uv run --project backend pytest backend/tests
 ```
 
-To include the database, migration, constraint, and RLS tests, point the suite at
-a Postgres server it may create and drop scratch databases on:
+That runs 536 tests and reports 401 as skipped. The skipped ones are the
+database, migration, constraint, and RLS suite; to run all 937, point the suite
+at a Postgres server it may create and drop scratch databases on:
 
 ```bash
 AMANAH_TEST_DATABASE_URL=postgresql://postgres:postgres@localhost:5432/postgres uv run --project backend pytest backend/tests
@@ -211,6 +220,12 @@ On PowerShell:
 
 ```bash
 $env:AMANAH_TEST_DATABASE_URL='postgresql://postgres:postgres@localhost:5432/postgres'; uv run --project backend pytest backend/tests
+```
+
+A disposable container is enough, and is what these were verified against:
+
+```bash
+docker run -d --name amanah-pg -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:16
 ```
 
 ## Demo walkthrough

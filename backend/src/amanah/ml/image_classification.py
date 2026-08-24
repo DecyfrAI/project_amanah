@@ -59,13 +59,29 @@ type ObjectReader = Callable[[str], bytes]
 
 @dataclass(frozen=True, slots=True)
 class ImageToClassify:
-    """One catalogued image, by reference and by digest."""
+    """One image to classify, by reference and by digest.
 
-    image_example_id: UUID
+    Exactly one of `image_example_id` and `image_upload_id` is set, mirroring the
+    `exactly_one_subject` constraint on the row this produces. The distinction is
+    not bookkeeping: a catalogue entry is reviewed corpus material this product
+    may send to the provider, while an upload is one person's unreviewed file
+    that requires a deployment opt-in first.
+    """
+
     storage_path: str
     sha256: str
     mime_type: str
+    image_example_id: UUID | None = None
+    image_upload_id: UUID | None = None
     is_fixture: bool = True
+    #: The data class this image belongs to for transfer authorization.
+    data_class: DataClass = DataClass.collected_text
+    #: Whether this deployment permits sending user-supplied media off-site.
+    allow_third_party_content_inference: bool = False
+
+    def __post_init__(self) -> None:
+        if (self.image_example_id is None) == (self.image_upload_id is None):
+            raise ValueError("name exactly one of image_example_id or image_upload_id")
 
 
 @dataclass(frozen=True, slots=True)
@@ -110,12 +126,14 @@ class ImageClassificationService:
                 # around them says.
                 content_hash=image.sha256,
                 transfer=TransferRequest(
-                    data_class=DataClass.collected_text,
+                    data_class=image.data_class,
                     # The research corpus is a reviewed internal fixture pack, not
-                    # material collected live from a platform (ADR 0007).
+                    # material collected live from a platform (ADR 0007). A user
+                    # upload has no platform either — it came from a device.
                     platform=PublicPlatform.not_applicable,
                     retention_policy=RetentionPolicy.indefinite_permitted,
                     is_fixture=image.is_fixture,
+                    allow_third_party_content_inference=(image.allow_third_party_content_inference),
                 ),
                 image=InlineImage(payload=payload, mime_type=image.mime_type),
             ),
@@ -199,6 +217,7 @@ class ImageClassificationService:
         table = cast(Table, ImageClassification.__table__)
         values: dict[str, Any] = {
             "image_example_id": image.image_example_id,
+            "image_upload_id": image.image_upload_id,
             "requested_by": requested_by,
             "model_name": model_name,
             "model_version": CALL_CONVENTION_VERSION,
@@ -235,13 +254,18 @@ class ImageClassificationService:
                 "inferred_at",
             )
         }
+        # The conflict target follows the subject: the two unique constraints
+        # cover different columns, and naming the wrong one would let a retry
+        # insert a duplicate rather than converge.
+        constraint = (
+            "image_classifications_image_model_prompt_version_unique"
+            if image.image_example_id is not None
+            else "image_classifications_upload_model_prompt_version_unique"
+        )
         statement: Any = (
             insert(table)
             .values(**values)
-            .on_conflict_do_update(
-                constraint="image_classifications_image_model_prompt_version_unique",
-                set_=refreshable,
-            )
+            .on_conflict_do_update(constraint=constraint, set_=refreshable)
             .returning(table.c.id)
         )
         return cast(UUID, self._session.execute(statement).scalar_one())

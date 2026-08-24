@@ -64,6 +64,40 @@ def _terminate_connections(connection: object, database: str) -> None:
     )
 
 
+#: Roles Supabase provisions on every project, which the row-level-security
+#: policies grant to by name. A plain Postgres server has neither, so the
+#: policies in `0003` would fail to create and the whole suite would error at
+#: setup. They are created as `NOLOGIN` group roles here — the tests reach them
+#: through `SET LOCAL ROLE`, never by connecting as them.
+SUPABASE_ROLES = ("anon", "authenticated")
+
+
+def _create_supabase_roles(database_url: str) -> None:
+    """Create the Supabase roles the policies reference, if they are absent.
+
+    Scoped to the scratch database's own server. `CREATE ROLE` is cluster-wide
+    in Postgres, so this is written to tolerate a role another concurrent run
+    already made rather than to assume it owns the cluster.
+    """
+    engine = create_engine(database_url, isolation_level="AUTOCOMMIT", poolclass=None)
+    try:
+        with engine.connect() as connection:
+            for role in SUPABASE_ROLES:
+                connection.execute(
+                    text(
+                        "DO $$ BEGIN "
+                        f"IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = '{role}') THEN "
+                        f"CREATE ROLE {role} NOLOGIN; "
+                        "END IF; END $$"
+                    )
+                )
+                # The policies decide what these roles may read; the grant only
+                # lets them reach the schema at all.
+                connection.execute(text(f"GRANT USAGE ON SCHEMA public TO {role}"))
+    finally:
+        engine.dispose()
+
+
 @contextmanager
 def scratch_database(server_url: str) -> Iterator[str]:
     """Yield the URL of an empty database, dropped when the block exits.
@@ -77,8 +111,10 @@ def scratch_database(server_url: str) -> Iterator[str]:
     try:
         with admin_engine.connect() as connection:
             connection.execute(text(f'CREATE DATABASE "{database}"'))
+        scratch_url = with_driver(_with_database(server_url, database))
         try:
-            yield with_driver(_with_database(server_url, database))
+            _create_supabase_roles(scratch_url)
+            yield scratch_url
         finally:
             with admin_engine.connect() as connection:
                 _terminate_connections(connection, database)

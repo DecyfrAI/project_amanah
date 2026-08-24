@@ -1,9 +1,9 @@
 /**
  * Screenshot chosen for a platform-report draft.
  *
- * The file is validated in the tab and previewed from an object URL. It is
- * never written to disk or sent to the API: only filename and size travel with
- * the draft request.
+ * The file is checked in the tab before upload and previewed from an object URL.
+ * This is a convenience check only; the backend re-validates and cleans the
+ * bytes before private storage.
  */
 export const EVIDENCE_MAX_BYTES = 5 * 1024 * 1024;
 

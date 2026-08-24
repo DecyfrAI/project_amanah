@@ -59,6 +59,12 @@ export function AskAmanah() {
     triggerRef.current?.focus();
   }, []);
 
+  const reset = useCallback((): void => {
+    ask.reset();
+    setTurns([]);
+    setQuestion('');
+  }, [ask]);
+
   const handleQuestionChange = useCallback((event: ChangeEvent<HTMLTextAreaElement>): void => {
     setQuestion(event.currentTarget.value);
   }, []);
@@ -147,9 +153,19 @@ export function AskAmanah() {
               stored figures for this sample. Document retrieval is not connected in this fixture.
             </p>
           </div>
-          <button type="button" className={styles.close} onClick={close}>
-            Close
-          </button>
+          <div className={styles.headerActions}>
+            <button
+              type="button"
+              className={styles.close}
+              onClick={reset}
+              disabled={turns.length === 0 && question.length === 0}
+            >
+              New chat
+            </button>
+            <button type="button" className={styles.close} onClick={close}>
+              Close
+            </button>
+          </div>
         </header>
 
         <div className={styles.thread}>
@@ -182,9 +198,7 @@ export function AskAmanah() {
                       {turn.error}
                     </p>
                   )}
-                  {turn.reply === null && turn.error === null && (
-                    <p className={styles.pending}>Reading the figures for this window.</p>
-                  )}
+                  {turn.reply === null && turn.error === null && <PendingBlock />}
                 </li>
               ))}
             </ol>
@@ -204,7 +218,7 @@ export function AskAmanah() {
             required
           />
           <Button variant="primary" type="submit" disabled={ask.isPending}>
-            Ask
+            {ask.isPending ? 'Reading…' : 'Ask'}
           </Button>
         </form>
       </dialog>
@@ -227,6 +241,25 @@ function PromptButton({ prompt, disabled, onAsk }: PromptButtonProps) {
     <button type="button" className={styles.prompt} disabled={disabled} onClick={handleClick}>
       {prompt.label}
     </button>
+  );
+}
+
+/**
+ * Shown while a reply is in flight. The dots carry the waiting; the sentence
+ * says what is being read, so the reader knows the delay is a lookup and not a
+ * stall. `aria-live` announces it once for a screen reader.
+ */
+function PendingBlock() {
+  return (
+    <p className={styles.pending} aria-live="polite">
+      <span className={styles.who}>Amanah</span>
+      <span className={styles.dots} aria-hidden="true">
+        <span className={styles.dot} />
+        <span className={styles.dot} />
+        <span className={styles.dot} />
+      </span>
+      Reading the figures for this window.
+    </p>
   );
 }
 

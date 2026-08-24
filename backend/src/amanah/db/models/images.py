@@ -135,13 +135,90 @@ class ImageExample(Base):
     dataset_package: Mapped[DatasetPackage] = relationship()
 
 
+class ImageUpload(Base):
+    """One image a signed-in person uploaded from their own device (B-S28).
+
+    Deliberately a separate table from `image_examples`. A catalogue entry is
+    reviewed corpus material with dataset provenance; an upload is one user's
+    unreviewed file, owned by them and subject to retention. Collapsing the two
+    would put an owner column on the corpus and a dataset column on a personal
+    file, and would let one row type be read through the other's policies.
+
+    What is stored is metadata and a private key. The bytes live in object
+    storage and `storage_path` never reaches a client — the API mints a
+    short-lived signed URL per request, exactly as it does for the catalogue.
+
+    The original filename is deliberately absent. It is user-controlled text that
+    frequently carries a person's name or a device path, and nothing here needs
+    it: the object is addressed by a server-generated key.
+    """
+
+    __tablename__ = "image_uploads"
+    __table_args__ = (
+        # The digest of the *cleaned* bytes, so a re-upload of the same picture
+        # converges for that owner instead of accumulating copies.
+        UniqueConstraint(
+            "owner_user_id", "sha256", name="image_uploads_owner_user_id_sha256_unique"
+        ),
+        CheckConstraint("sha256 ~ '^[0-9a-f]{64}$'", name="sha256_format"),
+        CheckConstraint("byte_size > 0", name="byte_size_positive"),
+        CheckConstraint(
+            f"mime_type IN ({_MIME_TYPE_SQL_LIST})",
+            name="mime_type_allowed",
+        ),
+        CheckConstraint("pixel_width > 0 AND pixel_height > 0", name="dimensions_positive"),
+        CheckConstraint("length(btrim(storage_path)) > 0", name="storage_path_present"),
+        # Retention is set when the row is written, so "when may this be deleted"
+        # is answerable without consulting configuration that has since changed.
+        CheckConstraint(
+            "retention_expires_at IS NULL OR retention_expires_at >= created_at",
+            name="retention_after_creation",
+        ),
+        CheckConstraint(
+            "deleted_at IS NULL OR deleted_at >= created_at",
+            name="deletion_after_creation",
+        ),
+        Index(
+            "image_uploads_owner_user_id_created_at_idx", "owner_user_id", text("created_at DESC")
+        ),
+    )
+
+    id: Mapped[UuidPrimaryKey]
+    owner_user_id: Mapped[UuidColumn] = mapped_column(
+        nullable=False, doc="The signed-in user who uploaded it. Only they may read it."
+    )
+
+    storage_bucket: Mapped[str] = mapped_column(String(63), nullable=False)
+    storage_path: Mapped[str] = mapped_column(
+        Text, nullable=False, doc="Private object-storage key. Never returned to a client."
+    )
+    sha256: Mapped[str] = mapped_column(
+        String(64), nullable=False, doc="Digest of the cleaned bytes, not of what was sent."
+    )
+    mime_type: Mapped[str] = mapped_column(String(100), nullable=False)
+    byte_size: Mapped[int] = mapped_column(BigInteger, nullable=False)
+    pixel_width: Mapped[int] = mapped_column(nullable=False)
+    pixel_height: Mapped[int] = mapped_column(nullable=False)
+
+    created_at: Mapped[CreatedAt]
+    retention_expires_at: Mapped[Timestamp | None]
+    #: Set when the object is removed from storage. The row survives so a
+    #: classification that referenced it still explains what it classified.
+    deleted_at: Mapped[Timestamp | None]
+
+
 class ImageClassification(Base):
-    """One staged classification of one catalogued image.
+    """One staged classification of one catalogued image or one user upload.
 
     Mirrors `predictions` in shape and in rule: keyed by the version triple that
     produced it, so a retry converges and a new model version adds history. It is
     a separate table rather than a nullable column on `predictions` because a
-    prediction points at a `content_item` and an image example is not one.
+    prediction points at a `content_item` and an image is not one.
+
+    Exactly one subject: a catalogue example or an upload, never both and never
+    neither. A check constraint enforces that rather than a convention, because
+    a row with both would make "whose image is this?" unanswerable — and that
+    question decides who may read the classification.
     """
 
     __tablename__ = "image_classifications"
@@ -152,6 +229,17 @@ class ImageClassification(Base):
             "model_version",
             "prompt_version",
             name="image_classifications_image_model_prompt_version_unique",
+        ),
+        UniqueConstraint(
+            "image_upload_id",
+            "model_name",
+            "model_version",
+            "prompt_version",
+            name="image_classifications_upload_model_prompt_version_unique",
+        ),
+        CheckConstraint(
+            "(image_example_id IS NULL) <> (image_upload_id IS NULL)",
+            name="exactly_one_subject",
         ),
         CheckConstraint("score >= 0 AND score <= 1", name="score_range"),
         CheckConstraint(
@@ -173,8 +261,13 @@ class ImageClassification(Base):
     )
 
     id: Mapped[UuidPrimaryKey]
-    image_example_id: Mapped[UuidColumn] = mapped_column(
-        ForeignKey("image_examples.id", ondelete="CASCADE"), nullable=False
+    # Nullable since B-S28: exactly one of these is set, enforced by
+    # `exactly_one_subject` above.
+    image_example_id: Mapped[UuidColumn | None] = mapped_column(
+        ForeignKey("image_examples.id", ondelete="CASCADE")
+    )
+    image_upload_id: Mapped[UuidColumn | None] = mapped_column(
+        ForeignKey("image_uploads.id", ondelete="CASCADE")
     )
     requested_by: Mapped[UuidColumn | None] = mapped_column(
         doc="The signed-in user who asked for this classification."
@@ -213,4 +306,5 @@ class ImageClassification(Base):
     inferred_at: Mapped[Timestamp | None]
     created_at: Mapped[CreatedAt]
 
-    image_example: Mapped[ImageExample] = relationship()
+    image_example: Mapped[ImageExample | None] = relationship()
+    image_upload: Mapped[ImageUpload | None] = relationship()

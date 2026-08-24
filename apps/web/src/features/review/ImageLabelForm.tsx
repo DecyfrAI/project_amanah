@@ -13,6 +13,7 @@ import { EvidenceClassification } from '@/features/reports/EvidenceClassificatio
 import { EvidencePreview } from '@/features/reports/EvidencePreview';
 import { EVIDENCE_MAX_BYTES, validateEvidenceFile } from '@/features/reports/evidence-file';
 import { useClassifyEvidence } from '@/features/reports/useClassifyEvidence';
+import { useUploadImage } from '@/features/reports/useUploadImage';
 
 import styles from './ImageLabelForm.module.css';
 
@@ -43,13 +44,13 @@ function errorMessage(error: unknown): string {
 }
 
 /**
- * Upload a research image and save a training label.
- *
- * The request is filename and size only. There is no author, handle, or other
- * personal field. A later importer can send this record to fine-tune storage.
+ * Upload a research image, classify the cleaned stored copy, and record a
+ * session-scoped training annotation. There is no author, handle, or other
+ * personal field.
  */
 export function ImageLabelForm() {
   const classify = useClassifyEvidence();
+  const upload = useUploadImage();
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [fileError, setFileError] = useState<string | null>(null);
@@ -80,13 +81,20 @@ export function ImageLabelForm() {
           }
           return URL.createObjectURL(valid);
         });
-        classify.mutate({
-          image_filename: valid.name,
-          image_byte_size: valid.size,
+        classify.reset();
+        upload.mutate(valid, {
+          onSuccess: (stored) => {
+            classify.mutate({
+              image_filename: valid.name,
+              image_byte_size: valid.size,
+              upload_id: stored.uploadId,
+            });
+          },
         });
       } catch (error) {
         setFile(null);
         classify.reset();
+        upload.reset();
         setPreviewUrl((current) => {
           if (current !== null) {
             URL.revokeObjectURL(current);
@@ -96,7 +104,7 @@ export function ImageLabelForm() {
         setFileError(error instanceof Error ? error.message : 'That image could not be used.');
       }
     },
-    [classify],
+    [classify, upload],
   );
 
   const handleFile = useCallback(
@@ -178,14 +186,15 @@ export function ImageLabelForm() {
           Label an image
         </h2>
         <InfoTip label="Label an image">
-          The classify request is filename and byte size only. This label is a training annotation.
-          It does not overwrite a model proposal.
+          This label is a training annotation. It does not overwrite a model proposal, and it is
+          never applied automatically.
         </InfoTip>
       </div>
       <p className={styles.lead}>
-        Upload a research image to classify and label it for later fine-tuning. The model request is
-        filename and byte size only. Do not enter a name, handle, or other personal detail. The
-        image stays in this tab.
+        Upload a research image to classify and label it for later fine-tuning. The image is
+        uploaded to Amanah and stored privately; only you can read it, and location and camera
+        metadata are removed before storage. Do not enter a name, handle, or other personal detail,
+        and do not upload personal photographs.
       </p>
 
       <form className={styles.form} onSubmit={handleSave}>
@@ -205,8 +214,9 @@ export function ImageLabelForm() {
             >
               <p className={styles.dropTitle}>Drop a research image here</p>
               <p className={styles.hint} id="research-image-hint">
-                PNG, JPEG or WebP, under {Math.round(EVIDENCE_MAX_BYTES / 1024)} KB. The file stays
-                in this tab.
+                PNG, JPEG or WebP, under {Math.round(EVIDENCE_MAX_BYTES / 1024)} KB. Amanah removes
+                location and camera metadata, stores the cleaned image privately, then sends that
+                stored copy to the configured classifier. Only you can read the stored image.
               </p>
               <input
                 id="research-image"
@@ -224,8 +234,28 @@ export function ImageLabelForm() {
               {fileError}
             </p>
           )}
+          {upload.isPending && (
+            <output className={styles.pending} aria-live="polite">
+              Uploading and cleaning the image.
+            </output>
+          )}
+          {upload.isError && (
+            <p className={styles.error} role="alert">
+              {errorMessage(upload.error)} The image was not classified.
+            </p>
+          )}
+          {upload.isSuccess && (
+            <p className={styles.hint}>
+              {upload.data.isNew
+                ? 'Stored privately.'
+                : 'You had already uploaded this image; the existing copy was reused.'}{' '}
+              {upload.data.disclosure}
+            </p>
+          )}
           {classify.isPending && (
-            <p className={styles.pending}>Checking the image. Pixels stay in this tab.</p>
+            <output className={styles.pending} aria-live="polite">
+              Classifying the stored image.
+            </output>
           )}
           {classify.isError && (
             <p className={styles.error} role="alert">
@@ -312,9 +342,14 @@ export function ImageLabelForm() {
           className={styles.primaryAction}
           disabled={file === null || hateTypes.length === 0}
         >
-          Save training label
+          Save label in this session
         </button>
       </form>
+
+      <p className={styles.hint}>
+        The uploaded image and model result are stored by the service. Your label below is a demo
+        annotation kept only in this browser session; it is not automatically added to training.
+      </p>
 
       {saved.length > 0 && (
         <ul className={styles.saved}>

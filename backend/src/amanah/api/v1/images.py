@@ -14,13 +14,15 @@ from __future__ import annotations
 import logging
 from enum import StrEnum
 from typing import Annotated, Any
+from uuid import UUID
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, File, UploadFile, status
 from sqlalchemy import Row
 
 from amanah.api.ai import GeminiDependency
 from amanah.api.dependencies import CurrentUser, DatabaseSession, build_response_meta, get_settings
-from amanah.api.errors import ResourceNotFoundError, ServiceUnavailableError
+from amanah.api.errors import ApiError, ResourceNotFoundError, ServiceUnavailableError
+from amanah.api.schemas.errors import ErrorCode
 from amanah.api.schemas.images import (
     DatasetAnnotation,
     ImageClassificationRequest,
@@ -28,14 +30,19 @@ from amanah.api.schemas.images import (
     ImageExampleEntry,
     ImageExampleListResponse,
     ImageManifest,
+    ImageUploadResponse,
 )
 from amanah.db.repositories.images import ImageCatalogRepository
 from amanah.domain.enums import ConfidenceTier, HateType, Relevance, Severity, Stance
+from amanah.images.cleaning import ImageRejectedError, clean_image, read_bounded_upload
+from amanah.images.uploads import ImageUploadService
+from amanah.ingestion.contract import AdapterError
 from amanah.ml.classification import CALL_CONVENTION_VERSION
 from amanah.ml.image_classification import ImageClassificationService, ImageToClassify
+from amanah.ml.policy import DataClass
 from amanah.ml.versions import TAXONOMY_VERSION
 from amanah.settings import Settings
-from amanah.storage.object_store import build_object_reader
+from amanah.storage.object_store import ObjectStore, build_object_reader
 from amanah.storage.signed_urls import ObjectUrlSigner, SigningUnavailableError
 
 logger = logging.getLogger(__name__)
@@ -70,7 +77,17 @@ def list_image_examples(
             # something to paper over with a broken link.
             logger.warning("image example has no storage path", extra={"example_id": str(row.id)})
             continue
-        signed = signer.sign(path)
+        try:
+            signed = signer.sign(path)
+        except AdapterError as exc:
+            # Signing is a provider call now, so it can fail per object. One
+            # refused link must not fail the whole catalogue, and it must not
+            # degrade into an unsigned one.
+            logger.warning(
+                "image example could not be signed",
+                extra={"example_id": str(row.id), "reason": exc.safe_code},
+            )
+            continue
         items.append(
             ImageExampleEntry(
                 id=row.id,
@@ -97,7 +114,71 @@ def list_image_examples(
     )
 
 
-@router.post("/image-classifications", summary="Classify one catalogued image server-side")
+@router.post(
+    "/image-uploads",
+    summary="Upload one image for classification",
+    status_code=status.HTTP_201_CREATED,
+)
+def upload_image(
+    user: CurrentUser,
+    session: DatabaseSession,
+    settings: Annotated[Settings, Depends(get_settings)],
+    file: Annotated[UploadFile, File(description="One JPEG, PNG, or WebP image.")],
+) -> ImageUploadResponse:
+    """Clean, store, and record one image the caller uploaded (B-S28).
+
+    Nothing the client sent about the file is trusted. The byte cap is enforced
+    while reading rather than from the declared length, the format is decided by
+    decoding the bytes rather than from the filename or content type, and the
+    stored object is a re-encode — so EXIF, GPS, and any trailing non-image
+    payload do not survive. The storage key is generated server-side.
+
+    Classification is a separate call. A model failure therefore never costs the
+    person their upload.
+    """
+    try:
+        store = ObjectStore.from_settings(settings)
+    except SigningUnavailableError as exc:
+        logger.warning("image upload refused", extra={"reason": "storage_not_configured"})
+        raise ServiceUnavailableError("Image upload is not available in this environment.") from exc
+
+    try:
+        raw = read_bounded_upload(file.file, max_bytes=settings.image_upload_max_bytes)
+        cleaned = clean_image(
+            raw,
+            max_pixels=settings.image_upload_max_pixels,
+            max_dimension=settings.image_upload_max_dimension,
+        )
+    except ImageRejectedError as exc:
+        raise _rejected(exc, settings) from exc
+    finally:
+        file.file.close()
+
+    service = ImageUploadService(
+        session, store=store, retention_days=settings.image_upload_retention_days
+    )
+    stored = service.store(cleaned, owner_user_id=user.user_id)
+
+    upload = service.get_owned(stored.upload_id, owner_user_id=user.user_id)
+    signed = ObjectUrlSigner.from_settings(settings).sign(
+        upload.storage_path if upload is not None else ""
+    )
+    return ImageUploadResponse(
+        upload_id=stored.upload_id,
+        mime_type=stored.mime_type,
+        byte_size=stored.byte_size,
+        pixel_width=stored.pixel_width,
+        pixel_height=stored.pixel_height,
+        sha256=stored.sha256,
+        is_new=stored.is_new,
+        retention_expires_at=upload.retention_expires_at if upload is not None else None,
+        image_url=signed.url,
+        image_url_expires_at=signed.expires_at,
+        meta=build_response_meta(settings),
+    )
+
+
+@router.post("/image-classifications", summary="Classify one catalogued or uploaded image")
 def classify_image(
     body: ImageClassificationRequest,
     user: CurrentUser,
@@ -105,41 +186,51 @@ def classify_image(
     client: GeminiDependency,
     settings: Annotated[Settings, Depends(get_settings)],
 ) -> ImageClassificationResponse:
-    """Classify one published example through the controlled Gemini boundary.
+    """Classify one image through the controlled Gemini boundary.
 
-    The caller names an example; the server fetches the bytes. Pixels never cross
-    this boundary in either direction (ADR 0007).
+    The caller names a published catalogue example or one of its own uploads, and
+    the server fetches the bytes. Pixels never cross this boundary in either
+    direction (ADR 0007); an upload arrives through `POST /v1/image-uploads`.
     """
     repository = ImageCatalogRepository(session)
-    target = repository.read_storage_target(body.example_id)
-    if target is None:
-        raise ResourceNotFoundError("No published image example was found for that id.")
+    try:
+        read_object = build_object_reader(settings)
+    except SigningUnavailableError as exc:
+        # No Storage credential, so the bytes cannot be fetched. Reporting this
+        # as unavailable is the honest answer; the alternative would be a
+        # classification of nothing.
+        logger.warning("image classification refused", extra={"reason": "storage_not_configured"})
+        raise ServiceUnavailableError(
+            "Image analysis is not available in this environment."
+        ) from exc
 
-    service = ImageClassificationService(
-        session,
-        client=client,
-        read_object=build_object_reader(settings),
-    )
-    record = service.classify(
-        ImageToClassify(
-            image_example_id=target.id,
-            storage_path=target.storage_path,
-            sha256=target.sha256,
-            mime_type=target.mime_type,
-        ),
-        requested_by=user.user_id,
-    )
+    # The request model guarantees exactly one of these is set; re-reading them
+    # here keeps that visible to a reader and to the type checker.
+    if body.example_id is not None:
+        subject = _catalogue_subject(repository, body.example_id)
+    elif body.upload_id is not None:
+        subject = _upload_subject(session, settings, body.upload_id, owner_user_id=user.user_id)
+    else:  # pragma: no cover - the request validator rejects this first
+        raise ApiError(
+            code=ErrorCode.validation_failed,
+            status_code=422,
+            message="Name exactly one of example_id or upload_id.",
+        )
+
+    service = ImageClassificationService(session, client=client, read_object=read_object)
+    record = service.classify(subject, requested_by=user.user_id)
     if record.output is None:
         # The model produced nothing usable. `spec.md` section 11.2 keeps the
         # rest of the product working and marks the analysis unavailable.
         raise ServiceUnavailableError(
-            "Image analysis is unavailable right now. The catalog entry is unchanged."
+            "Image analysis is unavailable right now. The stored image is unchanged."
         )
 
-    catalog_row = repository.get_example(body.example_id)
+    catalog_row = repository.get_example(body.example_id) if body.example_id is not None else None
     output = record.output
     return ImageClassificationResponse(
         example_id=body.example_id,
+        upload_id=body.upload_id,
         data_mode=settings.data_mode,
         relevance=output.relevance,
         stance=output.stance,
@@ -155,6 +246,78 @@ def classify_image(
         review_required=record.requires_review,
         dataset_annotation=(_dataset_annotation(catalog_row) if catalog_row is not None else None),
         meta=build_response_meta(settings),
+    )
+
+
+def _catalogue_subject(repository: ImageCatalogRepository, example_id: UUID) -> ImageToClassify:
+    """A reviewed corpus image. Permitted material under ADR 0007."""
+    target = repository.read_storage_target(example_id)
+    if target is None:
+        raise ResourceNotFoundError("No published image example was found for that id.")
+    return ImageToClassify(
+        image_example_id=target.id,
+        storage_path=target.storage_path,
+        sha256=target.sha256,
+        mime_type=target.mime_type,
+        data_class=DataClass.collected_text,
+    )
+
+
+def _upload_subject(
+    session: DatabaseSession,
+    settings: Settings,
+    upload_id: UUID,
+    *,
+    owner_user_id: UUID,
+) -> ImageToClassify:
+    """One of the caller's own uploads.
+
+    Ownership is re-checked here rather than assumed from the identifier: a
+    `upload_id` is a client-supplied value, and reading someone else's private
+    file is exactly what this route must not allow. A missing row and a row
+    belonging to another user produce the same `404`, so the response cannot be
+    used to discover which identifiers exist.
+    """
+    store = ObjectStore.from_settings(settings)
+    service = ImageUploadService(session, store=store)
+    upload = service.get_owned(upload_id, owner_user_id=owner_user_id)
+    if upload is None:
+        raise ResourceNotFoundError("No upload of yours was found for that id.")
+
+    return ImageToClassify(
+        image_upload_id=upload.id,
+        storage_path=upload.storage_path,
+        sha256=upload.sha256,
+        mime_type=upload.mime_type,
+        # An upload is never fixture material, whatever the deployment's data
+        # mode says: it is one person's own file.
+        is_fixture=False,
+        data_class=DataClass.user_submitted_media,
+        allow_third_party_content_inference=settings.allow_third_party_content_inference,
+    )
+
+
+def _rejected(error: ImageRejectedError, settings: Settings) -> ApiError:
+    """Map a refusal onto a safe, actionable message.
+
+    The wording describes the *limit*, never the file: telling a sender what was
+    detected in their upload would turn this endpoint into an oracle.
+    """
+    megabytes = settings.image_upload_max_bytes // (1024 * 1024)
+    messages = {
+        "image_too_large": f"That image is larger than the {megabytes} MB limit.",
+        "image_empty": "That file was empty.",
+        "image_format_not_allowed": "Upload a JPEG, PNG, or WebP image.",
+        "image_unreadable": "That file could not be read as an image.",
+        "image_dimensions_too_large": (
+            f"That image is wider or taller than {settings.image_upload_max_dimension} pixels."
+        ),
+        "image_too_many_pixels": "That image has too many pixels to process.",
+    }
+    return ApiError(
+        code=ErrorCode.validation_failed,
+        status_code=413 if error.code == "image_too_large" else 422,
+        message=messages.get(error.code, "That file could not be accepted."),
     )
 
 

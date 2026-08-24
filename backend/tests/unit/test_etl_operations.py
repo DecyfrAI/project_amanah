@@ -51,13 +51,33 @@ def test_reviewed_configuration_versions_cannot_drift() -> None:
         )
 
 
-@pytest.mark.parametrize("source_key", ["missing", "youtube"])
-def test_unknown_or_disabled_source_is_refused(source_key: str) -> None:
+def test_unknown_source_is_refused() -> None:
     sources, seeds = configured()
 
     with pytest.raises(EtlValidationError):
         validate_dispatch(
-            EtlDispatch(sources=(source_key,), item_cap=25), sources=sources, seeds=seeds
+            EtlDispatch(sources=("missing",), item_cap=25), sources=sources, seeds=seeds
+        )
+
+
+def test_disabled_source_is_refused() -> None:
+    sources, seeds = configured()
+    disabled_sources = sources.model_copy(
+        update={
+            "sources": tuple(
+                source.model_copy(update={"is_enabled": False})
+                if source.source_key == "youtube"
+                else source
+                for source in sources.sources
+            )
+        }
+    )
+
+    with pytest.raises(EtlValidationError):
+        validate_dispatch(
+            EtlDispatch(sources=("youtube",), item_cap=25),
+            sources=disabled_sources,
+            seeds=seeds,
         )
 
 

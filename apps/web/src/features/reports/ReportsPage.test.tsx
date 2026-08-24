@@ -170,57 +170,60 @@ describe('ReportsPage', () => {
     expect(screen.getByText(/content reference, not a person/i)).toBeVisible();
   });
 
-  it('offers a working research-report form rather than inert scope controls', () => {
-    renderReports();
+  it('states the scope a report would freeze, read from the address bar', () => {
+    renderReports('/app/reports?from=2026-08-09&to=2026-08-22&platform=youtube');
 
     expect(screen.getByRole('heading', { name: 'Research report' })).toBeVisible();
-    expect(screen.getByLabelText('Report title')).toBeEnabled();
-    expect(screen.getByLabelText('Include an aggregate CSV')).toBeEnabled();
-    expect(screen.getByRole('button', { name: 'Generate report' })).toBeEnabled();
+    expect(screen.getByText('2026-08-09 to 2026-08-22')).toBeVisible();
+    expect(screen.getByText('youtube')).toBeVisible();
   });
 
-  it('refuses to create a snapshot without a usable title', async () => {
-    const user = userEvent.setup();
-    renderReports();
-
-    await user.click(screen.getByRole('button', { name: 'Generate report' }));
-
-    expect(screen.getByText(/at least three characters/i)).toBeVisible();
-    expect(screen.queryByRole('button', { name: 'Download aggregate CSV' })).toBeNull();
-  });
-
-  it('creates a real snapshot and shows its scope, figures, and limitations', async () => {
-    const user = userEvent.setup();
-    renderReports();
-
-    await user.type(screen.getByLabelText('Report title'), 'Two-week coverage');
-    await user.click(screen.getByRole('button', { name: 'Generate report' }));
+  it('says a hate-type selection is not carried into the snapshot', () => {
+    renderReports('/app/reports?hate_type=collective_blame');
 
     expect(
-      await screen.findByRole('heading', { level: 3, name: 'Two-week coverage' }),
+      screen.getByText(/hate-type selection is active on screen but is not carried/i),
     ).toBeVisible();
-    // The snapshot states what it does and does not support, beside the figures.
-    expect(screen.getByText(/never platform-wide prevalence/i)).toBeVisible();
-    expect(screen.getByText('Methodology version')).toBeVisible();
   });
 
-  it('enables CSV download and print only once a snapshot exists', async () => {
+  it('offers generation once a title is typed, and exports only after freezing', async () => {
     const user = userEvent.setup();
     renderReports();
 
-    expect(screen.queryByRole('button', { name: 'Print or save as PDF' })).toBeNull();
+    // Exports do not exist before there is a snapshot to export.
+    expect(screen.queryByRole('button', { name: 'Download aggregate CSV' })).toBeNull();
 
-    await user.type(screen.getByLabelText('Report title'), 'Two-week coverage');
+    await user.type(screen.getByLabelText('Report title'), 'August monitored sample');
     await user.click(screen.getByRole('button', { name: 'Generate report' }));
 
-    expect(await screen.findByRole('button', { name: 'Download aggregate CSV' })).toBeEnabled();
+    expect(await screen.findByText('August monitored sample')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Download aggregate CSV' })).toBeEnabled();
     expect(screen.getByRole('button', { name: 'Print or save as PDF' })).toBeEnabled();
   });
 
-  it('states that the export carries aggregates only', () => {
+  it('freezes figures with their denominators and says they will not change', async () => {
+    const user = userEvent.setup();
     renderReports();
 
-    expect(screen.getByText(/Aggregate counts and denominators only/i)).toBeVisible();
+    await user.type(screen.getByLabelText('Report title'), 'August monitored sample');
+    await user.click(screen.getByRole('button', { name: 'Generate report' }));
+
+    expect(await screen.findByText('Muslim-related items')).toBeVisible();
+    expect(screen.getByText('Likely hate rate')).toBeVisible();
+    expect(screen.getByText(/do not change when the data behind them does/i)).toBeVisible();
+    expect(screen.getByText(/not a prevalence estimate for any platform/i)).toBeVisible();
+  });
+
+  it('states that CSV carries aggregates only without implying a frontend permission gate', async () => {
+    const user = userEvent.setup();
+    renderReports();
+
+    await user.type(screen.getByLabelText('Report title'), 'August monitored sample');
+    await user.click(screen.getByRole('button', { name: 'Generate report' }));
+
+    const note = await screen.findByText(/contains the aggregate counts and denominators/i);
+    expect(note).toHaveTextContent(/does not include item-level content or personal identifiers/i);
+    expect(note).not.toHaveTextContent(/elevated permission/i);
   });
 
   it('lists what the report will contain, including its limitations', () => {

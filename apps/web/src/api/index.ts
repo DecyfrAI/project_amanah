@@ -7,7 +7,6 @@ import type { ApiClient } from './client';
 export { FIXTURE_VIEWER, queryKeys } from './client';
 export type {
   ApiClient,
-  CreateResearchReportInput,
   ItemSearchFilters,
   NewsFilters,
   OverviewFilters,
@@ -23,6 +22,7 @@ export type {
   CreateInsightInput,
   ExplorerItem,
   ExplorerItemDataset,
+  ExplorerItemDetail,
   ExplorerItemImage,
   ExplorerPage,
   FilterOption,
@@ -39,8 +39,25 @@ export type {
   ImageClassification,
   ImageExample,
   ImageExampleList,
+  ImageUpload,
   ReportDraft,
   ReportDraftRequest,
+  CreateResearchReportRequest,
+  ReportFindingSnapshot,
+  ReportMetricKey,
+  ReportMetricSnapshot,
+  ResearchReport,
+  ReviewTaskType,
+  Relevance,
+  // The review queue reads these through the same barrel as every other
+  // feature; they were defined in `contracts.ts` but never re-exported here.
+  AppendDecisionRequest,
+  ReviewDecisionEntry,
+  ReviewDecisionKind,
+  ReviewQueuePage,
+  ReviewTask,
+  ReviewTaskDetail,
+  Stance,
   ViewerPost,
   ViewerPostList,
 } from './contracts';
@@ -85,6 +102,7 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
     getFilterOptions: () => tryLive((client) => client.getFilterOptions()),
     listNews: (filters) => tryLive((client) => client.listNews(filters)),
     searchItems: (filters) => tryLive((client) => client.searchItems(filters)),
+    getItem: (itemId) => tryLive((client) => client.getItem(itemId)),
     listInsights: () => tryLive((client) => client.listInsights()),
     getInsight: (insightId) => tryLive((client) => client.getInsight(insightId)),
     createInsight: (input) => tryLive((client) => client.createInsight(input)),
@@ -97,6 +115,7 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
     askAssistant: (input) => tryLive((client) => client.askAssistant(input)),
     prepareReportDraft: (input) => tryLive((client) => client.prepareReportDraft(input)),
     listImageExamples: () => tryLive((client) => client.listImageExamples()),
+    uploadImage: (file) => tryLive((client) => client.uploadImage(file)),
     classifyEvidence: (input) => tryLive((client) => client.classifyEvidence(input)),
     getCurrentUser: () => tryLive((client) => client.getCurrentUser()),
     updateProfile: (input) => tryLive((client) => client.updateProfile(input)),
@@ -106,9 +125,12 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
       tryLive((client) => client.recordReportOutcome(reportId, input)),
     listContributions: () => tryLive((client) => client.listContributions()),
     createResearchReport: (input) => tryLive((client) => client.createResearchReport(input)),
-    getResearchReport: (reportId) => tryLive((client) => client.getResearchReport(reportId)),
-    downloadResearchReportCsv: (reportId) =>
-      tryLive((client) => client.downloadResearchReportCsv(reportId)),
+    downloadResearchReportCsv: (report) =>
+      tryLive((client) => client.downloadResearchReportCsv(report)),
+    listReviewTasks: () => tryLive((client) => client.listReviewTasks()),
+    claimReviewTask: (taskId) => tryLive((client) => client.claimReviewTask(taskId)),
+    appendReviewDecision: (taskId, input) =>
+      tryLive((client) => client.appendReviewDecision(taskId, input)),
   };
 }
 
@@ -118,11 +140,11 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
  * Every product method routes to the live, authenticated service: news, the
  * dashboard and item reads (including datapack-backed rows), the grounded
  * assistant, insights and discussion, platform and research reports, and the
- * image catalogue/classification. No method here catches a live failure and
- * substitutes fixture data — a failure surfaces to the screen that made the
- * request. The surfaces that remain mocked (the review queue and connections
- * walkthroughs, and the local-file upload rehearsal) do not read through this
- * client at all and are labelled in place.
+ * image catalogue/classification, and the review queue. No method here catches
+ * a live failure and substitutes fixture data — a failure surfaces to the screen that made the
+ * request. The surfaces that remain mocked (the connections walkthrough and
+ * the local-file model-test rehearsal) do not read through this client at all and
+ * are labelled in place.
  */
 function createDemoProvider(live: ApiClient): ApiClient {
   return {
@@ -130,6 +152,7 @@ function createDemoProvider(live: ApiClient): ApiClient {
     getFilterOptions: live.getFilterOptions,
     listNews: live.listNews,
     searchItems: live.searchItems,
+    getItem: live.getItem,
     listInsights: live.listInsights,
     getInsight: live.getInsight,
     createInsight: live.createInsight,
@@ -142,6 +165,7 @@ function createDemoProvider(live: ApiClient): ApiClient {
     askAssistant: live.askAssistant,
     prepareReportDraft: live.prepareReportDraft,
     listImageExamples: live.listImageExamples,
+    uploadImage: live.uploadImage,
     classifyEvidence: live.classifyEvidence,
     getCurrentUser: live.getCurrentUser,
     updateProfile: live.updateProfile,
@@ -150,8 +174,10 @@ function createDemoProvider(live: ApiClient): ApiClient {
     recordReportOutcome: live.recordReportOutcome,
     listContributions: live.listContributions,
     createResearchReport: live.createResearchReport,
-    getResearchReport: live.getResearchReport,
     downloadResearchReportCsv: live.downloadResearchReportCsv,
+    listReviewTasks: live.listReviewTasks,
+    claimReviewTask: live.claimReviewTask,
+    appendReviewDecision: live.appendReviewDecision,
   };
 }
 

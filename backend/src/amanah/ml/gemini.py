@@ -264,7 +264,7 @@ class GeminiClient:
         `inlineData` part rather than encoded into the text, so the model receives
         a picture and the input character cap does not truncate it into garbage.
 
-        `responseSchema` asks the provider to constrain its own decoding, and the
+        `responseJsonSchema` asks the provider to constrain its own decoding, and the
         reply is still validated locally — a provider-side constraint is a
         convenience, not a guarantee this code may depend on.
         """
@@ -285,7 +285,7 @@ class GeminiClient:
                 "temperature": GENERATION_TEMPERATURE,
                 "maxOutputTokens": self._settings.gemini_max_output_tokens,
                 "responseMimeType": "application/json",
-                "responseSchema": _to_provider_schema(response_model),
+                "responseJsonSchema": _to_provider_schema(response_model),
             },
         }
 

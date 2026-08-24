@@ -167,6 +167,30 @@ export const WireItemSummarySchema = z.object({
   platform_display: z.string(),
 });
 
+/**
+ * `GET /v1/items/{id}`. Extends the summary with the model disclosure a
+ * classification must never be shown without: the score, the model, prompt, and
+ * taxonomy versions behind it, when it ran, its rationale, and the stated
+ * limitations of the sample it came from.
+ */
+export const WireItemDetailSchema = WireItemSummarySchema.extend({
+  score: z.number().min(0).max(1).nullable(),
+  model_name: z.string().nullable(),
+  model_version: z.string().nullable(),
+  prompt_version: z.string().nullable(),
+  taxonomy_version: z.string().nullable(),
+  inferred_at: z.string().nullable(),
+  rationale: z.string().nullable(),
+  narrative_tags: z.array(z.string()),
+  limitations: z.array(z.string()),
+  sampling_disclosure: z.string(),
+});
+
+export const WireItemDetailResponseSchema = z.object({
+  item: WireItemDetailSchema,
+  meta: WireMetaSchema,
+});
+
 export const WirePageInfoSchema = z.object({
   next_cursor: z.string().nullable(),
   limit: z.number().int().positive(),
@@ -471,8 +495,29 @@ export const WireImageExampleListSchema = z.object({
   meta: WireMetaSchema,
 });
 
+/**
+ * `POST /v1/image-uploads` (B-S28). Carries no storage path and no filename:
+ * the identifier is how the image is referred to afterwards, and the link is
+ * short-lived and minted per request.
+ */
+export const WireImageUploadSchema = z.object({
+  upload_id: z.string(),
+  mime_type: z.string(),
+  byte_size: z.number().int().positive(),
+  pixel_width: z.number().int().positive(),
+  pixel_height: z.number().int().positive(),
+  sha256: z.string(),
+  is_new: z.boolean(),
+  retention_expires_at: z.string().nullable(),
+  image_url: z.string(),
+  image_url_expires_at: z.string(),
+  disclosure: z.string(),
+  meta: WireMetaSchema,
+});
+
 export const WireImageClassificationSchema = z.object({
-  example_id: z.string(),
+  example_id: z.string().nullable(),
+  upload_id: z.string().nullable(),
   data_mode: WireDataModeSchema,
   relevance: WireRelevanceSchema,
   stance: WireStanceSchema,
@@ -503,6 +548,7 @@ export const WireErrorEnvelopeSchema = z.object({
 
 export type WireDashboardResponse = z.infer<typeof WireDashboardResponseSchema>;
 export type WireItemSummary = z.infer<typeof WireItemSummarySchema>;
+export type WireItemDetail = z.infer<typeof WireItemDetailSchema>;
 export type WireItemsPage = z.infer<typeof WireItemsPageSchema>;
 export type WireFilterOptions = z.infer<typeof WireFilterOptionsSchema>;
 export type WireInsightSummary = z.infer<typeof WireInsightSummarySchema>;
@@ -518,5 +564,6 @@ export type WireContributionSummary = z.infer<typeof WireContributionSummarySche
 export type WireContributionsPage = z.infer<typeof WireContributionsPageSchema>;
 export type WireResearchReport = z.infer<typeof WireResearchReportSchema>;
 export type WireImageExampleList = z.infer<typeof WireImageExampleListSchema>;
+export type WireImageUpload = z.infer<typeof WireImageUploadSchema>;
 export type WireImageClassification = z.infer<typeof WireImageClassificationSchema>;
 export type WireCapture = z.infer<typeof WireCaptureSchema>;

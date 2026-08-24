@@ -31,6 +31,15 @@ from amanah.ingestion.configuration import (
 #: `AGENTS.md` forbids replacing them with a guess, so their absence is a
 #: property worth asserting rather than a coincidence.
 REJECTED_FEED_HOSTS = ("feeds.reuters.com", "reutersagency.com", "apnews.com", "ctvnews.ca")
+YOUTUBE_DEMO_VIDEO_IDS = frozenset(
+    {
+        "kM6hqIGWgd4",
+        "Z_NV-xahGUk",
+        "6L2Jil03qmI",
+        "KS1_cAdIQR4",
+        "P5v-3BMRvHI",
+    }
+)
 
 
 @pytest.fixture(scope="module")
@@ -111,12 +120,28 @@ def test_the_open_datapack_source_is_the_single_controlled_row(
     assert datapacks[0].name == "N/A"
 
 
-def test_youtube_ships_disabled(sources: SourceConfiguration) -> None:
-    """It needs a credential and approved seeds; neither is assumed."""
+def test_youtube_ships_enabled_with_the_reviewed_demo_shortlist(
+    sources: SourceConfiguration, seeds: SeedConfiguration
+) -> None:
     youtube = sources.by_key("youtube")
+    youtube_seeds = seeds.runnable_for("youtube")
 
     assert youtube is not None
-    assert youtube.is_enabled is False
+    assert youtube.is_enabled is True
+    assert {seed.provider_reference for seed in youtube_seeds} == YOUTUBE_DEMO_VIDEO_IDS
+
+
+def test_youtube_demo_shortlist_is_bounded_and_preserves_control_provenance(
+    seeds: SeedConfiguration,
+) -> None:
+    youtube_seeds = seeds.runnable_for("youtube")
+
+    assert all(seed.entry_kind is SeedEntryKind.seed_video for seed in youtube_seeds)
+    assert all(seed.item_cap == 100 for seed in youtube_seeds)
+    assert {seed.sampling_stratum for seed in youtube_seeds} == {
+        SamplingStratum.enriched,
+        SamplingStratum.boundary_control,
+    }
 
 
 def test_every_news_outlet_has_a_homepage_for_attribution(
@@ -241,7 +266,7 @@ def test_neutral_muslim_related_reporting_passes_the_filter(
     """The committed keep list includes Muslim-related vocabulary *for
     topicality*. Passing it says an article is in scope, never that it is
     hateful."""
-    topical = seeds.seeds[0].topical_filter
+    topical = next(seed.topical_filter for seed in seeds.seeds if seed.source_key == "rss_bbc_news")
 
     assert topical is not None
     assert topical.matches("Mosque opens a community food bank") is True

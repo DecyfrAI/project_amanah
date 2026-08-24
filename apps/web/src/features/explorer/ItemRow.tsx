@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+
 import { platformLabel, reviewLabel, type ExplorerItem, type ExplorerItemImage } from '@/api';
 import { SafeImage } from '@/components/ui/SafeImage';
 import { StatusPill, type StatusIndicator } from '@/components/ui/StatusPill';
@@ -53,7 +55,9 @@ export function ItemRow({ item }: ItemRowProps) {
     <tr>
       <th scope="row" className={styles.identity}>
         <span className={styles.date}>{item.date}</span>
-        <span className={styles.itemId}>item {item.id}</span>
+        <Link className={styles.itemId} to={`/app/explorer/${encodeURIComponent(item.id)}`}>
+          item {item.id}
+        </Link>
       </th>
       <td>{item.platformDisplay ?? platformLabel(item.platform)}</td>
       <td className={styles.context}>{item.containerTitle ?? 'No public context'}</td>
