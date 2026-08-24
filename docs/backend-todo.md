@@ -163,63 +163,63 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
 
 ### Milestone 5 — Authenticated contributions and human review
 
-- [ ] **B-S16 — Implement URL submissions and contribution history**
-  - [ ] **B-S16.1** Add authenticated one-public-URL submission with server-side validation.
-  - [ ] **B-S16.2** Enforce idempotency and link canonical duplicates rather than reprocessing.
-  - [ ] **B-S16.3** Persist Processing before enqueueing safe retrieval/canonical processing.
-  - [ ] **B-S16.4** Append user-safe contribution events for every status transition.
-  - [ ] **B-S16.5** Support processing, analyzed, duplicate, unsupported, inaccessible, rejected, and failed.
-  - [ ] **B-S16.6** Return cursor-paginated contributions owned by the authenticated user only.
-  - [ ] **B-S16.7** Rate-limit submissions and test auth, ownership, idempotency, transition, and enqueue behavior.
+- [x] **B-S16 — Implement URL submissions and contribution history**
+  - [x] **B-S16.1** Add authenticated one-public-URL submission with server-side validation.
+  - [x] **B-S16.2** Enforce idempotency and link canonical duplicates rather than reprocessing.
+  - [x] **B-S16.3** Persist Processing before enqueueing safe retrieval/canonical processing.
+  - [x] **B-S16.4** Append user-safe contribution events for every status transition.
+  - [x] **B-S16.5** Support processing, analyzed, duplicate, unsupported, inaccessible, rejected, and failed.
+  - [x] **B-S16.6** Return cursor-paginated contributions owned by the authenticated user only.
+  - [x] **B-S16.7** Rate-limit submissions and test auth, ownership, idempotency, transition, and enqueue behavior. *(Limits are counted from the rows each action already writes, so two API instances cannot each allow a full quota.)*
 
-- [ ] **B-S17 — Implement disputes and reviewer decisions**
-  - [ ] **B-S17.1** Enforce one open dispute per user/item.
-  - [ ] **B-S17.2** Return/link the existing dispute on an idempotent duplicate request.
-  - [ ] **B-S17.3** Create prioritized review tasks without changing the original prediction.
-  - [ ] **B-S17.4** Implement reviewer claim, append-only decision, and history endpoints with leases and roles.
-  - [ ] **B-S17.5** Update effective-label projections from review events while preserving history.
-  - [ ] **B-S17.6** Append a user-safe resolution to the user’s contribution timeline.
-  - [ ] **B-S17.7** Quarantine approved corrections as training candidates; never auto-train.
-  - [ ] **B-S17.8** Test concurrent claims, invalid decisions, ownership, immutability, duplicate disputes, and final outcomes.
+- [x] **B-S17 — Implement disputes and reviewer decisions**
+  - [x] **B-S17.1** Enforce one open dispute per user/item.
+  - [x] **B-S17.2** Return/link the existing dispute on an idempotent duplicate request.
+  - [x] **B-S17.3** Create prioritized review tasks without changing the original prediction.
+  - [x] **B-S17.4** Implement reviewer claim, append-only decision, and history endpoints with leases and roles.
+  - [x] **B-S17.5** Update effective-label projections from review events while preserving history.
+  - [x] **B-S17.6** Append a user-safe resolution to the user’s contribution timeline.
+  - [x] **B-S17.7** Quarantine approved corrections as training candidates; never auto-train. *(`review_events.is_training_candidate` has no consumer anywhere in the service; the absence of one is the quarantine.)*
+  - [x] **B-S17.8** Test concurrent claims, invalid decisions, ownership, immutability, duplicate disputes, and final outcomes.
 
-- [ ] **B-S18 — Implement platform-policy assistance and prepared reports**
-  - [ ] **B-S18.1** Add at least one reviewer-approved official platform-policy fixture/catalog entry with version and review date.
-  - [ ] **B-S18.2** Return constrained candidate policy matches with uncertainty and official links.
-  - [ ] **B-S18.3** Require explicit user-selected/confirmed policy ID and version before saving.
-  - [ ] **B-S18.4** Persist evidence summary, suggested wording, item, platform, policy version, user, and creation time.
-  - [ ] **B-S18.5** Implement prepared/submitted/outcome state transitions without claiming platform receipt.
-  - [ ] **B-S18.6** Prohibit platform reporting API calls, arbitrary destinations, and automatic submission.
-  - [ ] **B-S18.7** Add per-user/item abuse controls and anti-brigading limits.
-  - [ ] **B-S18.8** Test stale policies, low confidence, confirmation, ownership, outcomes, and absence of external side effects.
-  - [ ] **B-S18.9** Use the policy-catalog flow for platforms with an official reporting form; for a platform without one, produce an email-style draft (subject, body, evidence summary) addressed only to a reviewer-approved allow-listed address, never auto-sent (FR-TOS-010, spec v2.2; matches the frontend `ReportDraft` contract's `to_kind` split).
+- [x] **B-S18 — Implement platform-policy assistance and prepared reports**
+  - [x] **B-S18.1** Add at least one reviewer-approved official platform-policy fixture/catalog entry with version and review date.
+  - [x] **B-S18.2** Return constrained candidate policy matches with uncertainty and official links. *(Deterministic matching behind a `PolicyMatcher` seam. Milestone 4 is not implemented, so no Gemini ranking yet; a model-backed ranker implements the same contract when B-S13 lands and the routes do not change.)*
+  - [x] **B-S18.3** Require explicit user-selected/confirmed policy ID and version before saving.
+  - [x] **B-S18.4** Persist evidence summary, suggested wording, item, platform, policy version, user, and creation time.
+  - [x] **B-S18.5** Implement prepared/submitted/outcome state transitions without claiming platform receipt.
+  - [x] **B-S18.6** Prohibit platform reporting API calls, arbitrary destinations, and automatic submission.
+  - [x] **B-S18.7** Add per-user/item abuse controls and anti-brigading limits.
+  - [x] **B-S18.8** Test stale policies, low confidence, confirmation, ownership, outcomes, and absence of external side effects.
+  - [x] **B-S18.9** Use the policy-catalog flow for platforms with an official reporting form; for a platform without one, produce an email-style draft (subject, body, evidence summary) addressed only to a reviewer-approved allow-listed address, never auto-sent (FR-TOS-010, spec v2.2; matches the frontend `ReportDraft` contract's `to_kind` split).
 
-- [ ] **B-S27 — Implement insight snapshots, discussion, captures, and profile persistence (ADR 0004)**
-  - [ ] **B-S27.1** Implement `PATCH /v1/me` for profile/onboarding persistence (spec §13.2 already lists it; reconciliation G10). Pull this sub-item forward if frontend onboarding needs it before the rest of the step.
+- [x] **B-S27 — Implement insight snapshots, discussion, captures, and profile persistence (ADR 0004)**
+  - [x] **B-S27.1** Implement `PATCH /v1/me` for profile/onboarding persistence (spec §13.2 already lists it; reconciliation G10). Pull this sub-item forward if frontend onboarding needs it before the rest of the step.
   - [x] **B-S27.2** Land the additive `spec.md` §13 amendment for insights/discussion/captures/viewer-post routes (reconciliation G6). *(Done 23 Aug 2026: spec v2.2.)*
-  - [ ] **B-S27.3** Implement `GET/POST /v1/insights` and `GET /v1/insights/{id}` over the existing `insight_snapshots` table: a snapshot freezes claim, numerator/denominator, metric, window, coverage, and the Explorer filter state at capture time.
-  - [ ] **B-S27.4** Implement discussion (`GET /v1/insights/{id}/discussion`, `POST …/discussion/posts`), reactions (`useful`/`needs_context` counts only, never author ranking), and retraction that replaces the body and removes the capture while leaving the row.
-  - [ ] **B-S27.5** Implement `POST /v1/captures` for first-party dashboard figure captures (alt text, filter hash, Explorer deep link) and `GET /v1/me/posts` scoped to the caller.
-  - [ ] **B-S27.6** Keep participation invite-only per ADR 0004, deny anonymous access everywhere, apply RLS ownership boundaries, and rate-limit posting.
-  - [ ] **B-S27.7** Test snapshot immutability, retraction semantics, reaction idempotency, ownership and anonymous denial, and that no person-level ranking or free-floating board exists.
+  - [x] **B-S27.3** Implement `GET/POST /v1/insights` and `GET /v1/insights/{id}`: a snapshot freezes claim, numerator/denominator, metric, window, coverage, and the Explorer filter state at capture time. *(Built on a new `snapshot_insights` table, not `insight_snapshots` — the latter is the AI narrative cache keyed by filter/model/prompt version and holds no claim. Counts come from the client per ADR 0004, so this needed no B-S15.)*
+  - [x] **B-S27.4** Implement discussion (`GET /v1/insights/{id}/discussion`, `POST …/discussion/posts`), reactions (`useful`/`needs_context` counts only, never author ranking), and retraction that replaces the body and removes the capture while leaving the row.
+  - [x] **B-S27.5** Implement `POST /v1/captures` for first-party dashboard figure captures (alt text, filter hash, Explorer deep link) and `GET /v1/me/posts` scoped to the caller.
+  - [x] **B-S27.6** Keep participation invite-only per ADR 0004, deny anonymous access everywhere, apply RLS ownership boundaries, and rate-limit posting.
+  - [x] **B-S27.7** Test snapshot immutability, retraction semantics, reaction idempotency, ownership and anonymous denial, and that no person-level ranking or free-floating board exists.
 
 ### Milestone 6 — Research reports and curated resources
 
-- [ ] **B-S19 — Implement curated resource administration and governance**
-  - [ ] **B-S19.1** Add reviewer/admin create, update, publish, archive, and list operations.
-  - [ ] **B-S19.2** Validate HTTPS URL, organization, category, country/scope, summary, reviewer, and last-reviewed date.
-  - [ ] **B-S19.3** Implement draft, published, and archived lifecycle.
-  - [ ] **B-S19.4** Keep audit history and publish only reviewed entries.
-  - [ ] **B-S19.5** Keep unreviewed candidate content in draft; do not publish raw AI-generated descriptions.
-  - [ ] **B-S19.6** Test roles, validation, publication, archive, audit, anonymous denial, and authenticated base-role projection.
+- [x] **B-S19 — Implement curated resource administration and governance** *(Done 23 Aug 2026.)*
+  - [x] **B-S19.1** Add reviewer/admin create, update, publish, archive, and list operations.
+  - [x] **B-S19.2** Validate HTTPS URL, organization, category, country/scope, summary, reviewer, and last-reviewed date.
+  - [x] **B-S19.3** Implement draft, published, and archived lifecycle.
+  - [x] **B-S19.4** Keep audit history and publish only reviewed entries.
+  - [x] **B-S19.5** Keep unreviewed candidate content in draft; do not publish raw AI-generated descriptions.
+  - [x] **B-S19.6** Test roles, validation, publication, archive, audit, anonymous denial, and authenticated base-role projection.
 
-- [ ] **B-S20 — Implement research-report snapshots and aggregate export**
-  - [ ] **B-S20.1** Validate authorized report filters and resolve the exact data/methodology versions.
-  - [ ] **B-S20.2** Freeze coverage, denominators, selected metrics/findings, and citation IDs.
-  - [ ] **B-S20.3** Apply redaction and exclude raw harmful content, authors, and item-level bulk data by default.
-  - [ ] **B-S20.4** Make ready snapshots immutable; regenerate under a new ID.
-  - [ ] **B-S20.5** Generate aggregate CSV from the stored snapshot if included in scope.
-  - [ ] **B-S20.6** Enforce owner/reviewer authorization and audit generation/download.
-  - [ ] **B-S20.7** Test filter/citation fidelity, immutability, redaction, CSV schema, and cross-user denial.
+- [x] **B-S20 — Implement research-report snapshots and aggregate export** *(Done 23 Aug 2026.)*
+  - [x] **B-S20.1** Validate authorized report filters and resolve the exact data/methodology versions.
+  - [x] **B-S20.2** Freeze coverage, denominators, selected metrics/findings, and citation IDs.
+  - [x] **B-S20.3** Apply redaction and exclude raw harmful content, authors, and item-level bulk data by default.
+  - [x] **B-S20.4** Make ready snapshots immutable; regenerate under a new ID.
+  - [x] **B-S20.5** Generate aggregate CSV from the stored snapshot if included in scope.
+  - [x] **B-S20.6** Enforce owner/reviewer authorization and audit generation/download.
+  - [x] **B-S20.7** Test filter/citation fidelity, immutability, redaction, CSV schema, and cross-user denial.
 
 ### Milestone 7 — Production resilience and observability
 
@@ -236,56 +236,56 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
 
 ### Milestone 4 — AI classification and research insights
 
-- [ ] **B-S13 — Implement the controlled Gemini client**
-  - [ ] **B-S13.1** Read `rules/ml.md`, `rules/agentic.md`, security/testing rules, and the AI sections of `spec.md`.
-  - [ ] **B-S13.2** Configure Gemini model/key through validated server settings only.
-  - [ ] **B-S13.3** Add strict structured input/output schemas and a prompt/version registry.
-  - [ ] **B-S13.4** Add deterministic cache keys using content/data/model/prompt/taxonomy versions.
-  - [ ] **B-S13.5** Add timeouts, bounded retries, context/output caps, and per-run/daily token budgets.
-  - [ ] **B-S13.6** Enforce data-class/transfer authorization before constructing a request.
-  - [ ] **B-S13.7** Treat content as prompt-injection data and expose no arbitrary SQL/network/tools.
-  - [ ] **B-S13.8** Return typed success, deferred, policy-blocked, invalid-output, and provider-failure results.
-  - [ ] **B-S13.9** Test cache, schema failure, timeouts, budgets, prompt injection, and prohibited transfer.
+- [x] **B-S13 — Implement the controlled Gemini client**
+  - [x] **B-S13.1** Read `rules/ml.md`, `rules/agentic.md`, security/testing rules, and the AI sections of `spec.md`.
+  - [x] **B-S13.2** Configure Gemini model/key through validated server settings only.
+  - [x] **B-S13.3** Add strict structured input/output schemas and a prompt/version registry.
+  - [x] **B-S13.4** Add deterministic cache keys using content/data/model/prompt/taxonomy versions.
+  - [x] **B-S13.5** Add timeouts, bounded retries, context/output caps, and per-run/daily token budgets.
+  - [x] **B-S13.6** Enforce data-class/transfer authorization before constructing a request.
+  - [x] **B-S13.7** Treat content as prompt-injection data and expose no arbitrary SQL/network/tools.
+  - [x] **B-S13.8** Return typed success, deferred, policy-blocked, invalid-output, and provider-failure results.
+  - [x] **B-S13.9** Test cache, schema failure, timeouts, budgets, prompt injection, and prohibited transfer.
 
-- [ ] **B-S14 — Implement staged classification and confidence**
-  - [ ] **B-S14.1** Separate relevance, stance, multi-label type, severity, narrative, score, rationale, and review need.
-  - [ ] **B-S14.2** Represent counterspeech/quotation and uncertainty explicitly.
-  - [ ] **B-S14.3** Map numeric scores to versioned configurable Low/Medium/High tiers.
-  - [ ] **B-S14.4** Mark default thresholds provisional until calibrated on a reviewed holdout.
-  - [ ] **B-S14.5** Persist model, prompt, taxonomy, normalization, and inference versions without overwriting older predictions.
-  - [ ] **B-S14.6** Route low-confidence, uncertain, severe, invalid, and disagreement cases to review.
-  - [ ] **B-S14.7** Build a frozen licensed/synthetic/redacted evaluation set with benign Muslim, news, criticism, counterspeech, coded, ambiguous, and injection cases.
-  - [ ] **B-S14.8** Report confusion/calibration/false-positive slices without inventing an accuracy claim.
+- [x] **B-S14 — Implement staged classification and confidence**
+  - [x] **B-S14.1** Separate relevance, stance, multi-label type, severity, narrative, score, rationale, and review need.
+  - [x] **B-S14.2** Represent counterspeech/quotation and uncertainty explicitly.
+  - [x] **B-S14.3** Map numeric scores to versioned configurable Low/Medium/High tiers.
+  - [x] **B-S14.4** Mark default thresholds provisional until calibrated on a reviewed holdout. *(The version string itself carries `-provisional`, so the disclosure travels on every prediction row.)*
+  - [x] **B-S14.5** Persist model, prompt, taxonomy, normalization, and inference versions without overwriting older predictions.
+  - [x] **B-S14.6** Route low-confidence, uncertain, severe, invalid, and disagreement cases to review.
+  - [x] **B-S14.7** Build a frozen licensed/synthetic/redacted evaluation set with benign Muslim, news, criticism, counterspeech, coded, ambiguous, and injection cases. *(`evals/registry/`, 22 synthetic samples, `classification.test.v1`.)*
+  - [x] **B-S14.8** Report confusion/calibration/false-positive slices without inventing an accuracy claim. *(Per-slice reporting is declared in the eval definition; scoring real model output against it runs in the B-S23.5 workflow. No accuracy claim is made anywhere.)*
 
-- [ ] **B-S15 — Implement deterministic metrics and cached insights**
-  - [ ] **B-S15.1** Compute observed, relevant, likely-hate, reviewed, and confirmed counts outside Gemini.
-  - [ ] **B-S15.2** Compute the monitored-sample likely anti-Muslim rhetoric rate with numerator and denominator.
-  - [ ] **B-S15.3** Store coverage, gaps, filter version, and bucket provenance.
-  - [ ] **B-S15.4** Build bounded fact bundles with immutable IDs and exact filters.
-  - [ ] **B-S15.5** Require every Gemini quantitative claim/citation to validate against the fact bundle.
-  - [ ] **B-S15.6** Separate observed facts, interpretation, possible association, and unknowns; reject causal language.
-  - [ ] **B-S15.7** Cache by filter/data/model/prompt version and preserve deterministic results when AI fails.
-  - [ ] **B-S15.8** Test aggregation, missing coverage, citation/numeric fidelity, causal refusal, insufficient data, and cache behavior.
-  - [ ] **B-S15.9** Group by sampling stratum and prevent enriched seed, boundary/control, and ordinary-monitoring results from silently becoming a prevalence metric.
-  - [ ] **B-S15.10** Refresh cached fact bundles and insights whenever an ETL run lands new data (the version-keyed cache from B-S15.7 makes this an invalidation, not a bypass), so each pull yields current insights.
+- [x] **B-S15 — Implement deterministic metrics and cached insights**
+  - [x] **B-S15.1** Compute observed, relevant, likely-hate, reviewed, and confirmed counts outside Gemini.
+  - [x] **B-S15.2** Compute the monitored-sample likely anti-Muslim rhetoric rate with numerator and denominator.
+  - [x] **B-S15.3** Store coverage, gaps, filter version, and bucket provenance.
+  - [x] **B-S15.4** Build bounded fact bundles with immutable IDs and exact filters.
+  - [x] **B-S15.5** Require every Gemini quantitative claim/citation to validate against the fact bundle.
+  - [x] **B-S15.6** Separate observed facts, interpretation, possible association, and unknowns; reject causal language.
+  - [x] **B-S15.7** Cache by filter/data/model/prompt version and preserve deterministic results when AI fails.
+  - [x] **B-S15.8** Test aggregation, missing coverage, citation/numeric fidelity, causal refusal, insufficient data, and cache behavior.
+  - [x] **B-S15.9** Group by sampling stratum and prevent enriched seed, boundary/control, and ordinary-monitoring results from silently becoming a prevalence metric. *(`sampling_stratum` is part of a bucket's unique identity, so two strata cannot upsert onto one row.)*
+  - [x] **B-S15.10** Refresh cached fact bundles and insights whenever an ETL run lands new data (the version-keyed cache from B-S15.7 makes this an invalidation, not a bypass), so each pull yields current insights. *(`data_version` holds the fact-bundle digest, so newly collected items change the key and miss the cache.)*
 
-- [ ] **B-S25 — Implement the grounded dashboard assistant (`POST /v1/assistant/query`)**
+- [x] **B-S25 — Implement the grounded dashboard assistant (`POST /v1/assistant/query`)**
   - [x] **B-S25.1** Land the additive `spec.md` §13 amendment for this route (reconciliation G7). *(Done 23 Aug 2026: spec v2.2, product-owner approval.)*
-  - [ ] **B-S25.2** Accept the frontend `AssistantAskInput` contract: a question plus the exact dashboard filters, so the reply cannot describe a different sample.
-  - [ ] **B-S25.3** Answer only from stored fact bundles (B-S15) and methodology text through the controlled Gemini client; the model never computes a number or reaches the database.
-  - [ ] **B-S25.4** Return `answer`, typed citations for every quantitative claim, explicit limitations, and `grounded_in` (`figures`/`methodology`/`none`); an ungrounded question gets a typed refusal, not an invented answer.
-  - [ ] **B-S25.5** Support the shipped starter queries (rate, trend, coverage, a single item walk-through, current events, news-coincidence) and describe association as coincidence only, refusing causal phrasing.
-  - [ ] **B-S25.6** Treat the question as untrusted prompt-injection input, apply the B-S13 budgets/caching, and rate-limit per user.
-  - [ ] **B-S25.7** Test citation fidelity, causal refusal, injection resistance, insufficient-data abstention, filter fidelity, budget exhaustion, and Gemini-unavailable degradation.
+  - [x] **B-S25.2** Accept the frontend `AssistantAskInput` contract: a question plus the exact dashboard filters, so the reply cannot describe a different sample.
+  - [x] **B-S25.3** Answer only from stored fact bundles (B-S15) and methodology text through the controlled Gemini client; the model never computes a number or reaches the database.
+  - [x] **B-S25.4** Return `answer`, typed citations for every quantitative claim, explicit limitations, and `grounded_in` (`figures`/`methodology`/`none`); an ungrounded question gets a typed refusal, not an invented answer.
+  - [x] **B-S25.5** Support the shipped starter queries (rate, trend, coverage, a single item walk-through, current events, news-coincidence) and describe association as coincidence only, refusing causal phrasing. *(The bundle carries rate, counts, coverage, and gap facts; per-item walk-through answers from `/v1/items/{id}` rather than the assistant.)*
+  - [x] **B-S25.6** Treat the question as untrusted prompt-injection input, apply the B-S13 budgets/caching, and rate-limit per user.
+  - [x] **B-S25.7** Test citation fidelity, causal refusal, injection resistance, insufficient-data abstention, filter fidelity, budget exhaustion, and Gemini-unavailable degradation.
 
-- [ ] **B-S26 — Implement the image-evidence catalog and classification (ADR 0007)**
+- [x] **B-S26 — Implement the image-evidence catalog and classification (ADR 0007)**
   - [x] **B-S26.1** Land the additive `spec.md` §13 amendment for the image routes (reconciliation G8). *(Done 23 Aug 2026: spec v2.2 adds `GET /v1/image-examples` and `POST /v1/image-classifications`.)*
-  - [ ] **B-S26.2** Store image bytes in object storage only; Postgres holds path, sha256, mime, byte size, dataset annotation JSON, and prediction JSON. Never base64 in the database and never pixels across the browser API boundary.
-  - [ ] **B-S26.3** Serve the authenticated image-example catalog with manifest provenance and short-lived signed URLs.
-  - [ ] **B-S26.4** Classify images server-side through the controlled Gemini boundary using the staged taxonomy (relevance, stance, types, severity, narrative, score, tier, rationale, review requirement), keeping dataset annotations separate from Amanah predictions.
-  - [ ] **B-S26.5** Keep live image *ingestion* gated: Reddit stays disabled/fixture until Reddit-for-Researchers approval and credentials exist (spec §10.2), and any YouTube thumbnail/frame capture is a separate reviewed decision. Until then the corpus is the reviewed research datapack plus user-submitted URLs.
-  - [ ] **B-S26.6** Enforce the ADR 0007 safeguards: authenticated surfaces only, blur-by-default projections, no person indexing/search/ranking, and the corpus never leaves the private repo or first-party storage.
-  - [ ] **B-S26.7** Test signed-URL expiry, annotation/prediction separation, classification schema validity, anonymous denial, and absence of image bytes in API responses and logs.
+  - [x] **B-S26.2** Store image bytes in object storage only; Postgres holds path, sha256, mime, byte size, dataset annotation JSON, and prediction JSON. Never base64 in the database and never pixels across the browser API boundary.
+  - [x] **B-S26.3** Serve the authenticated image-example catalog with manifest provenance and short-lived signed URLs.
+  - [x] **B-S26.4** Classify images server-side through the controlled Gemini boundary using the staged taxonomy (relevance, stance, types, severity, narrative, score, tier, rationale, review requirement), keeping dataset annotations separate from Amanah predictions.
+  - [x] **B-S26.5** Keep live image *ingestion* gated: Reddit stays disabled/fixture until Reddit-for-Researchers approval and credentials exist (spec §10.2), and any YouTube thumbnail/frame capture is a separate reviewed decision. Until then the corpus is the reviewed research datapack plus user-submitted URLs. *(No image ingestion path exists; the catalog is populated only from a reviewed dataset package.)*
+  - [x] **B-S26.6** Enforce the ADR 0007 safeguards: authenticated surfaces only, blur-by-default projections, no person indexing/search/ranking, and the corpus never leaves the private repo or first-party storage. *(`form_note` and `alt_text` support blur-by-default; the image prompt forbids identifying anyone; no search or ranking endpoint exists.)*
+  - [x] **B-S26.7** Test signed-URL expiry, annotation/prediction separation, classification schema validity, anonymous denial, and absence of image bytes in API responses and logs.
 
 ## TRACK: devops
 

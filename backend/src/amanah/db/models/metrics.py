@@ -29,6 +29,7 @@ from amanah.domain.enums import (
     MetricInterval,
     RelationBasis,
     RelationReviewState,
+    SamplingStratum,
     ValidationStatus,
 )
 
@@ -49,14 +50,17 @@ class MetricBucket(Base):
     __table_args__ = (
         # `spec.md` section 14.6. `filter_version` is part of the identity so
         # recomputing under a new filter definition adds a bucket instead of
-        # silently rewriting history.
+        # silently rewriting history, and `sampling_stratum` is part of it so an
+        # enriched sample can never be aggregated into the same row as ordinary
+        # monitoring.
         UniqueConstraint(
             "metric_key",
             "source_id",
+            "sampling_stratum",
             "interval",
             "bucket_start",
             "filter_version",
-            name="metric_buckets_key_source_interval_bucket_filter_unique",
+            name="metric_buckets_key_source_stratum_interval_bucket_filter_unique",
         ),
         CheckConstraint(
             "observed_count >= 0 AND relevant_count >= 0 AND likely_hate_count >= 0 "
@@ -88,6 +92,16 @@ class MetricBucket(Base):
     metric_key: Mapped[str] = mapped_column(String(100), nullable=False)
     source_id: Mapped[UuidColumn] = mapped_column(
         ForeignKey("sources.id", ondelete="RESTRICT"), nullable=False
+    )
+    sampling_stratum: Mapped[SamplingStratum] = mapped_column(
+        enum_column(SamplingStratum),
+        nullable=False,
+        server_default="ordinary_monitoring",
+        doc=(
+            "Why the items in this bucket were sampled. Part of the bucket's identity "
+            "so an enriched seed sample and ordinary monitoring can never be summed "
+            "into one figure and published as prevalence."
+        ),
     )
     interval: Mapped[MetricInterval] = mapped_column(enum_column(MetricInterval), nullable=False)
     bucket_start: Mapped[CreatedAt]
@@ -169,7 +183,15 @@ class InsightSnapshot(Base):
 
     id: Mapped[UuidPrimaryKey]
     filter_hash: Mapped[str] = mapped_column(String(64), nullable=False)
-    data_version: Mapped[str] = mapped_column(String(50), nullable=False)
+    data_version: Mapped[str] = mapped_column(
+        String(64),
+        nullable=False,
+        doc=(
+            "Digest of the exact fact bundle this narrative was generated from. "
+            "New data produces a new digest, so a re-run after collection is a cache "
+            "miss rather than a stale summary served over fresh figures."
+        ),
+    )
     model_name: Mapped[str] = mapped_column(String(100), nullable=False)
     prompt_version: Mapped[str] = mapped_column(String(50), nullable=False)
     input_fact_ids: Mapped[list[str]] = mapped_column(

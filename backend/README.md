@@ -123,7 +123,8 @@ curl http://127.0.0.1:8000/openapi.json -o openapi.json
 |---|---|---|
 | `GET /healthz` | none | Process liveness; checks no dependencies |
 | `GET /readyz` | none | Dependency readiness; `503` when degraded |
-| `GET /v1/me` | bearer | The caller's verified identity and role |
+| `GET /v1/me` | bearer | The caller's verified identity, role, and stored profile |
+| `PATCH /v1/me` | bearer | Persist display name, onboarding state, safety preferences |
 | `GET /v1/dashboard` | bearer | Coverage, deterministic metrics, trend, headlines |
 | `GET /v1/items` | bearer | Filtered, sorted, cursor-paginated items |
 | `GET /v1/items/{id}` | bearer | One item with its model disclosure and limitations |
@@ -131,10 +132,63 @@ curl http://127.0.0.1:8000/openapi.json -o openapi.json
 | `GET /v1/admin/runs` | bearer, admin | Collection runs, newest dispatch first |
 | `POST /v1/admin/runs` | bearer, admin | Dispatch one bounded run; `200` on a redelivered key |
 | `GET /v1/admin/runs/{id}` | bearer, admin | One run and the stages beneath it |
+| `GET/POST /v1/admin/resources` | bearer, reviewer | List governed entries or create a draft |
+| `GET/PATCH /v1/admin/resources/{id}` | bearer, reviewer | Read or revise a governed entry |
+| `POST /v1/admin/resources/{id}/publish` | bearer, reviewer | Confirm human review and publish |
+| `POST /v1/admin/resources/{id}/archive` | bearer, reviewer | Archive an entry |
+| `GET /v1/admin/resources/{id}/audit` | bearer, reviewer | Append-only governance history |
 | `GET /v1/filters` | bearer | Filter values present in the data, plus query bounds |
 | `GET /v1/resources` | bearer | Reviewed, published education resources |
+| `POST /v1/research-reports` | bearer | Freeze a filter-scoped aggregate report under a new ID |
+| `GET /v1/research-reports/{id}` | bearer, owner/reviewer | Read an immutable report snapshot |
+| `GET /v1/research-reports/{id}/summary.csv` | bearer, owner/reviewer | Export stored aggregate rows when included at generation |
 | `GET /v1/methodology` | bearer | Sampling, taxonomy, model, coverage, and limitations |
 | `GET /v1/connections` | bearer | Safe connector state; never a key or a provider error |
+| `POST /v1/assistant/query` | bearer | Grounded question about the current filtered window |
+| `GET /v1/image-examples` | bearer | Image-evidence catalog with short-lived signed URLs |
+| `POST /v1/image-classifications` | bearer | Server-side staged classification of one catalogued image |
+| `POST /v1/submissions` | bearer | Submit one public URL; `200` on a resubmission |
+| `GET /v1/submissions/{id}` | bearer, owner | Own submission status |
+| `GET /v1/me/contributions` | bearer, owner | Unified history across every contribution type |
+| `GET /v1/me/contributions/{id}/events` | bearer, owner | The appended timeline of one contribution |
+| `POST /v1/items/{id}/disputes` | bearer | Dispute a classification; `200` on an open duplicate |
+| `GET /v1/disputes/{id}` | bearer, owner | Own dispute status and resolution |
+| `POST /v1/items/{id}/policy-analysis` | bearer | Possible platform-policy matches, never findings |
+| `POST /v1/prepared-reports` | bearer | Save a prepared report against a confirmed policy version |
+| `PATCH /v1/prepared-reports/{id}` | bearer, owner | Record that you filed it, and the outcome you saw |
+| `GET /v1/insights` | bearer | Snapshot insights, newest first |
+| `POST /v1/insights` | bearer | Freeze a figure with the counts behind it |
+| `GET /v1/insights/{id}` | bearer | One snapshot insight |
+| `GET /v1/insights/{id}/discussion` | bearer | The thread on one insight |
+| `POST /v1/insights/{id}/discussion/posts` | bearer, invited | Add a note |
+| `POST /v1/posts/{id}/reactions` | bearer, invited | React `useful`/`needs_context`; idempotent |
+| `POST /v1/posts/{id}/retract` | bearer, owner | Withdraw your note; the row stays |
+| `POST /v1/captures` | bearer, invited | Store a first-party capture of an Amanah figure |
+| `GET /v1/me/posts` | bearer, owner | Your own discussion notes |
+| `GET /v1/review/tasks` | bearer, reviewer | The review queue, highest priority and oldest first |
+| `GET /v1/review/tasks/{id}` | bearer, reviewer | One task and every decision appended to it |
+| `POST /v1/review/tasks/{id}/claim` | bearer, reviewer | Take a task under a lease |
+| `POST /v1/review/tasks/{id}/decisions` | bearer, reviewer | Append a decision; never edits the prediction |
+
+`POST /v1/assistant/query` answers only from stored fact bundles and methodology
+text. Every quantitative claim is verified against the bundle server-side before
+the reply is returned; an unsupported question gets a grounded refusal. The
+image routes never carry pixels in their JSON contracts: the catalog returns an
+expiring signed URL and classification reads catalogued bytes server-side.
+
+The reporting routes never contact a platform. `policy-analysis` returns
+*possible* matches from the reviewed catalogue in `config/platform-policies.yml`
+with their official links and last-reviewed dates; a user has to confirm a rule
+and its version before a prepared report exists; and `submitted_at` records what
+the user said they did, never a platform acknowledgement. A platform with no
+reporting form gets an email-style draft addressed only to a reviewer-approved
+allow-listed address, and nothing sends it (FR-TOS-010).
+
+Discussion is attached to an insight and is invite-only (ADR 0004). Reading a
+thread needs a verified session; posting, capturing, and reacting need a live
+`discussion_participants` row. Reactions count on a post and never rank an
+author, and retracting a note replaces its body and drops its capture while the
+row stays in the thread.
 
 `/v1/news` is deliberately not an item projection. An ingested article coincides
 with the monitoring window; it is not an Amanah finding, so the response carries
@@ -144,6 +198,16 @@ no column for one. Classified news *item cards* are served from `/v1/items`.
 Every rate carries its numerator, denominator, window, source scope, coverage,
 and data mode. A window with no computed bucket is returned as a gap with null
 counts — never as zero.
+
+Resource creation always produces a draft. Publication is a separate reviewer action that
+requires explicit confirmation, records the reviewer and review time, and appends an audit
+event. Changing published wording or links returns the entry to draft. No starter candidate is
+seeded without documented human review.
+
+Research reports contain only frozen aggregate metrics, deterministic findings, citation IDs,
+coverage, methodology, disclosures, and limitations. They contain no raw harmful text, author
+identifier, or item-level bulk data. A ready snapshot cannot be updated or deleted; regeneration
+creates a new ID, and CSV is rendered from the stored snapshot rather than from live queries.
 
 Every failing request returns the same envelope:
 
@@ -180,13 +244,17 @@ src/amanah/
 │   ├── datapacks/  # manifest-validated importer, never a crawler
 │   └── urls/       # SSRF-safe retrieval of user-submitted URLs
 ├── canonical/      # normalization, context, hashing, dedupe, encrypted storage
+├── contributions/  # submissions, disputes, review decisions, timelines, rate limits
+├── reporting/      # reviewed policy catalogue, deterministic matching, prepared drafts
+├── discussion/     # snapshot insights, invite-only notes, captures, reactions
 ├── metrics/        # deterministic aggregates, coverage, and their disclosures
 ├── resources/      # curated resources and the published methodology
+├── reporting/      # immutable aggregate report snapshots and CSV rendering
 ├── observability/  # request correlation and structured logging
 ├── settings.py     # validated configuration
 └── main.py         # application factory
 migrations/         # Alembic revisions; a separate one-off process
-config/             # reviewed source and seed catalogue (repository root)
+config/             # reviewed source, seed, and platform-policy catalogue (repo root)
 tests/{unit,integration,contract,db}/
 ```
 

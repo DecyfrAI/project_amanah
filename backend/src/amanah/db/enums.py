@@ -71,6 +71,8 @@ ENUM_TYPES: tuple[tuple[type[StrEnum], str], ...] = (
     (domain.PublicationStatus, "publication_status"),
     (domain.PreparedReportStatus, "prepared_report_status"),
     (domain.PreparedReportOutcome, "prepared_report_outcome"),
+    (domain.ReportRecipientKind, "report_recipient_kind"),
+    (domain.ReactionKind, "reaction_kind"),
     (domain.ResearchReportStatus, "research_report_status"),
     (domain.RedactionMode, "redaction_mode"),
     (domain.ResourceCategory, "resource_category"),

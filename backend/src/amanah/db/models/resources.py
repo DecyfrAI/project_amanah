@@ -6,6 +6,7 @@ from typing import Any
 
 from sqlalchemy import (
     CheckConstraint,
+    ForeignKey,
     Index,
     String,
     Text,
@@ -13,7 +14,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from amanah.db.base import Base, CreatedAt, Timestamp, UpdatedAt, UuidColumn, UuidPrimaryKey
 from amanah.db.enums import enum_column
@@ -119,3 +120,58 @@ class ResearchReport(Base):
     safe_error_code: Mapped[str | None] = mapped_column(String(100))
     created_at: Mapped[CreatedAt]
     completed_at: Mapped[Timestamp | None]
+
+
+class ResourceAuditEvent(Base):
+    """Append-only evidence of a curated-resource governance action."""
+
+    __tablename__ = "resource_audit_events"
+    __table_args__ = (
+        CheckConstraint(
+            "action IN ('created', 'updated', 'published', 'archived')",
+            name="action_allowed",
+        ),
+        Index(
+            "resource_audit_events_resource_entry_id_created_at_idx",
+            "resource_entry_id",
+            text("created_at DESC"),
+        ),
+        Index("resource_audit_events_actor_user_id_idx", "actor_user_id"),
+    )
+
+    id: Mapped[UuidPrimaryKey]
+    resource_entry_id: Mapped[UuidColumn] = mapped_column(
+        ForeignKey("resource_entries.id", ondelete="RESTRICT"), nullable=False
+    )
+    actor_user_id: Mapped[UuidColumn] = mapped_column(nullable=False)
+    action: Mapped[str] = mapped_column(String(20), nullable=False)
+    snapshot: Mapped[dict[str, Any]] = mapped_column(JSONB, nullable=False)
+    created_at: Mapped[CreatedAt]
+
+    resource_entry: Mapped[ResourceEntry] = relationship()
+
+
+class ResearchReportAuditEvent(Base):
+    """Append-only evidence that a report was generated or downloaded."""
+
+    __tablename__ = "research_report_audit_events"
+    __table_args__ = (
+        CheckConstraint("action IN ('generated', 'downloaded')", name="action_allowed"),
+        Index(
+            "research_report_audit_events_research_report_id_created_at_idx",
+            "research_report_id",
+            text("created_at DESC"),
+        ),
+        Index("research_report_audit_events_actor_user_id_idx", "actor_user_id"),
+    )
+
+    id: Mapped[UuidPrimaryKey]
+    research_report_id: Mapped[UuidColumn] = mapped_column(
+        ForeignKey("research_reports.id", ondelete="RESTRICT"), nullable=False
+    )
+    actor_user_id: Mapped[UuidColumn] = mapped_column(nullable=False)
+    action: Mapped[str] = mapped_column(String(20), nullable=False)
+    request_id: Mapped[str] = mapped_column(String(100), nullable=False)
+    created_at: Mapped[CreatedAt]
+
+    research_report: Mapped[ResearchReport] = relationship()

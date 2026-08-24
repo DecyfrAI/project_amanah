@@ -6,6 +6,80 @@ All notable project changes are documented here using the Keep a Changelog struc
 
 ### Added
 
+- **Milestone 5 — authenticated contributions and human review (B-S16 to B-S18, B-S27).**
+  `POST /v1/submissions` records one public URL as `processing` and queues the same canonical
+  pipeline collected content uses; the resolver-free half of the SSRF check runs in the request
+  so a private literal, an unsafe port, or credentials in the URL are refused before a row
+  exists, while `SafeUrlFetcher` still re-resolves and re-validates every redirect hop at
+  retrieval, which remains the security boundary. Idempotency is the natural key
+  `(user, canonical URL)`, so a resubmission answers `200` with the existing record; a URL that
+  already produced an item is recorded as `duplicate` and queues nothing.
+- A `user_submission` adapter that discovers the queue of pending submissions, retrieves each
+  through the safe fetcher, settles the ones with no readable page as `unsupported`,
+  `inaccessible`, `rejected`, or `failed`, and canonicalizes the rest into metadata-only items.
+  The pipeline links the stored item back to its submission, turning "processing" in a user's
+  history into a link to the result.
+- `GET /v1/me/contributions`: one cursor-paginated history across submissions, disputes, and
+  prepared reports, built as a `UNION ALL` over the three owner-scoped projections, plus
+  `GET /v1/me/contributions/{id}/events` for the appended timeline. Every timeline line is
+  composed from controlled vocabulary, so no provider text, source wording, or reviewer note
+  can reach one.
+- Classification disputes: one open dispute per user and item, an idempotent retry returning the
+  existing record, and a shared review task when two people dispute the same prediction. A
+  dispute moves the item's *effective* review state and never edits the prediction.
+- The reviewer workflow: `GET /v1/review/tasks` (highest priority, oldest first),
+  `POST …/claim` as a conditional update so exactly one reviewer wins a race,
+  `POST …/decisions` appending to `review_events`, effective-label projection updates, a
+  user-safe resolution on every attached dispute's timeline, and lease release for abandoned
+  claims. Approved corrections are flagged `is_training_candidate` into a pool nothing in this
+  service reads — the absence of a consumer is the quarantine.
+- Assisted platform reporting without any external side effect: a reviewed catalogue in
+  `config/platform-policies.yml`, deterministic candidate matching behind a `PolicyMatcher`
+  seam (a Gemini-backed ranker implements the same contract when B-S13 lands), possible-match
+  language that never claims a violation, mandatory confirmation of a policy *and* its version,
+  a stale version reported as a conflict rather than substituted, and one prepared report per
+  user, item, and platform. FR-TOS-010: a platform with no reporting form gets an email-style
+  draft addressed only to the reviewer-approved allow-listed address in the catalogue — a caller
+  has no field in which to name a recipient, and nothing is ever sent.
+- ADR 0004 insight discussion: `snapshot_insights` freeze a claim with its numerator,
+  denominator, window, sources, and Explorer filter state, and a trigger refuses any later
+  edit. Invite-only participation through `discussion_participants`; notes attach to an insight
+  and there is no table for a thread without one; `useful`/`needs_context` reactions count per
+  post with one row per person and no per-author aggregate anywhere; retraction replaces the
+  body and detaches the capture while leaving the row in place. Captures are first-party
+  renderings only — both the image path and the Explorer link must be site-relative, and
+  `//host` is rejected along with absolute URLs.
+- `PATCH /v1/me` persists display name, onboarding state, and content-safety preferences.
+  `GET /v1/me` now reports them alongside the verified identity; the effective role still comes
+  from the token, never from the stored row, so a stale row cannot grant access.
+- Per-user rate limits on submissions, disputes, prepared reports, and discussion notes,
+  counted from the rows each action already writes so two API instances cannot each allow a
+  full quota. A refusal returns `429` with `Retry-After`.
+- Migration `0005`: reviewer and discussion projections, the FR-TOS-010 recipient columns with
+  constraints keeping form and email platforms consistent, five new tables with row-level
+  security enabled and forced, and the snapshot immutability trigger. Migration `0006` moves
+  the channel-completeness check to publication, so a draft catalogue entry a reviewer has not
+  finished can still exist while nothing incomplete can be offered to a user.
+
+### Fixed
+
+- `review_events.corrected_labels` wrote a JSON `null` rather than SQL `NULL` for a decision
+  with no labels, which the `corrected_labels_match_decision` check constraint read as "labels
+  present" — every confirmation, rejection, and needs-context decision would have failed to
+  insert. The column now uses `JSONB(none_as_null=True)`.
+
+- **Milestone 6 — governed resources and immutable research reports (B-S19–B-S20).**
+  Reviewer/admin resource creation, revision, explicit human-confirmed publication, archive,
+  and append-only audit history; published wording changes return to draft and only reviewed
+  entries reach authenticated base-role readers. Authenticated filter-scoped research-report
+  generation now freezes data and methodology versions, coverage, denominators, selected
+  aggregate metrics, deterministic findings, citations, disclosures, and limitations under a
+  new immutable snapshot ID. Optional aggregate CSV is rendered only from the stored snapshot,
+  with owner/reviewer authorization and durable generation/download audit events; raw harmful
+  content, authors, and item-level bulk rows are excluded.
+
+### Added
+
 - **Milestone 3 — collection and canonical processing (B-S7–B-S12, B-S24).** Collection runs
   and background jobs as an explicit state machine: transactional claims with leases,
   `FOR UPDATE SKIP LOCKED` so concurrent workers never take the same job, checkpoint-before-

@@ -10,7 +10,23 @@ from fastapi import APIRouter, Depends
 
 from amanah.api.dependencies import bearer_scheme, require_authenticated_user
 from amanah.api.schemas.errors import ErrorEnvelope
-from amanah.api.v1 import admin, catalogue, dashboard, items, me, news
+from amanah.api.v1 import (
+    admin,
+    assistant,
+    catalogue,
+    dashboard,
+    disputes,
+    images,
+    insights,
+    items,
+    me,
+    news,
+    reporting,
+    research_reports,
+    resource_admin,
+    review,
+    submissions,
+)
 
 v1_router = APIRouter(
     prefix="/v1",
@@ -26,4 +42,13 @@ v1_router.include_router(dashboard.router)
 v1_router.include_router(items.router)
 v1_router.include_router(news.router)
 v1_router.include_router(catalogue.router)
+v1_router.include_router(assistant.router)
+v1_router.include_router(images.router)
+v1_router.include_router(submissions.router)
+v1_router.include_router(disputes.router)
+v1_router.include_router(reporting.router)
+v1_router.include_router(insights.router)
+v1_router.include_router(review.router)
 v1_router.include_router(admin.router)
+v1_router.include_router(resource_admin.router)
+v1_router.include_router(research_reports.router)

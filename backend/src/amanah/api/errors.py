@@ -32,6 +32,7 @@ _STATUS_TO_ERROR_CODE: dict[int, ErrorCode] = {
     401: ErrorCode.authentication_required,
     403: ErrorCode.permission_denied,
     404: ErrorCode.resource_not_found,
+    409: ErrorCode.resource_conflict,
     405: ErrorCode.method_not_allowed,
     429: ErrorCode.rate_limited,
     503: ErrorCode.service_unavailable,
@@ -50,12 +51,14 @@ class ApiError(Exception):
         status_code: int,
         message: str,
         details: ErrorDetails | None = None,
+        retry_after_seconds: int | None = None,
     ) -> None:
         super().__init__(message)
         self.code = code
         self.status_code = status_code
         self.message = message
         self.details: ErrorDetails = details or {}
+        self.retry_after_seconds = retry_after_seconds
 
 
 class AuthenticationRequiredError(ApiError):
@@ -95,6 +98,40 @@ class ResourceNotFoundError(ApiError):
         )
 
 
+class RateLimitedError(ApiError):
+    """The caller has made too many of this kind of request in the window.
+
+    `rules/api.md` section 14.2 requires `Retry-After` on every `429`, so the
+    wait is carried on the error rather than left for the route to remember.
+    """
+
+    def __init__(self, *, retry_after_seconds: int, message: str) -> None:
+        super().__init__(
+            code=ErrorCode.rate_limited,
+            status_code=429,
+            message=message,
+            details={"retry_after_seconds": retry_after_seconds},
+            retry_after_seconds=retry_after_seconds,
+        )
+
+
+class ConflictError(ApiError):
+    """The request contradicts the current state of the resource.
+
+    Used where a retry cannot succeed until something else changes: a policy
+    version that the catalogue has moved past, a review task another reviewer
+    already claimed.
+    """
+
+    def __init__(self, message: str, *, details: ErrorDetails | None = None) -> None:
+        super().__init__(
+            code=ErrorCode.resource_conflict,
+            status_code=409,
+            message=message,
+            details=details,
+        )
+
+
 class ServiceUnavailableError(ApiError):
     """A dependency this request needs is not configured or not reachable."""
 
@@ -109,7 +146,12 @@ class ServiceUnavailableError(ApiError):
 
 
 def build_error_response(
-    *, code: ErrorCode, status_code: int, message: str, details: ErrorDetails | None = None
+    *,
+    code: ErrorCode,
+    status_code: int,
+    message: str,
+    details: ErrorDetails | None = None,
+    retry_after_seconds: int | None = None,
 ) -> JSONResponse:
     """Serialize the safe error envelope."""
     request_id = current_request_id() or new_request_id()
@@ -127,6 +169,8 @@ def build_error_response(
     headers = {REQUEST_ID_HEADER: request_id}
     if status_code == 401:
         headers["WWW-Authenticate"] = "Bearer"
+    if retry_after_seconds is not None:
+        headers["Retry-After"] = str(retry_after_seconds)
     return JSONResponse(
         status_code=status_code, content=envelope.model_dump(mode="json"), headers=headers
     )
@@ -161,6 +205,7 @@ async def _handle_api_error(request: Request, exc: Exception) -> JSONResponse:
         status_code=error.status_code,
         message=error.message,
         details=error.details,
+        retry_after_seconds=error.retry_after_seconds,
     )
 
 

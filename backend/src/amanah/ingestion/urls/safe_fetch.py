@@ -133,12 +133,18 @@ def resolve_public_addresses(host: str) -> tuple[str, ...]:
     return addresses
 
 
-def validate_destination(raw_url: str) -> str | tuple[SubmissionStatus, str]:
-    """Check one URL, returning the normalized form or a typed refusal.
+def validate_syntax(raw_url: str) -> str | tuple[SubmissionStatus, str]:
+    """Everything that can be decided without asking a resolver.
 
-    Used for the submitted URL and again for every redirect destination, which is
-    the whole point: a check performed once, before a chain of redirects, checks
-    nothing about where the request actually ends up.
+    Scheme, credentials, length, port, and any host written as an IP address in
+    any spelling. Split out from the full check because the API accepts a
+    submission synchronously and must not depend on DNS to do it: a host that is
+    momentarily unresolvable is an outcome the user is shown later, not an
+    invalid address to refuse now.
+
+    This is *not* the security boundary on its own — a name still has to be
+    resolved and checked — which is why nothing that opens a connection calls it
+    without `validate_destination` following.
     """
     try:
         url = normalize_url(raw_url)
@@ -155,14 +161,29 @@ def validate_destination(raw_url: str) -> str | tuple[SubmissionStatus, str]:
     # case that catches `http://127.0.0.1`, `http://[::1]`, and the decimal and
     # octal spellings of the same address.
     literal = as_ip_literal(host)
-    if literal is not None:
-        if not is_public_address(str(literal)):
-            return (SubmissionStatus.rejected, "url_destination_not_public")
-        return url
-
-    if not resolve_public_addresses(host):
+    if literal is not None and not is_public_address(str(literal)):
         return (SubmissionStatus.rejected, "url_destination_not_public")
     return url
+
+
+def validate_destination(raw_url: str) -> str | tuple[SubmissionStatus, str]:
+    """Check one URL fully, returning the normalized form or a typed refusal.
+
+    Used before the first request and again for every redirect destination,
+    which is the whole point: a check performed once, before a chain of
+    redirects, checks nothing about where the request actually ends up.
+    """
+    checked = validate_syntax(raw_url)
+    if isinstance(checked, tuple):
+        return checked
+
+    host = urlsplit(checked).hostname or ""
+    if as_ip_literal(host) is not None:
+        # Already checked as a literal; there is no name to resolve.
+        return checked
+    if not resolve_public_addresses(host):
+        return (SubmissionStatus.rejected, "url_destination_not_public")
+    return checked
 
 
 def as_ip_literal(host: str) -> ipaddress.IPv4Address | ipaddress.IPv6Address | None:
