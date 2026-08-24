@@ -29,6 +29,11 @@ import {
   ReportDraftSchema,
   CreateResearchReportRequestSchema,
   ResearchReportSchema,
+  AppendDecisionRequestSchema,
+  ReviewDecisionEntrySchema,
+  ReviewQueuePageSchema,
+  ReviewTaskDetailSchema,
+  ReviewTaskSchema,
   ViewerPostListSchema,
   type AssistantAskInput,
   type AssistantReply,
@@ -53,6 +58,11 @@ import {
   type ReportDraftRequest,
   type CreateResearchReportRequest,
   type ResearchReport,
+  type AppendDecisionRequest,
+  type ReviewDecisionEntry,
+  type ReviewQueuePage,
+  type ReviewTask,
+  type ReviewTaskDetail,
   type ViewerPostList,
 } from './contracts';
 import { ApiRequestError } from './errors';
@@ -69,6 +79,7 @@ import discussionsJson from '@/fixtures/discussions.json' with { type: 'json' };
 import insightsJson from '@/fixtures/insights.json' with { type: 'json' };
 import itemsJson from '@/fixtures/items.json' with { type: 'json' };
 import newsJson from '@/fixtures/news.json' with { type: 'json' };
+import reviewTasksJson from '@/fixtures/review-tasks.json' with { type: 'json' };
 
 let insightsCatalog: InsightList = InsightListSchema.parse(insightsJson);
 
@@ -95,6 +106,49 @@ const EXPLORER_PAGE_SIZE = 25;
 let discussionCatalog: Discussion[] = [];
 const captures = new Map<string, DashboardCapture>();
 
+/** Same lease window the service uses, so the two behave alike. */
+const CLAIM_LEASE_MINUTES = 30;
+
+/**
+ * The queue, mutable for the session.
+ *
+ * Claiming and deciding change state here exactly as they would server-side, so
+ * the flow a reviewer practises in fixture mode is the flow they get in live
+ * mode. Decisions accumulate; nothing is ever rewritten in place.
+ */
+const reviewTasks: ReviewTask[] = ReviewTaskSchema.array().parse(reviewTasksJson.items);
+const reviewDecisions = new Map<string, ReviewDecisionEntry[]>();
+const REVIEW_CLASSIFIED_IN_WINDOW = reviewTasksJson.classified_in_window;
+
+function replaceReviewTask(next: ReviewTask): void {
+  const index = reviewTasks.findIndex((task) => task.id === next.id);
+  if (index >= 0) {
+    reviewTasks[index] = next;
+  }
+}
+
+/**
+ * Queue-wide counts.
+ *
+ * Derived from the tasks and the decisions actually recorded, so a figure moves
+ * when a reviewer decides rather than staying a constant that contradicts the
+ * list beneath it.
+ */
+function reviewTotals(): {
+  open: number;
+  decided: number;
+  confirmed: number;
+  classified_in_window: number;
+} {
+  const appended = [...reviewDecisions.values()].flat();
+  return {
+    open: reviewTasks.filter((task) => task.status !== 'completed').length,
+    decided: reviewTasks.filter((task) => task.status === 'completed').length,
+    confirmed: appended.filter((entry) => entry.decision === 'confirmed').length,
+    classified_in_window: REVIEW_CLASSIFIED_IN_WINDOW,
+  };
+}
+
 function seedCatalog(): void {
   discussionCatalog = DiscussionCatalogSchema.parse(discussionsJson).threads.map((thread) =>
     structuredClone(thread),
@@ -115,9 +169,19 @@ function seedInsights(): void {
   insightsCatalog = InsightListSchema.parse(structuredClone(insightsJson));
 }
 
+function seedReviewQueue(): void {
+  reviewTasks.splice(
+    0,
+    reviewTasks.length,
+    ...ReviewTaskSchema.array().parse(reviewTasksJson.items),
+  );
+  reviewDecisions.clear();
+}
+
 export function resetFixtureProvider(): void {
   seedInsights();
   seedCatalog();
+  seedReviewQueue();
 }
 
 function viewerAuthor(): { id: string; displayName: string } {
@@ -481,6 +545,95 @@ export const fixtureProvider: ApiClient = {
       );
     }
     return renderAggregateCsv(report);
+  },
+
+  async listReviewTasks(): Promise<ReviewQueuePage> {
+    return ReviewQueuePageSchema.parse({
+      // Highest priority first, then oldest, matching the server's queue order.
+      items: reviewTasks.toSorted((left, right) =>
+        left.priority === right.priority
+          ? left.created_at.localeCompare(right.created_at)
+          : right.priority - left.priority,
+      ),
+      next_cursor: null,
+      totals: reviewTotals(),
+    });
+  },
+
+  async claimReviewTask(taskId: string): Promise<ReviewTaskDetail> {
+    const task = reviewTasks.find((candidate) => candidate.id === taskId);
+    if (task === undefined) {
+      throw new ApiRequestError('This review task was not found.', 404);
+    }
+    // A claim is a lease. Re-claiming one you already hold renews it rather than
+    // failing, so a reviewer whose page reloaded does not lose their place.
+    if (
+      task.status === 'claimed' &&
+      task.assigned_to !== null &&
+      task.assigned_to !== FIXTURE_VIEWER.id
+    ) {
+      throw new ApiRequestError('Another reviewer is working on this task.', 409);
+    }
+    if (task.status === 'completed') {
+      throw new ApiRequestError('This task has already been decided.', 409);
+    }
+    const claimed: ReviewTask = {
+      ...task,
+      status: 'claimed',
+      assigned_to: FIXTURE_VIEWER.id,
+      claim_expires_at: new Date(Date.now() + CLAIM_LEASE_MINUTES * 60_000).toISOString(),
+    };
+    replaceReviewTask(claimed);
+    return ReviewTaskDetailSchema.parse({
+      task: claimed,
+      decisions: reviewDecisions.get(taskId) ?? [],
+    });
+  },
+
+  async appendReviewDecision(
+    taskId: string,
+    input: AppendDecisionRequest,
+  ): Promise<ReviewTaskDetail> {
+    const parsed = AppendDecisionRequestSchema.parse(input);
+    const task = reviewTasks.find((candidate) => candidate.id === taskId);
+    if (task === undefined) {
+      throw new ApiRequestError('This review task was not found.', 404);
+    }
+    if (task.status !== 'claimed' || task.assigned_to !== FIXTURE_VIEWER.id) {
+      throw new ApiRequestError('Claim this task before deciding on it.', 409);
+    }
+
+    const moment = new Date().toISOString();
+    // Decisions append. The prediction on the task is left exactly as it was, so
+    // a later reader still sees what the model proposed beside who disagreed.
+    const appended = ReviewDecisionEntrySchema.parse({
+      id: `rve_${crypto.randomUUID().slice(0, 8)}`,
+      review_task_id: taskId,
+      reviewer_id: FIXTURE_VIEWER.id,
+      decision: parsed.decision,
+      corrected_labels: parsed.corrected_labels ?? null,
+      note: parsed.note ?? null,
+      is_training_candidate: parsed.is_training_candidate,
+      created_at: moment,
+    });
+    reviewDecisions.set(taskId, [...(reviewDecisions.get(taskId) ?? []), appended]);
+
+    // `needs_context` returns the task to the queue; every other decision closes
+    // it. The prediction fields are untouched under all of them.
+    const settled = parsed.decision !== 'needs_context';
+    const next: ReviewTask = {
+      ...task,
+      status: settled ? 'completed' : 'open',
+      assigned_to: settled ? task.assigned_to : null,
+      claim_expires_at: null,
+      completed_at: settled ? moment : null,
+    };
+    replaceReviewTask(next);
+
+    return ReviewTaskDetailSchema.parse({
+      task: next,
+      decisions: reviewDecisions.get(taskId) ?? [],
+    });
   },
 
   async listImageExamples(): Promise<ImageExampleList> {

@@ -17,6 +17,10 @@ import {
   ReportDraftRequestSchema,
   CreateResearchReportRequestSchema,
   ResearchReportSchema,
+  AppendDecisionRequestSchema,
+  ReviewQueuePageSchema,
+  ReviewTaskDetailSchema,
+  ReviewTaskSchema,
   ViewerPostListSchema,
   type AssistantAskInput,
   type AssistantReply,
@@ -39,6 +43,9 @@ import {
   type ReportDraftRequest,
   type CreateResearchReportRequest,
   type ResearchReport,
+  type AppendDecisionRequest,
+  type ReviewQueuePage,
+  type ReviewTaskDetail,
   type ViewerPostList,
 } from './contracts';
 import { readApiBaseUrl } from './env';
@@ -239,6 +246,53 @@ export const liveProvider: ApiClient = {
       );
     }
     return response.text();
+  },
+
+  /**
+   * The reviewer queue.
+   *
+   * The service returns a cursor page of tasks and no queue-wide totals, so the
+   * counts are derived from the page rather than invented. `classified_in_window`
+   * has no live source yet and is reported as zero, which the queue reads as
+   * "unknown" rather than as a real denominator.
+   */
+  async listReviewTasks(): Promise<ReviewQueuePage> {
+    const payload = (await requestJson('/v1/review/tasks')) as {
+      items: unknown[];
+      page: { next_cursor: string | null };
+    };
+    const items = ReviewTaskSchema.array().parse(payload.items);
+    return ReviewQueuePageSchema.parse({
+      items,
+      next_cursor: payload.page.next_cursor,
+      totals: {
+        open: items.filter((task) => task.status !== 'completed').length,
+        decided: items.filter((task) => task.status === 'completed').length,
+        confirmed: 0,
+        classified_in_window: 0,
+      },
+    });
+  },
+
+  async claimReviewTask(taskId: string): Promise<ReviewTaskDetail> {
+    const payload = await requestJson(`/v1/review/tasks/${taskId}/claim`, { method: 'POST' });
+    return ReviewTaskDetailSchema.parse(payload);
+  },
+
+  /**
+   * Append a decision, then re-read the task so the caller receives the full
+   * decision history rather than only the row just written.
+   */
+  async appendReviewDecision(
+    taskId: string,
+    input: AppendDecisionRequest,
+  ): Promise<ReviewTaskDetail> {
+    const body = AppendDecisionRequestSchema.parse(input);
+    await requestJson(`/v1/review/tasks/${taskId}/decisions`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return ReviewTaskDetailSchema.parse(await requestJson(`/v1/review/tasks/${taskId}`));
   },
 
   async listImageExamples(): Promise<ImageExampleList> {

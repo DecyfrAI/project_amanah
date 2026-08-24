@@ -690,6 +690,129 @@ export type ReportFindingSnapshot = z.infer<typeof ReportFindingSnapshotSchema>;
 export type ReportCitation = z.infer<typeof ReportCitationSchema>;
 export type ResearchReport = z.infer<typeof ResearchReportSchema>;
 
+/**
+ * Reviewer queue and its append-only decisions (spec §17).
+ *
+ * A queue entry carries the item and the prediction a reviewer has to judge, and
+ * deliberately not the identity of whoever disputed it. A decision is appended:
+ * the response is the event that was written, never a rewritten prediction, so a
+ * later reader can still see what the model proposed and who disagreed.
+ */
+export const ReviewTaskTypeSchema = z.enum([
+  'dispute',
+  'low_confidence',
+  'severity_escalation',
+  'model_disagreement',
+  'uncertain_relevance',
+  'invalid_output',
+]);
+
+export const ReviewTaskStatusSchema = z.enum(['open', 'claimed', 'completed', 'cancelled']);
+
+export const ReviewDecisionSchema = z.enum(['confirmed', 'corrected', 'needs_context', 'rejected']);
+
+export const ReviewTaskSchema = z.object({
+  id: z.string(),
+  content_item_id: z.string(),
+  prediction_id: z.string(),
+  task_type: ReviewTaskTypeSchema,
+  reason: z.string(),
+  priority: z.number().int().nonnegative(),
+  status: ReviewTaskStatusSchema,
+  assigned_to: z.string().nullable(),
+  claim_expires_at: z.string().nullable(),
+  created_at: z.string(),
+  completed_at: z.string().nullable(),
+
+  title: z.string().nullable(),
+  permitted_excerpt: z.string().nullable(),
+  canonical_url: z.string().nullable(),
+  platform: z.string(),
+
+  relevance: RelevanceSchema,
+  stance: StanceSchema,
+  hate_types: z.array(HateTypeSchema),
+  severity: z.number().int().min(0).max(3),
+  score: z.number().min(0).max(1),
+  confidence_tier: ConfidenceTierSchema,
+  model_name: z.string(),
+  model_version: z.string(),
+});
+
+export const ReviewDecisionEntrySchema = z.object({
+  id: z.string(),
+  review_task_id: z.string(),
+  reviewer_id: z.string(),
+  decision: ReviewDecisionSchema,
+  /** Present only on a correction. Never edits the prediction it sits beside. */
+  corrected_labels: z
+    .object({
+      stance: StanceSchema.optional(),
+      hate_types: z.array(HateTypeSchema).optional(),
+      severity: z.number().int().min(0).max(3).optional(),
+    })
+    .nullable(),
+  note: z.string().nullable(),
+  is_training_candidate: z.boolean(),
+  created_at: z.string(),
+});
+
+/**
+ * A decision to append.
+ *
+ * The correction pairing is a rule the service enforces and the schema states:
+ * a correction must carry corrected labels, and only a correction may. The
+ * training flag is a quarantine marker, allowed on corrections alone; nothing
+ * retrains a model from it.
+ */
+export const AppendDecisionRequestSchema = z
+  .object({
+    decision: ReviewDecisionSchema,
+    note: z.string().max(2000).optional(),
+    corrected_labels: z
+      .object({
+        stance: StanceSchema.optional(),
+        hate_types: z.array(HateTypeSchema).optional(),
+        severity: z.number().int().min(0).max(3).optional(),
+      })
+      .optional(),
+    is_training_candidate: z.boolean(),
+  })
+  .refine((value) => (value.decision === 'corrected') === (value.corrected_labels !== undefined), {
+    message: 'a correction must carry corrected labels, and only a correction may',
+    path: ['corrected_labels'],
+  })
+  .refine((value) => !value.is_training_candidate || value.decision === 'corrected', {
+    message: 'only a correction may be marked as a training candidate',
+    path: ['is_training_candidate'],
+  });
+
+export const ReviewTaskDetailSchema = z.object({
+  task: ReviewTaskSchema,
+  decisions: z.array(ReviewDecisionEntrySchema),
+});
+
+export const ReviewQueuePageSchema = z.object({
+  items: z.array(ReviewTaskSchema),
+  next_cursor: z.string().nullable(),
+  /** Counts for the queue as a whole, so a figure never rests on one page. */
+  totals: z.object({
+    open: z.number().int().nonnegative(),
+    decided: z.number().int().nonnegative(),
+    confirmed: z.number().int().nonnegative(),
+    classified_in_window: z.number().int().nonnegative(),
+  }),
+});
+
+export type ReviewTaskType = z.infer<typeof ReviewTaskTypeSchema>;
+export type ReviewTaskStatus = z.infer<typeof ReviewTaskStatusSchema>;
+export type ReviewDecisionKind = z.infer<typeof ReviewDecisionSchema>;
+export type ReviewTask = z.infer<typeof ReviewTaskSchema>;
+export type ReviewDecisionEntry = z.infer<typeof ReviewDecisionEntrySchema>;
+export type AppendDecisionRequest = z.infer<typeof AppendDecisionRequestSchema>;
+export type ReviewTaskDetail = z.infer<typeof ReviewTaskDetailSchema>;
+export type ReviewQueuePage = z.infer<typeof ReviewQueuePageSchema>;
+
 export type HateType = z.infer<typeof HateTypeSchema>;
 export type Stance = z.infer<typeof StanceSchema>;
 export type ConfidenceTier = z.infer<typeof ConfidenceTierSchema>;
