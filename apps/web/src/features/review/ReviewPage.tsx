@@ -7,7 +7,7 @@ import { usePageTitle } from '@/hooks/usePageTitle';
 
 import { ImageExampleCatalog } from '@/features/reports/ImageExampleCatalog';
 
-import { ImageLabelForm } from './ImageLabelForm';
+import { ImageWorkbench } from './ImageWorkbench';
 import { QueueRow } from './QueueRow';
 import { useReviewQueue } from './useReviewQueue';
 
@@ -150,7 +150,7 @@ export function ReviewPage() {
         )}
       </section>
 
-      <ImageLabelForm />
+      <ImageWorkbench />
       <ImageExampleCatalog />
     </div>
   );
