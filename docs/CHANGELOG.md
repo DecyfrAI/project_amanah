@@ -1,10 +1,83 @@
-# Changelog
+﻿# Changelog
 
 All notable project changes are documented here using the Keep a Changelog structure.
 
 ## [Unreleased]
 
 ### Added
+
+- **Authenticated image upload (B-S28).** `POST /v1/image-uploads` takes one multipart image,
+  and `POST /v1/image-classifications` now accepts either a catalogue `example_id` or an
+  `upload_id` — exactly one, enforced by a check constraint so "whose image is this?" always
+  has an answer. Splitting upload from classification means a model failure never costs the
+  person their file.
+  - Nothing the client sends is trusted: the 5 MB cap is enforced while reading rather than
+    from the declared length, the format is decided by decoding the bytes rather than from the
+    filename or content type, and the stored object is a **re-encode**, so EXIF, GPS, XMP, and
+    any trailing non-image payload do not survive. A file that is both a valid PNG and a valid
+    script stops being the second one.
+  - The storage key is generated server-side (`user-images/<owner>/<uuid>.<ext>`); nothing the
+    caller sent contributes to it. PostgreSQL holds owner, path, digest, MIME, size,
+    dimensions, and retention — never bytes, and never the original filename.
+  - Migration `0008_user_image_uploads` adds `image_uploads` with RLS forced: anonymous reaches
+    nothing, an upload is readable by its owner alone (not by reviewers — a colleague's private
+    file is not their remit), and an administrator may read and delete so retention is operable.
+    The projection carries no storage path.
+  - Uploaded pixels are a new transfer class, `user_submitted_media`, refused unless
+    `ALLOW_THIRD_PARTY_CONTENT_INFERENCE` is set. The fixture flag cannot bypass it: a caller
+    must not be able to relabel someone's upload as this product's own material.
+
+### Removed
+
+- **PA-05 discussion attachments are descoped** by product-owner decision. Text notes and
+  first-party chart captures remain on both viewer snapshots and machine-generated insights.
+  Arbitrary uploads into a shared thread were excluded for safety rather than time — they
+  would need malware scanning, safe download handling, and per-attachment authorization, and
+  ADR 0004 refused a screenshot board because it would redistribute the material this product
+  exists to measure. Recorded in `completion-guide.md`, `apps/web/todo.md`, and the README so
+  the absence reads as a decision.
+
+### Fixed
+
+- **The migration history had branched into three heads,** so `alembic upgrade head`
+  refused to run against any fresh database — including Render's pre-deploy step, which
+  would have failed on the first real deployment. `0007_merge_milestone_heads` rejoins the
+  three branches that grew out of `0004`; it carries no DDL, only graph bookkeeping.
+- **Application and database clocks are no longer compared against each other.** Five
+  sites wrote `datetime.now(UTC)` into a column whose partner defaults to `now()`
+  server-side under a check constraint requiring one to follow the other, so settling a
+  collection run, retracting a discussion note, or resolving a dispute raised an
+  `IntegrityError` whenever the database clock ran microseconds ahead. `JobService.claim_next`
+  had the same fault in reverse — it compared a server-defaulted `available_at` against this
+  process's clock, so a freshly enqueued job was invisible and the queue appeared empty.
+- **Arrays of Postgres enums no longer deserialize into single characters.** psycopg
+  returned `hate_type[]` as the raw literal `'{derogation}'`, which SQLAlchemy then split
+  per character, so `HateType('{')` would have raised on the image catalogue the moment
+  Storage was configured. The enum type is now registered on every pooled connection, in
+  the application engine and the test engine alike.
+- **Supabase Storage is reached through the provider's own API.** Signed URLs were minted
+  from a homegrown HMAC over the content-encryption key and pointed at Supabase's
+  `authenticated` route, which understands neither that signature nor query-string
+  credentials; object reads presented `SUPABASE_JWT_SECRET`, a token-*verification* secret,
+  as though it were an access token. Both are replaced by the official signing endpoint and
+  a dedicated server-only `SUPABASE_STORAGE_SECRET_KEY`. Absent that key, the catalogue reports
+  itself unavailable instead of serving links that would fail.
+
+### Added
+
+- **Real news ingestion.** 32 articles from four reviewed publishers (BBC News, The
+  Guardian, Al Jazeera English, Tell MAMA) are ingested through the canonical pipeline.
+  The topical filter rejected 53 off-topic items on the first BBC run, and repeating a run
+  deduplicated 5 of 12 discovered items rather than storing them twice.
+- Item detail (`F-S8`) at `/app/explorer/:itemId`: the full model disclosure — score, model,
+  prompt and taxonomy versions, inference time, rationale — beside the sampling limitation,
+  with dataset provenance for datapack rows and no person-level field anywhere.
+- Contributions history (`F-S11`) at `/app/contributions`: one owner-scoped view across URL
+  submissions, disputes, and prepared reports. A prepared report reads as *prepared* until
+  the owner records that they filed it themselves.
+- The database test suite creates the Supabase roles (`anon`, `authenticated`) its RLS
+  policies grant to, so it runs on any plain Postgres. The 401 tests that had always been
+  skipped now execute: **937 pass, none skipped.**
 
 - **Frontend/backend integration — the demo is wired end to end.** Supabase Auth
   replaces the fixture session: `SessionProvider` restores a real session before any

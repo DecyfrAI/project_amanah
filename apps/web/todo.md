@@ -41,22 +41,42 @@ New work cites **F-S** identifiers. Demo scope and its remaining work live in
 - [x] **PA-06** Root `README.md` written for a reviewer.
 - [x] `netlify.toml` already exists at the repository root; reviewed, not stale.
 
+## Done (24 August 2026, second pass)
+
+- [x] **F-S8** Item detail at `/app/explorer/:itemId`: model disclosure with the
+      score, model/prompt/taxonomy versions, inference time, and rationale, the
+      sampling limitation beside it, dataset provenance for datapack rows, the
+      PA-01 media preference on any attached image, and a route to prepare a
+      report. No author or person-level field anywhere.
+- [x] **F-S11** Contributions history at `/app/contributions`, reading the
+      owner-scoped `GET /v1/me/contributions`. Completes the reporting loop:
+      a report saved in Reports now appears somewhere.
+
 ## Next
 
-- [ ] **F-S8** Item detail route with redaction, reveal, and gated actions.
 - [ ] **F-S3.4** 404 route and a standalone methodology page if marketing should
       still deep-link to one.
-- [ ] **Image upload reconciliation.** The live path refuses a local file
-      visibly, because no backend multipart upload route exists. Connect the
-      picker once that route lands (completion guide step 8).
-- [ ] **PA-05 attachments.** Text notes work on viewer and machine-generated
-      insights, and the composer now respects the server's `can_participate`.
-      Uploaded attachments need an ADR 0004 supersede, a schema migration, and
-      Storage policy — all requiring explicit authorization first.
+- [ ] **F-S12/F-S13** URL submission and dispute forms. Both backends exist
+      (`POST /v1/submissions`, `POST /v1/items/{id}/disputes`) and both would
+      surface in the Contributions history that now exists.
+- [ ] **E2E coverage.** Nothing exists today — no Playwright, no `e2e/`
+      directory — while `AGENTS.md` documents a `pnpm … e2e` command. Either add
+      a small deterministic fixture-mode suite or correct that command.
+
+## Descoped
+
+- **PA-05 attachments — not part of the hackathon demo** (product-owner
+  decision, 24 August 2026). Text notes work on viewer and machine-generated
+  insights and the composer respects the server's `can_participate`; uploaded
+  attachments were excluded deliberately, for safety rather than time. Arbitrary
+  uploads into a shared thread would need malware scanning, safe download
+  handling, per-attachment authorization, and an ADR superseding ADR 0004, which
+  refused a screenshot board because it would redistribute the material this
+  product exists to measure. Rationale is recorded in `docs/completion-guide.md`.
+  Do not add attachment controls without reopening that decision.
 
 ## Later
 
-- [ ] F-S11 to F-S13: contributions history UI, URL submit, disputes.
 - [ ] F-S17: the declared sharing mock.
 - [ ] F-S18 to F-S20: resilience inventory, accessibility QA, E2E demo freeze.
 

@@ -114,6 +114,47 @@ class Settings(BaseSettings):
     # column. Base64 of exactly 32 bytes.
     content_encryption_key: SecretStr | None = Field(default=None)
 
+    # Server-only credential for private object storage. Deliberately separate
+    # from `supabase_jwt_secret`: that value verifies inbound access tokens and
+    # is a *signing* secret, not an access token, so presenting it to Storage
+    # authenticates nothing. Absent means the image catalogue reports itself
+    # unavailable rather than serving links that would 401.
+    #
+    # Either a new-style `sb_secret_â€¦` API key or a legacy service-role JWT
+    # works; both are presented the same way. Named for what it is rather than
+    # for the legacy key, since Supabase now issues the former by default.
+    supabase_storage_secret_key: SecretStr | None = Field(
+        default=None,
+        description="Supabase secret API key for Storage. Server-only; never exposed to a browser.",
+    )
+    supabase_storage_bucket: str = Field(
+        default="amanah-private-media",
+        min_length=1,
+        max_length=63,
+        description="Private bucket holding first-party research and uploaded media.",
+    )
+    # How long an object link stays valid. Long enough to load a catalogue page
+    # on a slow connection, short enough that a copied link is useless by the
+    # time it is shared.
+    storage_signed_url_ttl_seconds: int = Field(default=300, ge=30, le=3600)
+
+    # Bounds on one authenticated image upload (B-S28.2). The byte cap is
+    # enforced while reading, not from the declared length, so a lying
+    # `Content-Length` cannot get past it. The pixel cap bounds decode cost: a
+    # small file can still describe an enormous canvas.
+    image_upload_max_bytes: int = Field(default=5 * 1024 * 1024, ge=1024, le=20 * 1024 * 1024)
+    image_upload_max_pixels: int = Field(default=50_000_000, ge=10_000)
+    image_upload_max_dimension: int = Field(default=12_000, ge=64, le=60_000)
+    #: Days an uploaded image is kept before it is eligible for deletion.
+    image_upload_retention_days: int = Field(default=30, ge=1, le=365)
+
+    # Whether pixels a signed-in person uploaded may be sent to the model
+    # provider (`spec.md` section 11.3). Off by default: a user's own upload is
+    # not this product's material to forward, and a deployment must opt in
+    # deliberately. With it off, upload and storage still work and only
+    # classification reports itself unavailable.
+    allow_third_party_content_inference: bool = Field(default=False)
+
     gemini_api_key: SecretStr | None = Field(default=None)
     gemini_model: str | None = Field(default=None)
 
@@ -137,6 +178,7 @@ class Settings(BaseSettings):
     @field_validator(
         "database_url",
         "content_encryption_key",
+        "supabase_storage_secret_key",
         "gemini_api_key",
         "gemini_model",
         "youtube_api_key",

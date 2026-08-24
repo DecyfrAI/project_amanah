@@ -6,6 +6,7 @@ import type {
   CreatePostInput,
   DashboardCapture,
   Discussion,
+  ExplorerItemDetail,
   ExplorerPage,
   FilterOptions,
   Insight,
@@ -16,6 +17,7 @@ import type {
   EvidenceClassifyRequest,
   ImageClassification,
   ImageExampleList,
+  ImageUpload,
   ReportDraft,
   ReportDraftRequest,
   ViewerPostList,
@@ -81,6 +83,7 @@ export interface ApiClient {
   getFilterOptions: () => Promise<FilterOptions>;
   listNews: (filters: NewsFilters) => Promise<NewsList>;
   searchItems: (filters: ItemSearchFilters) => Promise<ExplorerPage>;
+  getItem: (itemId: string) => Promise<ExplorerItemDetail>;
   listInsights: () => Promise<InsightList>;
   getInsight: (insightId: string) => Promise<Insight>;
   createInsight: (input: CreateInsightInput) => Promise<Insight>;
@@ -93,6 +96,8 @@ export interface ApiClient {
   askAssistant: (input: AssistantAskInput) => Promise<AssistantReply>;
   prepareReportDraft: (input: ReportDraftRequest) => Promise<ReportDraft>;
   listImageExamples: () => Promise<ImageExampleList>;
+  /** Sends one file to the backend, which cleans and stores it (B-S28). */
+  uploadImage: (file: File) => Promise<ImageUpload>;
   classifyEvidence: (input: EvidenceClassifyRequest) => Promise<ImageClassification>;
   getCurrentUser: () => Promise<WireProfile>;
   updateProfile: (input: UpdateProfileInput) => Promise<WireProfile>;
@@ -139,6 +144,7 @@ export const queryKeys = {
     ['news', filters.from ?? null, filters.to ?? null, filters.cursor ?? null] as const,
   items: (filters: ItemSearchFilters) =>
     ['items', ...filterKey(filters), filters.cursor ?? null] as const,
+  item: (itemId: string) => ['items', 'detail', itemId] as const,
   insights: ['insights'] as const,
   insight: (id: string) => ['insights', id] as const,
   viewerPosts: ['viewer-posts'] as const,

@@ -1,5 +1,6 @@
 import { replyFromOverview } from '@/features/ask/ask-reply';
 import { readFixtureSession } from '@/features/auth/session';
+import { validateEvidenceFile } from '@/features/reports/evidence-file';
 import { prepareReportDraft as buildReportDraft } from '@/features/reports/prepare-report-draft';
 import { classifyEvidenceFixture, loadImageExampleList } from './image-classification';
 
@@ -30,6 +31,7 @@ import {
   CreateInsightInputSchema,
   CreatePostInputSchema,
   DiscussionCatalogSchema,
+  ExplorerItemDetailSchema,
   ExplorerItemSchema,
   ExplorerPageSchema,
   FilterOptionsSchema,
@@ -41,6 +43,7 @@ import {
   EvidenceClassifyRequestSchema,
   ImageClassificationSchema,
   ImageExampleListSchema,
+  ImageUploadSchema,
   ReportDraftRequestSchema,
   ReportDraftSchema,
   ViewerPostListSchema,
@@ -52,6 +55,7 @@ import {
   type DashboardCapture,
   type Discussion,
   type ExplorerItem,
+  type ExplorerItemDetail,
   type ExplorerPage,
   type FilterOptions,
   type Insight,
@@ -63,6 +67,7 @@ import {
   type EvidenceClassifyRequest,
   type ImageClassification,
   type ImageExampleList,
+  type ImageUpload,
   type ReportDraft,
   type ReportDraftRequest,
   type ViewerPostList,
@@ -104,6 +109,14 @@ const orderedItems = explorerItems.toSorted((left, right) =>
 );
 
 const EXPLORER_PAGE_SIZE = 25;
+
+/**
+ * What the fixture sample does and does not represent. Mirrors the sentence the
+ * live service attaches to every item detail, so the two providers cannot make
+ * different claims about the same screen.
+ */
+const FIXTURE_SAMPLING_DISCLOSURE =
+  'These figures describe a monitored sample of reviewed sources, not a platform, a country, or a group of people. They do not support a prevalence claim.';
 let discussionCatalog: Discussion[] = [];
 const captures = new Map<string, DashboardCapture>();
 
@@ -304,6 +317,31 @@ export const fixtureProvider: ApiClient = {
       returned: page.length,
       nextCursor: nextOffset < matched.length ? String(nextOffset) : null,
       items: structuredClone(page),
+    });
+  },
+
+  async getItem(itemId: string): Promise<ExplorerItemDetail> {
+    const item = orderedItems.find((entry) => entry.id === itemId);
+    if (item === undefined) {
+      throw new ApiRequestError('That item could not be found.', 404);
+    }
+    return ExplorerItemDetailSchema.parse({
+      ...structuredClone(item),
+      modelName: item.modelScore === null ? null : 'amanah-classifier-fixture',
+      modelVersion: item.modelScore === null ? null : 'fixture-0.1',
+      promptVersion: item.modelScore === null ? null : 'fixture-prompt-1',
+      taxonomyVersion: item.modelScore === null ? null : 'taxonomy-v2-spec-9.5',
+      inferredAt: item.modelScore === null ? null : `${item.date}T12:00:00Z`,
+      rationale:
+        item.modelScore === null
+          ? null
+          : 'Synthetic fixture rationale. A score is a model score, not a measure of certainty.',
+      narrativeTags: [],
+      limitations: [
+        'This item comes from a monitored sample, not a census of any platform.',
+        'A classification is a proposal for human review, never a finding.',
+      ],
+      samplingDisclosure: FIXTURE_SAMPLING_DISCLOSURE,
     });
   },
 
@@ -512,6 +550,24 @@ export const fixtureProvider: ApiClient = {
 
   async listImageExamples(): Promise<ImageExampleList> {
     return ImageExampleListSchema.parse(loadImageExampleList('fixture'));
+  },
+
+  async uploadImage(file: File): Promise<ImageUpload> {
+    // The rehearsal path. Nothing leaves the tab: the preview is an object URL,
+    // and the identifier is local. Its shape matches the live response so the
+    // screens above cannot tell which provider answered.
+    const validated = validateEvidenceFile(file);
+    return ImageUploadSchema.parse({
+      uploadId: `upl_${crypto.randomUUID()}`,
+      mimeType: validated.type,
+      byteSize: validated.size,
+      pixelWidth: 800,
+      pixelHeight: 600,
+      isNew: true,
+      imageSrc: URL.createObjectURL(validated),
+      retentionExpiresAt: null,
+      disclosure: 'Fixture upload. The file stayed in this tab and no bytes were transmitted.',
+    });
   },
 
   async classifyEvidence(input: EvidenceClassifyRequest): Promise<ImageClassification> {

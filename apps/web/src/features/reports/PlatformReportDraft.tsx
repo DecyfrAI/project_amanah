@@ -19,6 +19,7 @@ import { isReportPlatform, REPORT_PLATFORM_OPTIONS } from './prepare-report-draf
 import { ReportDraftPreview } from './ReportDraftPreview';
 import { useClassifyEvidence } from './useClassifyEvidence';
 import { usePrepareReportDraft } from './usePrepareReportDraft';
+import { useUploadImage } from './useUploadImage';
 
 import styles from './PlatformReportDraft.module.css';
 
@@ -41,6 +42,7 @@ export function PlatformReportDraft() {
   const [params] = useSearchParams();
   const prepare = usePrepareReportDraft();
   const classify = useClassifyEvidence();
+  const upload = useUploadImage();
   const platformParam = params.get('platform');
   const itemParam = params.get('item');
   const initialPlatform =
@@ -89,23 +91,16 @@ export function PlatformReportDraft() {
 
   const applyChosenFile = useCallback(
     (chosen: File): void => {
+      let valid: File;
       try {
-        const valid = validateEvidenceFile(chosen);
-        setFileError(null);
-        setFile(valid);
-        setPreviewUrl((current) => {
-          if (current !== null) {
-            URL.revokeObjectURL(current);
-          }
-          return URL.createObjectURL(valid);
-        });
-        classify.mutate({
-          image_filename: valid.name,
-          image_byte_size: valid.size,
-        });
+        // A local check first, so an obviously wrong file is refused without a
+        // round trip. The server re-decides from the bytes regardless: this is
+        // convenience, never the boundary.
+        valid = validateEvidenceFile(chosen);
       } catch (error) {
         setFile(null);
         classify.reset();
+        upload.reset();
         setPreviewUrl((current) => {
           if (current !== null) {
             URL.revokeObjectURL(current);
@@ -113,9 +108,32 @@ export function PlatformReportDraft() {
           return null;
         });
         setFileError(error instanceof Error ? error.message : 'That screenshot could not be used.');
+        return;
       }
+
+      setFileError(null);
+      setFile(valid);
+      setPreviewUrl((current) => {
+        if (current !== null) {
+          URL.revokeObjectURL(current);
+        }
+        return URL.createObjectURL(valid);
+      });
+      classify.reset();
+
+      // Upload, then classify what was stored. Two steps so a model failure
+      // leaves the image in place rather than asking for it again.
+      upload.mutate(valid, {
+        onSuccess: (stored) => {
+          classify.mutate({
+            image_filename: valid.name,
+            image_byte_size: valid.size,
+            upload_id: stored.uploadId,
+          });
+        },
+      });
     },
-    [classify],
+    [classify, upload],
   );
 
   const handleFile = useCallback(
@@ -248,7 +266,10 @@ export function PlatformReportDraft() {
               >
                 <p className={styles.dropTitle}>Drop a screenshot here</p>
                 <p className={styles.hint} id="evidence-file-hint">
-                  PNG, JPEG or WebP, under 5120 KB. The file stays in this tab.
+                  PNG, JPEG or WebP, under 5 MB. The image is uploaded to Amanah and stored
+                  privately; only you can read it. Location and camera metadata are removed before
+                  storage. Do not upload personal photographs or identifiable material about other
+                  people.
                 </p>
                 <input
                   className={styles.file}
@@ -268,13 +289,33 @@ export function PlatformReportDraft() {
               {previewUrl !== null && file !== null && (
                 <EvidencePreview src={previewUrl} filename={file.name} />
               )}
+              {upload.isPending && (
+                <output className={styles.pending} aria-live="polite">
+                  Uploading. The image is stored privately and only you can read it.
+                </output>
+              )}
+              {upload.isError && (
+                <p className={styles.error} role="alert">
+                  {errorMessage(upload.error)} The draft can still be prepared without an image.
+                </p>
+              )}
+              {upload.isSuccess && (
+                <p className={styles.hint}>
+                  {upload.data.isNew
+                    ? 'Stored privately.'
+                    : 'You had already uploaded this image; the existing copy was reused.'}{' '}
+                  {upload.data.disclosure}
+                </p>
+              )}
               {classify.isPending && (
-                <p className={styles.pending}>Checking the screenshot. Pixels stay in this tab.</p>
+                <output className={styles.pending} aria-live="polite">
+                  Classifying the stored image.
+                </output>
               )}
               {classify.isError && (
                 <p className={styles.error} role="alert">
-                  {errorMessage(classify.error)} The draft can still be prepared without a
-                  classification.
+                  {errorMessage(classify.error)} Your image is still stored; the draft can be
+                  prepared without a classification.
                 </p>
               )}
               {classify.isSuccess && <EvidenceClassification result={classify.data} />}

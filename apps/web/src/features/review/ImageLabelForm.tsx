@@ -178,14 +178,15 @@ export function ImageLabelForm() {
           Label an image
         </h2>
         <InfoTip label="Label an image">
-          The classify request is filename and byte size only. This label is a training annotation.
-          It does not overwrite a model proposal.
+          This label is a training annotation. It does not overwrite a model proposal, and it is
+          never applied automatically.
         </InfoTip>
       </div>
       <p className={styles.lead}>
-        Upload a research image to classify and label it for later fine-tuning. The model request is
-        filename and byte size only. Do not enter a name, handle, or other personal detail. The
-        image stays in this tab.
+        Upload a research image to classify and label it for later fine-tuning. The image is
+        uploaded to Amanah and stored privately; only you can read it, and location and camera
+        metadata are removed before storage. Do not enter a name, handle, or other personal detail,
+        and do not upload personal photographs.
       </p>
 
       <form className={styles.form} onSubmit={handleSave}>

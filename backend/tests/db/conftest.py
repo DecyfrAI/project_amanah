@@ -21,6 +21,7 @@ import pytest
 from sqlalchemy import Connection, Engine, create_engine, text
 
 from amanah.db.models import Base
+from amanah.db.session import register_enum_types
 from amanah.domain.enums import Role
 from tests.db.scratch_database import (
     SKIP_REASON,
@@ -47,6 +48,10 @@ def database_url() -> Iterator[str]:
 @pytest.fixture(scope="session")
 def engine(database_url: str) -> Iterator[Engine]:
     created = create_engine(database_url)
+    # The same driver registration the application engine performs. Without it
+    # these tests would read this schema's enum arrays differently from the way
+    # the service does, and would therefore prove nothing about it.
+    register_enum_types(created)
     try:
         yield created
     finally:

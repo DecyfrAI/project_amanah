@@ -34,7 +34,7 @@ from pathlib import Path
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select
+from sqlalchemy import func, select
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -286,7 +286,10 @@ class DatapackImporter:
         run.error_count = errors
         run.row_count = imported + skipped + errors
         run.safe_error_code = safe_error_code
-        run.completed_at = datetime.now(UTC)
+        # The database clock: `started_at` defaults to `now()` server-side and a
+        # check constraint compares the two, so an application clock a few
+        # microseconds behind would make a fast import fail to settle.
+        run.completed_at = func.now()
         self._session.commit()
 
     def _open_datapack_source_id(self) -> UUID:

@@ -1,4 +1,4 @@
-import {
+﻿import {
   type ApiClient,
   type CreateResearchReportInput,
   type ItemSearchFilters,
@@ -25,6 +25,7 @@ import {
   type Discussion,
   type DiscussionPost,
   type ExplorerItem,
+  type ExplorerItemDetail,
   type ExplorerPage,
   type FilterOptions,
   type Insight,
@@ -37,6 +38,7 @@ import {
   type EvidenceClassifyRequest,
   type ImageClassification,
   type ImageExampleList,
+  type ImageUpload as ImageUploadResult,
   type ReportDraft,
   type ReportDraftRequest,
   type ViewerPostList,
@@ -56,8 +58,10 @@ import {
   WireFilterOptionsSchema,
   WireImageClassificationSchema,
   WireImageExampleListSchema,
+  WireImageUploadSchema,
   WireInsightResponseSchema,
   WireInsightsPageSchema,
+  WireItemDetailResponseSchema,
   WireItemsPageSchema,
   WirePolicyAnalysisSchema,
   WirePostResponseSchema,
@@ -78,7 +82,7 @@ import {
 /**
  * The live provider: authenticated requests to the deployed FastAPI service.
  *
- * Every request carries the Supabase access token as a bearer header — there is
+ * Every request carries the Supabase access token as a bearer header â€” there is
  * no unauthenticated `/v1` route (spec FR-HOME-006). Responses are validated
  * against the backend wire contracts in `wire.ts` and then mapped into the view
  * models the components consume. A failure here surfaces as an
@@ -107,9 +111,13 @@ const REQUEST_TIMEOUT_MS = 60_000;
 
 async function request(path: string, init?: RequestInit): Promise<Response> {
   const token = await readAccessToken();
+  // `FormData` sets its own `Content-Type`, including the multipart boundary the
+  // server needs to parse the body. Declaring JSON over it would make every
+  // upload unreadable.
+  const isMultipart = init?.body instanceof FormData;
   const headers: Record<string, string> = {
     Accept: 'application/json',
-    ...(init?.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
+    ...(init?.body !== undefined && !isMultipart ? { 'Content-Type': 'application/json' } : {}),
     ...(token !== null ? { Authorization: `Bearer ${token}` } : {}),
   };
 
@@ -123,7 +131,7 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
   } catch (error) {
     if (error instanceof DOMException && error.name === 'TimeoutError') {
       throw new ApiRequestError(
-        'The live service did not answer in time. It may be waking up — try again.',
+        'The live service did not answer in time. It may be waking up â€” try again.',
         408,
       );
     }
@@ -158,7 +166,7 @@ async function requestJson(path: string, init?: RequestInit): Promise<unknown> {
 
 // -- filter translation -----------------------------------------------------
 
-/** `YYYY-MM-DD` → an aware UTC instant at the start or end of that day. */
+/** `YYYY-MM-DD` â†’ an aware UTC instant at the start or end of that day. */
 function toUtcInstant(date: string, boundary: 'start' | 'end'): string {
   return boundary === 'start' ? `${date}T00:00:00Z` : `${date}T23:59:59Z`;
 }
@@ -224,7 +232,7 @@ function newsQuery(filters: NewsFilters): string {
   return query === '' ? '' : `?${query}`;
 }
 
-// -- dashboard → Overview view model ----------------------------------------
+// -- dashboard â†’ Overview view model ----------------------------------------
 
 function dateOnly(instant: string): string {
   return instant.slice(0, 10);
@@ -367,7 +375,7 @@ function toOverview(wire: WireDashboardResponse, filters: OverviewFilters): Over
   };
 }
 
-// -- items → Explorer view model ---------------------------------------------
+// -- items â†’ Explorer view model ---------------------------------------------
 
 function toExplorerItem(wire: WireItemSummary): ExplorerItem {
   return {
@@ -405,7 +413,7 @@ function toExplorerItem(wire: WireItemSummary): ExplorerItem {
   };
 }
 
-// -- insights → view model ----------------------------------------------------
+// -- insights â†’ view model ----------------------------------------------------
 
 function toInsight(wire: WireInsightSummary): Insight {
   return {
@@ -542,6 +550,25 @@ export const liveProvider: ApiClient = {
       returned: items.length,
       nextCursor: wire.page.next_cursor,
       items,
+    };
+  },
+
+  async getItem(itemId: string): Promise<ExplorerItemDetail> {
+    const wire = WireItemDetailResponseSchema.parse(await requestJson(`/v1/items/${itemId}`));
+    const item = wire.item;
+    return {
+      ...toExplorerItem(item),
+      // The summary mapper has no score to read; the detail response does.
+      modelScore: item.score,
+      modelName: item.model_name,
+      modelVersion: item.model_version,
+      promptVersion: item.prompt_version,
+      taxonomyVersion: item.taxonomy_version,
+      inferredAt: item.inferred_at,
+      rationale: item.rationale,
+      narrativeTags: item.narrative_tags,
+      limitations: item.limitations,
+      samplingDisclosure: item.sampling_disclosure,
     };
   },
 
@@ -684,7 +711,7 @@ export const liveProvider: ApiClient = {
 
   async prepareReportDraft(input: ReportDraftRequest): Promise<ReportDraft> {
     ReportDraftRequestSchema.parse(input);
-    // The live path is the policy-catalog flow (analyzePolicies →
+    // The live path is the policy-catalog flow (analyzePolicies â†’
     // savePreparedReport). The freeform email-style draft remains a declared
     // fixture rehearsal, so this surface is hidden outside fixture mode.
     throw new ApiRequestError(
@@ -712,26 +739,49 @@ export const liveProvider: ApiClient = {
     };
   },
 
+  async uploadImage(file: File): Promise<ImageUploadResult> {
+    // `FormData` rather than JSON: the bytes go to the backend, which cleans and
+    // stores them. The browser never talks to object storage directly, and it
+    // never sends base64 (ADR 0007, B-S28).
+    const form = new FormData();
+    form.append('file', file, file.name);
+    const wire = WireImageUploadSchema.parse(
+      await requestJson('/v1/image-uploads', { method: 'POST', body: form }),
+    );
+    return {
+      uploadId: wire.upload_id,
+      mimeType: wire.mime_type,
+      byteSize: wire.byte_size,
+      pixelWidth: wire.pixel_width,
+      pixelHeight: wire.pixel_height,
+      isNew: wire.is_new,
+      imageSrc: wire.image_url,
+      retentionExpiresAt: wire.retention_expires_at,
+      disclosure: wire.disclosure,
+    };
+  },
+
   async classifyEvidence(input: EvidenceClassifyRequest): Promise<ImageClassification> {
     const body = EvidenceClassifyRequestSchema.parse(input);
-    if (body.example_id === undefined) {
-      // Direct file upload has no live backend yet (completion guide step 8);
-      // the picker is hidden outside fixture mode, and reaching here anyway is
-      // a visible failure rather than a silent fixture substitution.
-      throw new ApiRequestError(
-        'Live classification currently supports catalogued research images only. Pick an image from the catalog.',
-        501,
-      );
+    if (body.example_id === undefined && body.upload_id === undefined) {
+      // The service classifies something already stored. A caller that named
+      // neither has not uploaded yet, and inventing a subject would produce a
+      // label about nothing.
+      throw new ApiRequestError('Upload the image first, then ask for a classification.', 400);
     }
+    const subject =
+      body.upload_id !== undefined
+        ? { upload_id: body.upload_id }
+        : { example_id: body.example_id };
     const wire = WireImageClassificationSchema.parse(
       await requestJson('/v1/image-classifications', {
         method: 'POST',
-        body: JSON.stringify({ example_id: body.example_id }),
+        body: JSON.stringify(subject),
       }),
     );
     return {
       data_mode: wire.data_mode,
-      example_id: wire.example_id,
+      example_id: wire.example_id ?? wire.upload_id ?? '',
       relevance: wire.relevance,
       stance: wire.stance,
       classification: wire.stance === 'likely_anti_muslim' ? 'likely_hate' : 'not_hate',
@@ -863,7 +913,7 @@ export const liveProvider: ApiClient = {
 /**
  * A stable hex digest of the Explorer state a figure was read under.
  *
- * The backend requires an 8–64 char hex `filter_hash`; the view layer carries
+ * The backend requires an 8â€“64 char hex `filter_hash`; the view layer carries
  * the href itself. FNV-1a over the href is enough: this identifies a filter
  * state, it is not a security control.
  */

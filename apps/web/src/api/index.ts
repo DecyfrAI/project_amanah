@@ -1,4 +1,4 @@
-import { fixtureProvider } from './fixture-provider';
+﻿import { fixtureProvider } from './fixture-provider';
 import { liveProvider } from './live-provider';
 import { readDataMode } from './env';
 import { ApiRequestError } from './errors';
@@ -23,6 +23,7 @@ export type {
   CreateInsightInput,
   ExplorerItem,
   ExplorerItemDataset,
+  ExplorerItemDetail,
   ExplorerItemImage,
   ExplorerPage,
   FilterOption,
@@ -39,6 +40,7 @@ export type {
   ImageClassification,
   ImageExample,
   ImageExampleList,
+  ImageUpload,
   ReportDraft,
   ReportDraftRequest,
   ViewerPost,
@@ -85,6 +87,7 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
     getFilterOptions: () => tryLive((client) => client.getFilterOptions()),
     listNews: (filters) => tryLive((client) => client.listNews(filters)),
     searchItems: (filters) => tryLive((client) => client.searchItems(filters)),
+    getItem: (itemId) => tryLive((client) => client.getItem(itemId)),
     listInsights: () => tryLive((client) => client.listInsights()),
     getInsight: (insightId) => tryLive((client) => client.getInsight(insightId)),
     createInsight: (input) => tryLive((client) => client.createInsight(input)),
@@ -97,6 +100,7 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
     askAssistant: (input) => tryLive((client) => client.askAssistant(input)),
     prepareReportDraft: (input) => tryLive((client) => client.prepareReportDraft(input)),
     listImageExamples: () => tryLive((client) => client.listImageExamples()),
+    uploadImage: (file) => tryLive((client) => client.uploadImage(file)),
     classifyEvidence: (input) => tryLive((client) => client.classifyEvidence(input)),
     getCurrentUser: () => tryLive((client) => client.getCurrentUser()),
     updateProfile: (input) => tryLive((client) => client.updateProfile(input)),
@@ -119,7 +123,7 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
  * dashboard and item reads (including datapack-backed rows), the grounded
  * assistant, insights and discussion, platform and research reports, and the
  * image catalogue/classification. No method here catches a live failure and
- * substitutes fixture data — a failure surfaces to the screen that made the
+ * substitutes fixture data â€” a failure surfaces to the screen that made the
  * request. The surfaces that remain mocked (the review queue and connections
  * walkthroughs, and the local-file upload rehearsal) do not read through this
  * client at all and are labelled in place.
@@ -130,6 +134,7 @@ function createDemoProvider(live: ApiClient): ApiClient {
     getFilterOptions: live.getFilterOptions,
     listNews: live.listNews,
     searchItems: live.searchItems,
+    getItem: live.getItem,
     listInsights: live.listInsights,
     getInsight: live.getInsight,
     createInsight: live.createInsight,
@@ -142,6 +147,7 @@ function createDemoProvider(live: ApiClient): ApiClient {
     askAssistant: live.askAssistant,
     prepareReportDraft: live.prepareReportDraft,
     listImageExamples: live.listImageExamples,
+    uploadImage: live.uploadImage,
     classifyEvidence: live.classifyEvidence,
     getCurrentUser: live.getCurrentUser,
     updateProfile: live.updateProfile,

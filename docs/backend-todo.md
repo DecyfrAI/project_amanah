@@ -341,7 +341,8 @@ checked because a test file exists.
 
 | Command | Result |
 |---|---|
-| `uv run --project backend pytest backend/tests` | **532 passed, 401 skipped.** The skips are the PostgreSQL-backed database, migration, constraint, and RLS tests: `AMANAH_TEST_DATABASE_URL` was unset, and no local Postgres or running Docker daemon was available. `BE-GATE-TEST-02` therefore stays open. |
+| `uv run --project backend pytest backend/tests` with `AMANAH_TEST_DATABASE_URL` set to a disposable Postgres 16 container | **937 passed, 0 skipped**, three consecutive runs. The previously-skipped 401 database, migration, constraint, and RLS tests now execute. Closing `BE-GATE-TEST-02` required fixing four real defects — see *Defects found by running the database gate* below. |
+| `uv run --project backend pytest backend/tests` with no database configured | 536 passed, 401 skipped. The skip is still reported rather than passing silently. |
 | `uv run --project backend ruff check backend/src backend/tests backend/migrations` | All checks passed. |
 | `uv run --project backend ruff format --check backend/src backend/tests backend/migrations` | 239 files already formatted. |
 | `uv run --project backend mypy backend/src backend/tests` | Success: no issues found in 230 source files. |
@@ -355,9 +356,42 @@ checked because a test file exists.
 | Running service, `GET /v1/me` with a malformed bearer token | 401 with the safe envelope `AUTHENTICATION_REQUIRED` and a `request_id`; no stack trace, no provider text. |
 | Response headers on `/healthz` | `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `Cache-Control: no-store`. |
 
-Still outstanding for the demo: a Postgres target for `BE-GATE-TEST-02`, real
-provider credentials for `BE-GATE-TEST-07` and `BE-GATE-DOC-09`, and the deployed
-smoke run for `BE-GATE-TEST-09` / `B-S23.10`.
+Still outstanding for the demo: real provider credentials for `BE-GATE-TEST-07`
+and `BE-GATE-DOC-09`, and the deployed smoke run for `BE-GATE-TEST-09` /
+`B-S23.10`.
+
+### Defects found by running the database gate, 24 August 2026
+
+The 401 database tests had never executed anywhere, so they had never reported
+what they were built to catch. Running them surfaced four real defects:
+
+1. **The migration history had branched into three heads.** Milestones 4, 5, and
+   6 each added a revision whose parent was `0004_collection_pipeline`, so
+   `alembic upgrade head` refused to choose between them. Every *fresh* database
+   failed to migrate — including Render's `preDeployCommand`, which would have
+   broken the first real deployment. Fixed by `0007_merge_milestone_heads`, a
+   no-DDL merge revision.
+2. **Application and database clocks were compared against each other.** Five
+   sites wrote a timestamp from `datetime.now(UTC)` into a column whose partner
+   defaults to `now()` server-side, under a check constraint requiring one to
+   follow the other (`completion_after_start`, `retraction_after_creation`,
+   `resolution_after_creation`). Whenever the database clock ran even
+   microseconds ahead, settling a run, retracting a note, or resolving a dispute
+   raised an `IntegrityError`. The job queue had the same fault in reverse:
+   `claim_next` compared a server-defaulted `available_at` against this
+   process's clock, so a freshly enqueued job was invisible and **the queue
+   simply appeared empty**. All now use the database clock.
+3. **Arrays of Postgres enums deserialized into single characters.** psycopg
+   does not know a project-defined enum, so it returned `hate_type[]` as the raw
+   literal `'{derogation}'`; SQLAlchemy then treated that string as the iterable
+   it expected and produced `['{', 'd', 'e', …]`. `HateType('{')` would have
+   raised on the image catalogue as soon as Storage was configured. Fixed by
+   registering the enum type on every pooled connection, in both the application
+   engine and the test engine so the two cannot diverge again.
+4. **The test harness never created the Supabase roles** (`anon`,
+   `authenticated`) that the RLS policies grant to, so the suite could not run
+   on any plain Postgres — which is why it had always been skipped rather than
+   failing.
 
 ### Security review
 

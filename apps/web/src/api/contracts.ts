@@ -244,6 +244,27 @@ export const ExplorerItemSchema = z.object({
   image: ExplorerItemImageSchema.nullable().optional(),
 });
 
+/**
+ * One item on its own page (F-S8).
+ *
+ * Extends the row with the disclosure a classification must never appear
+ * without: the score, the versions that produced it, when it ran, the model's
+ * rationale, and what this sample cannot support. Every one of these is
+ * nullable, because an item that has not been classified is a real state and
+ * must not be dressed as a finding.
+ */
+export const ExplorerItemDetailSchema = ExplorerItemSchema.extend({
+  modelName: z.string().nullable(),
+  modelVersion: z.string().nullable(),
+  promptVersion: z.string().nullable(),
+  taxonomyVersion: z.string().nullable(),
+  inferredAt: z.string().nullable(),
+  rationale: z.string().nullable(),
+  narrativeTags: z.array(z.string()),
+  limitations: z.array(z.string()),
+  samplingDisclosure: z.string(),
+});
+
 export const ExplorerPageSchema = z.object({
   applied: AppliedFiltersSchema,
   /** Total matches, or null when keyset pagination cannot count them. */
@@ -513,6 +534,7 @@ export type FilterOptions = z.infer<typeof FilterOptionsSchema>;
 export type ExplorerItemImage = z.infer<typeof ExplorerItemImageSchema>;
 export type ExplorerItemDataset = z.infer<typeof ExplorerItemDatasetSchema>;
 export type ExplorerItem = z.infer<typeof ExplorerItemSchema>;
+export type ExplorerItemDetail = z.infer<typeof ExplorerItemDetailSchema>;
 export type ExplorerPage = z.infer<typeof ExplorerPageSchema>;
 export type Insight = z.infer<typeof InsightSchema>;
 export type InsightList = z.infer<typeof InsightListSchema>;
@@ -568,6 +590,28 @@ export const EvidenceClassifyRequestSchema = z.object({
   image_filename: z.string().min(1).max(255),
   image_byte_size: z.number().int().nonnegative(),
   example_id: z.string().max(64).optional(),
+  /** An image the person uploaded through `POST /v1/image-uploads` (B-S28). */
+  upload_id: z.string().max(64).optional(),
+});
+
+/**
+ * One stored upload (B-S28).
+ *
+ * `imageSrc` is a short-lived signed URL, never a durable location, and there is
+ * no field for the storage path or the original filename. `isNew` is false when
+ * the same picture was already stored, so the interface does not claim to have
+ * saved it twice.
+ */
+export const ImageUploadSchema = z.object({
+  uploadId: z.string(),
+  mimeType: z.string(),
+  byteSize: z.number().int().positive(),
+  pixelWidth: z.number().int().positive(),
+  pixelHeight: z.number().int().positive(),
+  isNew: z.boolean(),
+  imageSrc: z.string(),
+  retentionExpiresAt: z.string().nullable(),
+  disclosure: z.string(),
 });
 
 export const DatasetAnnotationSchema = z.object({
@@ -631,6 +675,7 @@ export type HateType = z.infer<typeof HateTypeSchema>;
 export type Stance = z.infer<typeof StanceSchema>;
 export type ConfidenceTier = z.infer<typeof ConfidenceTierSchema>;
 export type EvidenceClassifyRequest = z.infer<typeof EvidenceClassifyRequestSchema>;
+export type ImageUpload = z.infer<typeof ImageUploadSchema>;
 export type DatasetAnnotation = z.infer<typeof DatasetAnnotationSchema>;
 export type ImageClassification = z.infer<typeof ImageClassificationSchema>;
 export type ImageExample = z.infer<typeof ImageExampleSchema>;

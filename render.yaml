@@ -1,4 +1,4 @@
-services:
+﻿services:
   - type: web
     name: amanah-api
     runtime: python
@@ -25,6 +25,12 @@ services:
         sync: false
       - key: CONTENT_ENCRYPTION_KEY
         sync: false
+      # Server-only Storage credential. Distinct from SUPABASE_JWT_SECRET: that
+      # verifies inbound tokens, this authenticates outbound Storage calls.
+      - key: SUPABASE_STORAGE_SECRET_KEY
+        sync: false
+      - key: SUPABASE_STORAGE_BUCKET
+        value: research-images
       - key: GEMINI_API_KEY
         sync: false
       - key: GEMINI_MODEL

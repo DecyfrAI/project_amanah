@@ -23,7 +23,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -151,8 +151,14 @@ class JobService:
         workers safe: a row another worker is already claiming is skipped rather
         than waited on, so no two workers can leave with the same job and none
         of them blocks.
+
+        Eligibility is judged by the *database* clock unless a caller names a
+        moment. `available_at` defaults to `now()` server-side, so comparing it
+        against this process's clock makes every freshly enqueued job invisible
+        whenever the database is running even slightly ahead — the queue simply
+        appears empty. Tests still pass an explicit `now` to control time.
         """
-        moment = now if now is not None else datetime.now(UTC)
+        moment: Any = now if now is not None else func.now()
         candidate = (
             select(BackgroundJob.id)
             .where(
