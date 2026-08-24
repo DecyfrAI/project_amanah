@@ -18,6 +18,11 @@ import type {
   ImageExampleList,
   ReportDraft,
   ReportDraftRequest,
+  CreateResearchReportRequest,
+  ResearchReport,
+  AppendDecisionRequest,
+  ReviewQueuePage,
+  ReviewTaskDetail,
   ViewerPostList,
 } from './contracts';
 import type { OverviewFilters } from './fixture-derive';
@@ -51,8 +56,15 @@ export interface ApiClient {
   createCapture: (input: CreateCaptureInput) => Promise<DashboardCapture>;
   askAssistant: (input: AssistantAskInput) => Promise<AssistantReply>;
   prepareReportDraft: (input: ReportDraftRequest) => Promise<ReportDraft>;
+  createResearchReport: (input: CreateResearchReportRequest) => Promise<ResearchReport>;
+  /** The frozen aggregate CSV as text, ready to hand to a download. */
+  downloadResearchReportCsv: (report: ResearchReport) => Promise<string>;
   listImageExamples: () => Promise<ImageExampleList>;
   classifyEvidence: (input: EvidenceClassifyRequest) => Promise<ImageClassification>;
+  listReviewTasks: () => Promise<ReviewQueuePage>;
+  /** Take a task under a lease, or fail because another reviewer holds it. */
+  claimReviewTask: (taskId: string) => Promise<ReviewTaskDetail>;
+  appendReviewDecision: (taskId: string, input: AppendDecisionRequest) => Promise<ReviewTaskDetail>;
 }
 
 export const FIXTURE_VIEWER: { id: string; displayName: string } = {
@@ -93,6 +105,7 @@ export const queryKeys = {
   viewerPosts: ['viewer-posts'] as const,
   discussion: (insightId: string) => ['discussion', insightId] as const,
   imageExamples: ['image-examples'] as const,
+  reviewTasks: ['review-tasks'] as const,
 };
 
 export type { OverviewFilters };

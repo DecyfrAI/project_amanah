@@ -15,6 +15,12 @@ import {
   OverviewSchema,
   EvidenceClassifyRequestSchema,
   ReportDraftRequestSchema,
+  CreateResearchReportRequestSchema,
+  ResearchReportSchema,
+  AppendDecisionRequestSchema,
+  ReviewQueuePageSchema,
+  ReviewTaskDetailSchema,
+  ReviewTaskSchema,
   ViewerPostListSchema,
   type AssistantAskInput,
   type AssistantReply,
@@ -35,6 +41,11 @@ import {
   type ImageExampleList,
   type ReportDraft,
   type ReportDraftRequest,
+  type CreateResearchReportRequest,
+  type ResearchReport,
+  type AppendDecisionRequest,
+  type ReviewQueuePage,
+  type ReviewTaskDetail,
   type ViewerPostList,
 } from './contracts';
 import { readApiBaseUrl } from './env';
@@ -202,6 +213,86 @@ export const liveProvider: ApiClient = {
       'The live service cannot prepare a report draft yet. Platform addresses come from a backend allow-list that is not connected. Use fixture mode to practise this flow.',
       501,
     );
+  },
+
+  /**
+   * Freeze a snapshot server-side. The response carries the report nested under
+   * `report`, alongside the standard response meta.
+   */
+  async createResearchReport(input: CreateResearchReportRequest): Promise<ResearchReport> {
+    const body = CreateResearchReportRequestSchema.parse(input);
+    const payload = await requestJson('/v1/research-reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return ResearchReportSchema.parse((payload as { report: unknown }).report);
+  },
+
+  /**
+   * Fetch the server's own CSV rendering rather than re-deriving it here, so the
+   * bytes a reader receives are the ones the service audited handing out.
+   */
+  async downloadResearchReportCsv(report: ResearchReport): Promise<string> {
+    const response = await fetch(
+      `${readApiBaseUrl()}/v1/research-reports/${report.id}/summary.csv`,
+      { headers: { Accept: 'text/csv' } },
+    );
+    if (!response.ok) {
+      throw new ApiRequestError(
+        response.status === 409
+          ? 'Aggregate CSV was not included when this snapshot was generated.'
+          : 'The live service could not produce the aggregate CSV.',
+        response.status,
+      );
+    }
+    return response.text();
+  },
+
+  /**
+   * The reviewer queue.
+   *
+   * The service returns a cursor page of tasks and no queue-wide totals, so the
+   * counts are derived from the page rather than invented. `classified_in_window`
+   * has no live source yet and is reported as zero, which the queue reads as
+   * "unknown" rather than as a real denominator.
+   */
+  async listReviewTasks(): Promise<ReviewQueuePage> {
+    const payload = (await requestJson('/v1/review/tasks')) as {
+      items: unknown[];
+      page: { next_cursor: string | null };
+    };
+    const items = ReviewTaskSchema.array().parse(payload.items);
+    return ReviewQueuePageSchema.parse({
+      items,
+      next_cursor: payload.page.next_cursor,
+      totals: {
+        open: items.filter((task) => task.status !== 'completed').length,
+        decided: items.filter((task) => task.status === 'completed').length,
+        confirmed: 0,
+        classified_in_window: 0,
+      },
+    });
+  },
+
+  async claimReviewTask(taskId: string): Promise<ReviewTaskDetail> {
+    const payload = await requestJson(`/v1/review/tasks/${taskId}/claim`, { method: 'POST' });
+    return ReviewTaskDetailSchema.parse(payload);
+  },
+
+  /**
+   * Append a decision, then re-read the task so the caller receives the full
+   * decision history rather than only the row just written.
+   */
+  async appendReviewDecision(
+    taskId: string,
+    input: AppendDecisionRequest,
+  ): Promise<ReviewTaskDetail> {
+    const body = AppendDecisionRequestSchema.parse(input);
+    await requestJson(`/v1/review/tasks/${taskId}/decisions`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return ReviewTaskDetailSchema.parse(await requestJson(`/v1/review/tasks/${taskId}`));
   },
 
   async listImageExamples(): Promise<ImageExampleList> {

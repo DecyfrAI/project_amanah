@@ -170,46 +170,58 @@ describe('ReportsPage', () => {
     expect(screen.getByText(/content reference, not a person/i)).toBeVisible();
   });
 
-  it('shows the scope controls with real labels, all of them inert', () => {
-    renderReports();
+  it('states the scope a report would freeze, read from the address bar', () => {
+    renderReports('/app/reports?from=2026-08-09&to=2026-08-22&platform=youtube');
 
-    expect(screen.getByLabelText('Window starts')).toBeDisabled();
-    expect(screen.getByLabelText('Window ends')).toBeDisabled();
-    expect(screen.getByLabelText('Platform')).toBeDisabled();
-    expect(screen.getByLabelText('Severity band')).toBeDisabled();
-    expect(screen.getByLabelText('Review state')).toBeDisabled();
+    expect(screen.getByRole('heading', { name: 'Research report' })).toBeVisible();
+    expect(screen.getByText('2026-08-09 to 2026-08-22')).toBeVisible();
+    expect(screen.getByText('youtube')).toBeVisible();
   });
 
-  it('gives the reason the scope controls cannot be used', () => {
-    renderReports();
+  it('says a hate-type selection is not carried into the snapshot', () => {
+    renderReports('/app/reports?hate_type=collective_blame');
 
-    expect(screen.getByText(/report generation needs the research-report API/i)).toBeVisible();
+    expect(
+      screen.getByText(/hate-type selection is active on screen but is not carried/i),
+    ).toBeVisible();
   });
 
-  it('disables generation and both exports rather than implying they work', () => {
-    renderReports();
-
-    expect(screen.getByRole('button', { name: 'Generate report' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Download aggregate CSV' })).toBeDisabled();
-    expect(screen.getByRole('button', { name: 'Print or save as PDF' })).toBeDisabled();
-  });
-
-  it('a disabled export cannot be triggered by clicking it', async () => {
+  it('offers generation once a title is typed, and exports only after freezing', async () => {
     const user = userEvent.setup();
     renderReports();
 
-    const download = screen.getByRole('button', { name: 'Download aggregate CSV' });
-    await user.click(download);
+    // Exports do not exist before there is a snapshot to export.
+    expect(screen.queryByRole('button', { name: 'Download aggregate CSV' })).toBeNull();
 
-    expect(download).toBeDisabled();
-    expect(download).not.toHaveFocus();
+    await user.type(screen.getByLabelText('Report title'), 'August monitored sample');
+    await user.click(screen.getByRole('button', { name: 'Generate report' }));
+
+    expect(await screen.findByText('August monitored sample')).toBeVisible();
+    expect(screen.getByRole('button', { name: 'Download aggregate CSV' })).toBeEnabled();
+    expect(screen.getByRole('button', { name: 'Print or save as PDF' })).toBeEnabled();
   });
 
-  it('states that CSV carries aggregates only and that item-level export is gated', () => {
+  it('freezes figures with their denominators and says they will not change', async () => {
+    const user = userEvent.setup();
     renderReports();
 
-    const note = screen.getByText(/CSV export carries aggregate data only/i);
-    expect(note).toBeVisible();
+    await user.type(screen.getByLabelText('Report title'), 'August monitored sample');
+    await user.click(screen.getByRole('button', { name: 'Generate report' }));
+
+    expect(await screen.findByText('Muslim-related items')).toBeVisible();
+    expect(screen.getByText('Likely hate rate')).toBeVisible();
+    expect(screen.getByText(/do not change when the data behind them does/i)).toBeVisible();
+    expect(screen.getByText(/not a prevalence estimate for any platform/i)).toBeVisible();
+  });
+
+  it('states that CSV carries aggregates only and that item-level export is gated', async () => {
+    const user = userEvent.setup();
+    renderReports();
+
+    await user.type(screen.getByLabelText('Report title'), 'August monitored sample');
+    await user.click(screen.getByRole('button', { name: 'Generate report' }));
+
+    const note = await screen.findByText(/carries counts and denominators only/i);
     expect(note).toHaveTextContent(/item-level export needs elevated permission/i);
   });
 
