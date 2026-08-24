@@ -25,6 +25,9 @@ def test_factory_builds_an_application_with_its_routes_mounted() -> None:
         "/v1/resources",
         "/v1/methodology",
         "/v1/connections",
+        "/v1/assistant/query",
+        "/v1/image-examples",
+        "/v1/image-classifications",
         "/v1/admin/runs",
         "/v1/admin/runs/{run_id}",
     }
