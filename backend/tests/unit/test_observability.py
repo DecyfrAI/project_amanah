@@ -4,7 +4,8 @@ import json
 import logging
 
 from amanah.observability.logging import JsonLogFormatter
-from amanah.observability.request_context import resolve_request_id
+from amanah.observability.metrics import MetricName, record_metric
+from amanah.observability.request_context import bind_operation_context, resolve_request_id
 
 
 def make_record(message: str, **extra: object) -> logging.LogRecord:
@@ -77,3 +78,37 @@ def test_traceback_is_not_included_in_the_log_payload() -> None:
 
     assert payload["exception_type"] == "ValueError"
     assert "secret/path.py" not in json.dumps(payload)
+
+
+def test_sensitive_extra_fields_are_redacted() -> None:
+    payload = json.loads(
+        JsonLogFormatter().format(
+            make_record("provider failed", prompt="hostile source text", access_token="secret")
+        )
+    )
+
+    assert payload["prompt"] == "[REDACTED]"
+    assert payload["access_token"] == "[REDACTED]"
+    assert "hostile source text" not in json.dumps(payload)
+
+
+def test_run_and_job_context_is_attached_and_then_released() -> None:
+    with bind_operation_context(run_id="run-1", job_id="job-1", stage="fetch"):
+        inside = json.loads(JsonLogFormatter().format(make_record("stage complete")))
+    outside = json.loads(JsonLogFormatter().format(make_record("request complete")))
+
+    assert inside["run_id"] == "run-1"
+    assert inside["job_id"] == "job-1"
+    assert inside["stage"] == "fetch"
+    assert "run_id" not in outside
+
+
+def test_metric_events_keep_only_allowlisted_low_cardinality_labels() -> None:
+    event = record_metric(
+        MetricName.connector_runs,
+        source_key="fixtures",
+        outcome="succeeded",
+        submitted_url="https://should-not-appear.example",
+    )
+
+    assert event.labels == {"source_key": "fixtures", "outcome": "succeeded"}

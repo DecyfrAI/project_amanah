@@ -61,6 +61,9 @@ checkout.
 | ETL fixture run (no network) | `uv run --project backend --env-file backend/.env amanah-etl run --source fixtures --mode fixture` |
 | ETL dry run | the same command with `--dry-run` |
 | Historical backfill | `uv run --project backend --env-file backend/.env amanah-etl backfill --source fixtures --from 2021-08-23 --to 2026-08-23` |
+| Validate scheduled ETL | set the documented `ETL_*` variables, then `uv run --project backend --env-file backend/.env amanah-etl validate-config` |
+| Run scheduled/manual ETL | the same environment with `amanah-etl run-from-env` |
+| Deployed smoke check | set `AMANAH_SMOKE_BASE_URL` and `AMANAH_SMOKE_ACCESS_TOKEN`, then `uv run --project backend python -m amanah.observability.smoke` |
 
 The import/startup check reads the environment, so give it configuration:
 `uv run --project backend --env-file backend/.env python -c ...`.
@@ -94,6 +97,7 @@ application. Every variable is documented in
 | `SUPABASE_JWT_SECRET` | yes | Verifies access tokens; at least 32 characters |
 | `DATABASE_URL` | readiness | Postgres connection string; `/readyz` degrades and `/v1` product reads return `503` without it |
 | `DATABASE_CONNECT_TIMEOUT_SECONDS`, `DATABASE_STATEMENT_TIMEOUT_MS`, `DATABASE_POOL_SIZE` | no | Explicit connection and query bounds, and pool size |
+| `API_RATE_LIMIT_REQUESTS`, `API_RATE_LIMIT_WINDOW_SECONDS` | no | Per-instance IP ceiling; user mutations also have durable database-backed per-user limits |
 | `APP_ENV`, `LOG_LEVEL`, `DATA_MODE` | no | Environment name, log level, fixture/live/fallback mode |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | no | Enables the Gemini connector when both are set |
 | `YOUTUBE_API_KEY`, `NEWS_API_KEY` | no | Enable their connectors |

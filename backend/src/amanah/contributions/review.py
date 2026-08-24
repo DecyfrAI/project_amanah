@@ -44,6 +44,7 @@ from amanah.domain.enums import (
     ReviewState,
     ReviewTaskStatus,
 )
+from amanah.observability.metrics import MetricName, record_metric
 
 logger = logging.getLogger(__name__)
 
@@ -146,6 +147,7 @@ class ReviewService:
             "review task claimed",
             extra={"task_id": str(task_id), "reviewer_id": str(reviewer_id)},
         )
+        record_metric(MetricName.review_queue, action="claim", outcome="claimed")
         return self._session.get_one(ReviewTask, task_id)
 
     def decide(self, task_id: UUID, *, reviewer_id: UUID, request: DecisionRequest) -> ReviewEvent:
@@ -197,6 +199,11 @@ class ReviewService:
                 "decision": request.decision.value,
                 "is_training_candidate": request.is_training_candidate,
             },
+        )
+        record_metric(
+            MetricName.review_queue,
+            action="decision",
+            outcome=request.decision.value,
         )
         return event
 

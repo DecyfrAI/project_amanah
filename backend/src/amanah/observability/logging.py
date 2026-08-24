@@ -13,9 +13,8 @@ import json
 import logging
 import sys
 from datetime import UTC, datetime
-from typing import Any
 
-from amanah.observability.request_context import current_request_id
+from amanah.observability.request_context import current_operation_context, current_request_id
 
 SERVICE_NAME = "amanah-api"
 
@@ -25,12 +24,50 @@ _RESERVED_RECORD_ATTRIBUTES = frozenset(
     logging.LogRecord("", 0, "", 0, "", None, None).__dict__
 ) | frozenset({"asctime", "message", "taskName"})
 
+_SENSITIVE_KEY_PARTS = frozenset(
+    {
+        "authorization",
+        "content",
+        "cookie",
+        "credential",
+        "password",
+        "prompt",
+        "secret",
+        "text",
+        "token",
+        "url",
+    }
+)
+_MAX_LOG_VALUE_CHARACTERS = 512
+
+
+type LogValue = str | int | float | bool | list["LogValue"] | dict[str, "LogValue"] | None
+
+
+def _safe_log_value(key: str, value: object) -> LogValue:
+    """Redact sensitive fields and bound values before serialization."""
+    lowered = key.casefold()
+    if any(part in lowered for part in _SENSITIVE_KEY_PARTS):
+        return "[REDACTED]"
+    if isinstance(value, str):
+        return value[:_MAX_LOG_VALUE_CHARACTERS]
+    if isinstance(value, (bool, int, float)) or value is None:
+        return value
+    if isinstance(value, (list, tuple, set)):
+        return [_safe_log_value(key, item) for item in list(value)[:50]]
+    if isinstance(value, dict):
+        return {
+            str(child_key): _safe_log_value(str(child_key), child_value)
+            for child_key, child_value in list(value.items())[:50]
+        }
+    return str(value)[:_MAX_LOG_VALUE_CHARACTERS]
+
 
 class JsonLogFormatter(logging.Formatter):
     """Render a log record as a single-line JSON object."""
 
     def format(self, record: logging.LogRecord) -> str:
-        payload: dict[str, Any] = {
+        payload: dict[str, LogValue] = {
             "timestamp": datetime.fromtimestamp(record.created, tz=UTC).isoformat(),
             "level": record.levelname.lower(),
             "service": SERVICE_NAME,
@@ -40,9 +77,10 @@ class JsonLogFormatter(logging.Formatter):
         request_id = current_request_id()
         if request_id is not None:
             payload["request_id"] = request_id
+        payload.update(current_operation_context())
         for key, value in record.__dict__.items():
             if key not in _RESERVED_RECORD_ATTRIBUTES:
-                payload[key] = value
+                payload[key] = _safe_log_value(key, value)
         if record.exc_info is not None:
             # The exception type is safe context; the traceback stays out of the
             # payload so internal paths are never shipped to a log aggregator

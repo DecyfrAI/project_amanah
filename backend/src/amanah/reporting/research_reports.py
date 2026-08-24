@@ -30,6 +30,7 @@ from amanah.db.repositories.dashboard import DashboardRepository
 from amanah.db.repositories.research_reports import ResearchReportRepository
 from amanah.domain.enums import DataMode, ResearchReportStatus
 from amanah.metrics.dashboard import build_dashboard
+from amanah.observability.metrics import MetricName, record_metric
 
 logger = logging.getLogger(__name__)
 
@@ -152,6 +153,7 @@ class ResearchReportService:
                 "data_version": data_version,
             },
         )
+        record_metric(MetricName.reports, action="generate", outcome="ready")
         return self.require_report(report.id)
 
     def require_report(self, report_id: UUID) -> Row[Any]:
@@ -178,6 +180,7 @@ class ResearchReportService:
             "research report aggregate downloaded",
             extra={"report_id": str(report_id), "user_id": str(actor_user_id)},
         )
+        record_metric(MetricName.reports, action="download", outcome="succeeded")
         return content
 
 

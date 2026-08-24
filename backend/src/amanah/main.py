@@ -14,6 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from amanah.api import health
 from amanah.api.errors import register_error_handlers
+from amanah.api.rate_limit import RateLimitMiddleware
 from amanah.api.security_headers import SecurityHeadersMiddleware
 from amanah.api.v1.router import v1_router
 from amanah.db.session import Database, create_database_engine
@@ -81,6 +82,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     register_error_handlers(app)
     app.add_middleware(SecurityHeadersMiddleware)
+    app.add_middleware(
+        RateLimitMiddleware,
+        limit=resolved.api_rate_limit_requests,
+        window_seconds=resolved.api_rate_limit_window_seconds,
+    )
     app.add_middleware(
         CORSMiddleware,
         allow_origins=list(resolved.allowed_origins),

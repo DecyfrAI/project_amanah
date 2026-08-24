@@ -1,0 +1,84 @@
+name: Amanah ETL
+
+on:
+  schedule:
+    - cron: "17 */8 * * *"
+  workflow_dispatch:
+    inputs:
+      source:
+        description: Reviewed source adapter
+        required: true
+        default: fixtures
+        type: choice
+        options: [fixtures, rss_bbc_news, rss_cbc, rss_guardian, youtube]
+      registry_keys:
+        description: Comma-separated approved stable registry keys, or blank for all
+        required: false
+        type: string
+      config_version:
+        description: Required reviewed config version when registry keys are supplied
+        required: false
+        type: string
+      datapack_ids:
+        description: Comma-separated IDs from config/datapacks.example.yml
+        required: false
+        type: string
+      max_items:
+        description: Hard item cap (1-1000)
+        required: true
+        default: "100"
+        type: string
+      dry_run:
+        description: Validate/discover without persistent content writes
+        required: true
+        default: false
+        type: boolean
+
+permissions:
+  contents: read
+
+concurrency:
+  group: amanah-etl-production
+  cancel-in-progress: false
+
+jobs:
+  etl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    environment: etl-production
+    env:
+      APP_ENV: production
+      APP_ORIGIN: ${{ vars.APP_ORIGIN }}
+      DATA_MODE: ${{ (inputs.source || vars.ETL_DEFAULT_SOURCE) == 'fixtures' && 'fixture' || 'live' }}
+      ETL_SOURCES: ${{ inputs.source || vars.ETL_DEFAULT_SOURCE }}
+      ETL_REGISTRY_KEYS: ${{ inputs.registry_keys || '' }}
+      ETL_CONFIG_VERSION: ${{ inputs.config_version || vars.ETL_CONFIG_VERSION }}
+      ETL_DATAPACK_IDS: ${{ inputs.datapack_ids || vars.ETL_DATAPACK_IDS }}
+      ETL_MAX_ITEMS: ${{ inputs.max_items || vars.ETL_MAX_ITEMS }}
+      ETL_DRY_RUN: ${{ inputs.dry_run || false }}
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_JWT_SECRET: ${{ secrets.SUPABASE_JWT_SECRET }}
+      CONTENT_ENCRYPTION_KEY: ${{ secrets.CONTENT_ENCRYPTION_KEY }}
+      YOUTUBE_API_KEY: ${{ secrets.YOUTUBE_API_KEY }}
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --locked --project backend
+      - name: Validate reviewed dispatch
+        run: uv run --project backend amanah-etl validate-config
+      - name: Run checkpointed pipeline
+        run: uv run --project backend amanah-etl run-from-env
+      - name: Upload redacted run summary
+        if: always()
+        uses: actions/upload-artifact@v7
+        with:
+          name: etl-run-summary-${{ github.run_id }}
+          path: work/etl-run-summary.json
+          if-no-files-found: ignore
+          retention-days: 7

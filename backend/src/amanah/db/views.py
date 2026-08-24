@@ -476,6 +476,7 @@ FORBIDDEN_PROJECTION_COLUMNS = frozenset(
         "metadata",
         "normalized_text",
         "raw_object_key",
+        "storage_path",
         "source_item_id",
         "submitted_origin",
         "text_ciphertext",

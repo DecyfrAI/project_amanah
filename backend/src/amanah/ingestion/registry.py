@@ -95,6 +95,8 @@ class AdapterRegistry:
         configured = context.sources.by_key(source_key)
         if configured is None:
             raise UnknownSourceError(source_key)
+        if not configured.is_enabled:
+            raise SourceDisabledError(source_key)
 
         adapter = registration.factory(context)
         if adapter.is_fixture != registration.is_fixture:

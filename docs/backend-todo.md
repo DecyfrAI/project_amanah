@@ -223,14 +223,14 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
 
 ### Milestone 7 — Production resilience and observability
 
-- [ ] **B-S22 — Add production resilience and observability**
-  - [ ] **B-S22.1** Add structured redacted logs with request/run/job correlation.
-  - [ ] **B-S22.2** Add documented metrics for API, connector, Gemini, job, contribution, review, and report behavior.
-  - [ ] **B-S22.3** Apply explicit dependency timeouts and bounded transient retries with jitter.
-  - [ ] **B-S22.4** Add per-IP/user rate limits and correct `Retry-After` behavior.
-  - [ ] **B-S22.5** Preserve last-successful data with stale/partial coverage; never silently swap fixtures.
-  - [ ] **B-S22.6** Isolate connector/item failures and implement accurate health/readiness semantics.
-  - [ ] **B-S22.7** Test provider outages, quota exhaustion, Gemini deferral, DB failure, lease loss, partial extraction, and auth expiry.
+- [x] **B-S22 — Add production resilience and observability**
+  - [x] **B-S22.1** Add structured redacted logs with request/run/job correlation.
+  - [x] **B-S22.2** Add documented metrics for API, connector, Gemini, job, contribution, review, and report behavior.
+  - [x] **B-S22.3** Apply explicit dependency timeouts and bounded transient retries with jitter.
+  - [x] **B-S22.4** Add per-IP/user rate limits and correct `Retry-After` behavior.
+  - [x] **B-S22.5** Preserve last-successful data with stale/partial coverage; never silently swap fixtures.
+  - [x] **B-S22.6** Isolate connector/item failures and implement accurate health/readiness semantics.
+  - [x] **B-S22.7** Test provider outages, quota exhaustion, Gemini deferral, DB failure, lease loss, partial extraction, and auth expiry.
 
 ## TRACK: ml
 
@@ -291,30 +291,30 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
 
 ### Milestone 7 — Scheduling, CI, deployment, and demo readiness
 
-- [ ] **B-S21 — Assemble the idempotent ETL command and eight-hour workflow**
-  - [ ] **B-S21.1** Read DevOps/security/documentation rules and obtain explicit instruction before editing CI/CD configuration.
-  - [ ] **B-S21.2** Assemble discover → fetch → canonicalize → normalize → classify → aggregate → insights → finalize.
-  - [ ] **B-S21.3** Persist stage checkpoints and make reruns resumable/idempotent.
-  - [ ] **B-S21.4** Add scheduled execution at `17 */8 * * *` and constrained manual dispatch.
-  - [ ] **B-S21.5** Constrain dispatch to configured sources, query IDs, approved datapack manifest IDs, item caps, and dry-run.
-  - [ ] **B-S21.6** Prevent overlapping production ETL runs.
-  - [ ] **B-S21.7** Enable optional connectors only when approved/configured; otherwise report disabled/access-required.
-  - [ ] **B-S21.8** Upload only redacted run summaries with counts, warnings, and safe error codes.
-  - [ ] **B-S21.9** Provide an explicitly labelled fixture mode and test workflow/config validation.
-  - [ ] **B-S21.10** Include reviewed datapack import → canonicalize in manual/scheduled ETL with manifest selection constrained to approved configuration.
-  - [ ] **B-S21.11** Accept only approved stable registry keys/config versions for seed runs; never schedule directly from the Markdown registry.
+- [x] **B-S21 — Assemble the idempotent ETL command and eight-hour workflow**
+  - [x] **B-S21.1** Read DevOps/security/documentation rules and obtain explicit instruction before editing CI/CD configuration.
+  - [x] **B-S21.2** Assemble discover → fetch → canonicalize → normalize → classify → aggregate → insights → finalize.
+  - [x] **B-S21.3** Persist stage checkpoints and make reruns resumable/idempotent.
+  - [x] **B-S21.4** Add scheduled execution at `17 */8 * * *` and constrained manual dispatch.
+  - [x] **B-S21.5** Constrain dispatch to configured sources, query IDs, approved datapack manifest IDs, item caps, and dry-run.
+  - [x] **B-S21.6** Prevent overlapping production ETL runs.
+  - [x] **B-S21.7** Enable optional connectors only when approved/configured; otherwise report disabled/access-required.
+  - [x] **B-S21.8** Upload only redacted run summaries with counts, warnings, and safe error codes.
+  - [x] **B-S21.9** Provide an explicitly labelled fixture mode and test workflow/config validation.
+  - [x] **B-S21.10** Include reviewed datapack import → canonicalize in manual/scheduled ETL with manifest selection constrained to approved configuration.
+  - [x] **B-S21.11** Accept only approved stable registry keys/config versions for seed runs; never schedule directly from the Markdown registry.
 
 - [ ] **B-S23 — Complete CI, AI evals, security gates, deployment, and smoke runbooks**
-  - [ ] **B-S23.1** Obtain explicit instruction before adding/changing CI/CD configuration.
-  - [ ] **B-S23.2** Add deterministic lint, format, type, unit, integration, contract, and fixture-E2E CI gates.
-  - [ ] **B-S23.3** Add disposable-Postgres migration/RLS and OpenAPI compatibility tests.
-  - [ ] **B-S23.4** Add dependency, secret, forbidden-file, and frontend-bundle scans.
-  - [ ] **B-S23.5** Add AI evals for schema, citations/numbers, benign-Muslim false positives, abstention, causality, prompt injection, and data-transfer/tool refusal.
-  - [ ] **B-S23.6** Ensure CI has no live provider calls, production secrets, or harmful raw content.
-  - [ ] **B-S23.7** Add Render health/readiness/deployment configuration and safe environment handoff documentation.
-  - [ ] **B-S23.8** Add deployed smoke tests proving health/readiness remain anonymous, all `/v1` product routes deny anonymous access, and an authenticated demo account completes a deterministic vertical slice.
-  - [ ] **B-S23.9** Document rollback, missing keys, manual ETL, fixture fallback, known limitations, and live/mock inventory.
-  - [ ] **B-S23.10** Run all gates and freeze scope after acceptance blockers are resolved.
+  - [x] **B-S23.1** Obtain explicit instruction before adding/changing CI/CD configuration.
+  - [x] **B-S23.2** Add deterministic lint, format, type, unit, integration, contract, and fixture-E2E CI gates.
+  - [x] **B-S23.3** Add disposable-Postgres migration/RLS and OpenAPI compatibility tests.
+  - [x] **B-S23.4** Add dependency, secret, forbidden-file, and frontend-bundle scans.
+  - [x] **B-S23.5** Add AI evals for schema, citations/numbers, benign-Muslim false positives, abstention, causality, prompt injection, and data-transfer/tool refusal.
+  - [x] **B-S23.6** Ensure CI has no live provider calls, production secrets, or harmful raw content.
+  - [x] **B-S23.7** Add Render health/readiness/deployment configuration and safe environment handoff documentation.
+  - [x] **B-S23.8** Add deployed smoke tests proving health/readiness remain anonymous, all `/v1` product routes deny anonymous access, and an authenticated demo account completes a deterministic vertical slice.
+  - [x] **B-S23.9** Document rollback, missing keys, manual ETL, fixture fallback, known limitations, and live/mock inventory.
+  - [ ] **B-S23.10** Run all gates and freeze scope after acceptance blockers are resolved. *(Local verification passed except for 401 PostgreSQL-backed tests skipped without `AMANAH_TEST_DATABASE_URL`; CI now provisions PostgreSQL. The deployed smoke also requires the target URL and short-lived demo token.)*
 
 ## Cross-cutting gates
 

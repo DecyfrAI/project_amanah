@@ -6,6 +6,16 @@ All notable project changes are documented here using the Keep a Changelog struc
 
 ### Added
 
+- **Milestone 7 — scheduling, resilience, observability, CI, and deployment readiness
+  (B-S21–B-S23).** Scheduled and manual eight-hour collection now share the validated,
+  checkpointed `amanah-etl run-from-env` command and constrain source, stable seed/config,
+  datapack manifest ID, cap, concurrency, fixture mode, and redacted artifacts. Request/run/job
+  correlation, sensitive-field redaction, API limits with `Retry-After`, safe CI and AI evals,
+  security gates, Render configuration, smoke checks, threat model, rollback, and operations
+  runbooks complete the reproducible deployment path without live-provider calls in CI.
+
+### Added
+
 - **Milestone 5 — authenticated contributions and human review (B-S16 to B-S18, B-S27).**
   `POST /v1/submissions` records one public URL as `processing` and queues the same canonical
   pipeline collected content uses; the resolver-free half of the SSRF check runs in the request
