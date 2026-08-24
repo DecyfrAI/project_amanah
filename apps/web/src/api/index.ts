@@ -1,4 +1,4 @@
-﻿import { fixtureProvider } from './fixture-provider';
+import { fixtureProvider } from './fixture-provider';
 import { liveProvider } from './live-provider';
 import { readDataMode } from './env';
 import { ApiRequestError } from './errors';
@@ -7,7 +7,6 @@ import type { ApiClient } from './client';
 export { FIXTURE_VIEWER, queryKeys } from './client';
 export type {
   ApiClient,
-  CreateResearchReportInput,
   ItemSearchFilters,
   NewsFilters,
   OverviewFilters,
@@ -43,6 +42,22 @@ export type {
   ImageUpload,
   ReportDraft,
   ReportDraftRequest,
+  CreateResearchReportRequest,
+  ReportFindingSnapshot,
+  ReportMetricKey,
+  ReportMetricSnapshot,
+  ResearchReport,
+  ReviewTaskType,
+  Relevance,
+  // The review queue reads these through the same barrel as every other
+  // feature; they were defined in `contracts.ts` but never re-exported here.
+  AppendDecisionRequest,
+  ReviewDecisionEntry,
+  ReviewDecisionKind,
+  ReviewQueuePage,
+  ReviewTask,
+  ReviewTaskDetail,
+  Stance,
   ViewerPost,
   ViewerPostList,
 } from './contracts';
@@ -110,9 +125,12 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
       tryLive((client) => client.recordReportOutcome(reportId, input)),
     listContributions: () => tryLive((client) => client.listContributions()),
     createResearchReport: (input) => tryLive((client) => client.createResearchReport(input)),
-    getResearchReport: (reportId) => tryLive((client) => client.getResearchReport(reportId)),
-    downloadResearchReportCsv: (reportId) =>
-      tryLive((client) => client.downloadResearchReportCsv(reportId)),
+    downloadResearchReportCsv: (report) =>
+      tryLive((client) => client.downloadResearchReportCsv(report)),
+    listReviewTasks: () => tryLive((client) => client.listReviewTasks()),
+    claimReviewTask: (taskId) => tryLive((client) => client.claimReviewTask(taskId)),
+    appendReviewDecision: (taskId, input) =>
+      tryLive((client) => client.appendReviewDecision(taskId, input)),
   };
 }
 
@@ -122,11 +140,11 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
  * Every product method routes to the live, authenticated service: news, the
  * dashboard and item reads (including datapack-backed rows), the grounded
  * assistant, insights and discussion, platform and research reports, and the
- * image catalogue/classification. No method here catches a live failure and
- * substitutes fixture data â€” a failure surfaces to the screen that made the
- * request. The surfaces that remain mocked (the review queue and connections
- * walkthroughs, and the local-file upload rehearsal) do not read through this
- * client at all and are labelled in place.
+ * image catalogue/classification, and the review queue. No method here catches
+ * a live failure and substitutes fixture data — a failure surfaces to the screen that made the
+ * request. The surfaces that remain mocked (the connections walkthrough and
+ * the local-file upload rehearsal) do not read through this client at all and
+ * are labelled in place.
  */
 function createDemoProvider(live: ApiClient): ApiClient {
   return {
@@ -156,8 +174,10 @@ function createDemoProvider(live: ApiClient): ApiClient {
     recordReportOutcome: live.recordReportOutcome,
     listContributions: live.listContributions,
     createResearchReport: live.createResearchReport,
-    getResearchReport: live.getResearchReport,
     downloadResearchReportCsv: live.downloadResearchReportCsv,
+    listReviewTasks: live.listReviewTasks,
+    claimReviewTask: live.claimReviewTask,
+    appendReviewDecision: live.appendReviewDecision,
   };
 }
 

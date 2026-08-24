@@ -671,8 +671,237 @@ export const ImageExampleListSchema = z.object({
   items: z.array(ImageExampleSchema),
 });
 
+/**
+ * Immutable research-report snapshot (spec §16).
+ *
+ * Aggregate only: counts and their denominators, never an item. A snapshot
+ * freezes the figures at the moment it was generated, so a report cited later
+ * still states what was true when it was made rather than re-querying and
+ * quietly changing. Wire fields stay snake_case to match the FastAPI payload.
+ */
+export const ReportMetricKeySchema = z.enum([
+  'observed_count',
+  'muslim_related_count',
+  'likely_anti_muslim_count',
+  'reviewed_count',
+  'likely_anti_muslim_rate',
+]);
+
+export const ReportFindingKeySchema = z.enum(['monitored_sample_rate', 'analysis_coverage']);
+
+export const RedactionModeSchema = z.enum(['default_redacted', 'aggregate_only']);
+
+/**
+ * The filter subset a report may freeze.
+ *
+ * Deliberately narrower than the dashboard's filters: the backend `ItemFilters`
+ * has no hate-type axis, so a report cannot claim a scope the service cannot
+ * reproduce. A hate-type selection on screen is not carried into the snapshot.
+ */
+export const ResearchReportFiltersSchema = z.object({
+  date_from: z.string().optional(),
+  date_to: z.string().optional(),
+  platforms: z.array(z.string()).max(25).optional(),
+  severities: z.array(z.string()).max(25).optional(),
+  review_states: z.array(z.string()).max(25).optional(),
+});
+
+export const CreateResearchReportRequestSchema = z.object({
+  title: z.string().min(3).max(200),
+  filters: ResearchReportFiltersSchema,
+  metrics: z.array(ReportMetricKeySchema).min(1).max(5),
+  findings: z.array(ReportFindingKeySchema).max(2),
+  include_aggregate_csv: z.boolean(),
+  redaction_mode: RedactionModeSchema,
+});
+
+export const ReportMetricSnapshotSchema = z.object({
+  key: ReportMetricKeySchema,
+  value: z.number().nullable(),
+  numerator: z.number().int().nonnegative().nullable(),
+  denominator: z.number().int().nonnegative().nullable(),
+});
+
+export const ReportFindingSnapshotSchema = z.object({
+  key: ReportFindingKeySchema,
+  statement: z.string().min(1).max(1000),
+  citation_ids: z.array(z.string()).min(1),
+});
+
+export const ReportCitationSchema = z.object({
+  id: z.string().min(1).max(200),
+  kind: z.enum(['aggregate', 'methodology']),
+  label: z.string().min(1).max(500),
+});
+
+export const ReportCoverageSchema = z.object({
+  last_success_at: z.string().nullable(),
+  coverage_score: z.number().min(0).max(1).nullable(),
+  data_mode: z.enum(['fixture', 'live', 'fallback', 'stale', 'unavailable']),
+  is_stale: z.boolean(),
+  warnings: z.array(z.string()),
+});
+
+export const ResearchReportSchema = z.object({
+  id: z.string(),
+  title: z.string(),
+  /** SHA-256 of the exact filters. Two reports of the same scope share it. */
+  filter_hash: z.string().regex(/^[0-9a-f]{64}$/),
+  filters: ResearchReportFiltersSchema,
+  data_version: z.string(),
+  coverage: ReportCoverageSchema,
+  metrics: z.array(ReportMetricSnapshotSchema),
+  findings: z.array(ReportFindingSnapshotSchema),
+  citations: z.array(ReportCitationSchema),
+  methodology_version: z.string(),
+  limitations: z.array(z.string()),
+  source_scope: z.array(z.string()),
+  window_start: z.string(),
+  window_end: z.string(),
+  data_mode: z.enum(['fixture', 'live', 'fallback', 'stale', 'unavailable']),
+  redaction_mode: RedactionModeSchema,
+  status: z.enum(['pending', 'ready', 'failed']),
+  aggregate_csv_available: z.boolean(),
+  created_at: z.string(),
+  completed_at: z.string(),
+});
+
+export type ReportMetricKey = z.infer<typeof ReportMetricKeySchema>;
+export type ReportFindingKey = z.infer<typeof ReportFindingKeySchema>;
+export type RedactionMode = z.infer<typeof RedactionModeSchema>;
+export type ResearchReportFilters = z.infer<typeof ResearchReportFiltersSchema>;
+export type CreateResearchReportRequest = z.infer<typeof CreateResearchReportRequestSchema>;
+export type ReportMetricSnapshot = z.infer<typeof ReportMetricSnapshotSchema>;
+export type ReportFindingSnapshot = z.infer<typeof ReportFindingSnapshotSchema>;
+export type ReportCitation = z.infer<typeof ReportCitationSchema>;
+export type ResearchReport = z.infer<typeof ResearchReportSchema>;
+
+/**
+ * Reviewer queue and its append-only decisions (spec §17).
+ *
+ * A queue entry carries the item and the prediction a reviewer has to judge, and
+ * deliberately not the identity of whoever disputed it. A decision is appended:
+ * the response is the event that was written, never a rewritten prediction, so a
+ * later reader can still see what the model proposed and who disagreed.
+ */
+export const ReviewTaskTypeSchema = z.enum([
+  'dispute',
+  'low_confidence',
+  'severity_escalation',
+  'model_disagreement',
+  'uncertain_relevance',
+  'invalid_output',
+]);
+
+export const ReviewTaskStatusSchema = z.enum(['open', 'claimed', 'completed', 'cancelled']);
+
+export const ReviewDecisionSchema = z.enum(['confirmed', 'corrected', 'needs_context', 'rejected']);
+
+export const ReviewTaskSchema = z.object({
+  id: z.string(),
+  content_item_id: z.string(),
+  prediction_id: z.string(),
+  task_type: ReviewTaskTypeSchema,
+  reason: z.string(),
+  priority: z.number().int().nonnegative(),
+  status: ReviewTaskStatusSchema,
+  assigned_to: z.string().nullable(),
+  claim_expires_at: z.string().nullable(),
+  created_at: z.string(),
+  completed_at: z.string().nullable(),
+
+  title: z.string().nullable(),
+  permitted_excerpt: z.string().nullable(),
+  canonical_url: z.string().nullable(),
+  platform: z.string(),
+
+  relevance: RelevanceSchema,
+  stance: StanceSchema,
+  hate_types: z.array(HateTypeSchema),
+  severity: z.number().int().min(0).max(3),
+  score: z.number().min(0).max(1),
+  confidence_tier: ConfidenceTierSchema,
+  model_name: z.string(),
+  model_version: z.string(),
+});
+
+export const ReviewDecisionEntrySchema = z.object({
+  id: z.string(),
+  review_task_id: z.string(),
+  reviewer_id: z.string(),
+  decision: ReviewDecisionSchema,
+  /** Present only on a correction. Never edits the prediction it sits beside. */
+  corrected_labels: z
+    .object({
+      stance: StanceSchema.optional(),
+      hate_types: z.array(HateTypeSchema).optional(),
+      severity: z.number().int().min(0).max(3).optional(),
+    })
+    .nullable(),
+  note: z.string().nullable(),
+  is_training_candidate: z.boolean(),
+  created_at: z.string(),
+});
+
+/**
+ * A decision to append.
+ *
+ * The correction pairing is a rule the service enforces and the schema states:
+ * a correction must carry corrected labels, and only a correction may. The
+ * training flag is a quarantine marker, allowed on corrections alone; nothing
+ * retrains a model from it.
+ */
+export const AppendDecisionRequestSchema = z
+  .object({
+    decision: ReviewDecisionSchema,
+    note: z.string().max(2000).optional(),
+    corrected_labels: z
+      .object({
+        stance: StanceSchema.optional(),
+        hate_types: z.array(HateTypeSchema).optional(),
+        severity: z.number().int().min(0).max(3).optional(),
+      })
+      .optional(),
+    is_training_candidate: z.boolean(),
+  })
+  .refine((value) => (value.decision === 'corrected') === (value.corrected_labels !== undefined), {
+    message: 'a correction must carry corrected labels, and only a correction may',
+    path: ['corrected_labels'],
+  })
+  .refine((value) => !value.is_training_candidate || value.decision === 'corrected', {
+    message: 'only a correction may be marked as a training candidate',
+    path: ['is_training_candidate'],
+  });
+
+export const ReviewTaskDetailSchema = z.object({
+  task: ReviewTaskSchema,
+  decisions: z.array(ReviewDecisionEntrySchema),
+});
+
+export const ReviewQueuePageSchema = z.object({
+  items: z.array(ReviewTaskSchema),
+  next_cursor: z.string().nullable(),
+  /** Counts for the queue as a whole, so a figure never rests on one page. */
+  totals: z.object({
+    open: z.number().int().nonnegative(),
+    decided: z.number().int().nonnegative(),
+    confirmed: z.number().int().nonnegative(),
+    classified_in_window: z.number().int().nonnegative(),
+  }),
+});
+
+export type ReviewTaskType = z.infer<typeof ReviewTaskTypeSchema>;
+export type ReviewTaskStatus = z.infer<typeof ReviewTaskStatusSchema>;
+export type ReviewDecisionKind = z.infer<typeof ReviewDecisionSchema>;
+export type ReviewTask = z.infer<typeof ReviewTaskSchema>;
+export type ReviewDecisionEntry = z.infer<typeof ReviewDecisionEntrySchema>;
+export type AppendDecisionRequest = z.infer<typeof AppendDecisionRequestSchema>;
+export type ReviewTaskDetail = z.infer<typeof ReviewTaskDetailSchema>;
+export type ReviewQueuePage = z.infer<typeof ReviewQueuePageSchema>;
+
 export type HateType = z.infer<typeof HateTypeSchema>;
 export type Stance = z.infer<typeof StanceSchema>;
+export type Relevance = z.infer<typeof RelevanceSchema>;
 export type ConfidenceTier = z.infer<typeof ConfidenceTierSchema>;
 export type EvidenceClassifyRequest = z.infer<typeof EvidenceClassifyRequestSchema>;
 export type ImageUpload = z.infer<typeof ImageUploadSchema>;

@@ -1,11 +1,15 @@
 ﻿/**
- * Editorial copy describing what a research report contains.
+ * Editorial copy describing what a research report contains, plus the
+ * illustrative snapshot list at the foot of the page.
  *
- * This is documentation of the report's structure, not data: report creation
- * and reading go through `/v1/research-reports` in `ResearchReportPanel`. The
- * inert scope form and the illustrative snapshot list that used to live here
- * were removed when that flow was connected.
+ * Neither is data. Report creation and reading go through
+ * `/v1/research-reports` in `ResearchReportPanel`; the inert scope form that
+ * used to live here was removed when that flow was connected, and the snapshot
+ * rows below are labelled on screen as illustrations of reports nobody
+ * prepared.
  */
+
+import type { StatusIndicator } from '@/components/ui/StatusPill';
 
 export interface ReportSection {
   readonly id: string;
@@ -68,5 +72,59 @@ export const REPORT_SECTIONS: readonly ReportSection[] = [
     name: 'Limitations',
     detail:
       'What this report cannot support, at full weight: a bounded sample is not a platform, a country, or a group of people.',
+  },
+];
+
+/**
+ * Illustrative snapshots for the list at the foot of Reports.
+ *
+ * These describe reports nobody prepared, and the page labels them as such.
+ * Real snapshots are created by `ResearchReportPanel` through
+ * `POST /v1/research-reports`; this list is layout, not data.
+ */
+export interface ReportSnapshot {
+  readonly id: string;
+  readonly title: string;
+  readonly window: string;
+  readonly filters: string;
+  readonly createdAt: string;
+  readonly indicator: StatusIndicator;
+  readonly statusLabel: string;
+  /** What a reader has to know before quoting this snapshot. */
+  readonly caveat: string;
+}
+
+export const REPORT_SNAPSHOTS: readonly ReportSnapshot[] = [
+  {
+    id: 'rep_5b21c8',
+    title: 'Planning decision coverage, two weeks',
+    window: '9 August 2026 to 22 August 2026',
+    filters: 'YouTube and Reddit, any severity, model and reviewed',
+    createdAt: '22 August 2026, 08:40 UTC',
+    indicator: 'ok',
+    statusLabel: 'Prepared',
+    caveat: 'Covers 214 containers, 1,208 classified items, and 14 of 14 days collected.',
+  },
+  {
+    id: 'rep_9c4470',
+    title: 'Threat and incitement band, one month',
+    window: '18 July 2026 to 18 August 2026',
+    filters: 'All configured platforms, band 3 only, reviewed only',
+    createdAt: '18 August 2026, 17:05 UTC',
+    indicator: 'degraded',
+    statusLabel: 'Prepared with a coverage gap',
+    caveat:
+      'The Mastodon connector failed on 5 of the 31 days. Those days are reported as gaps, so the totals describe 26 collected days.',
+  },
+  {
+    id: 'rep_1f7de3',
+    title: 'Open datapack baseline, historical rows',
+    window: '1 January 2024 to 31 December 2024',
+    filters: 'Open datapack only, any severity, awaiting review only',
+    createdAt: '11 August 2026, 12:22 UTC',
+    indicator: 'absent',
+    statusLabel: 'Trend section is a gap',
+    caveat:
+      'A one-off import has no daily collection, so the trend section reports no daily rate rather than a flat line at zero.',
   },
 ];

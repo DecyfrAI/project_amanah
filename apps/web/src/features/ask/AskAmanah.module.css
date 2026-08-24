@@ -42,8 +42,19 @@
   font-size: var(--text-sm);
 }
 
-.close:hover {
+.close:hover:not(:disabled) {
   border-color: var(--color-accent);
+}
+
+.close:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.headerActions {
+  display: flex;
+  flex-shrink: 0;
+  gap: var(--space-2);
 }
 
 .dialog {
@@ -205,8 +216,48 @@
   font: inherit;
 }
 
+.dots {
+  display: inline-flex;
+  gap: var(--space-1);
+  margin-inline-end: var(--space-2);
+  vertical-align: middle;
+}
+
+.dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  background-color: var(--color-accent);
+  border-radius: var(--radius-full);
+  animation: ask-dot 1.2s ease-in-out infinite;
+}
+
+.dot:nth-child(2) {
+  animation-delay: 0.2s;
+}
+
+.dot:nth-child(3) {
+  animation-delay: 0.4s;
+}
+
+@keyframes ask-dot {
+  0%,
+  60%,
+  100% {
+    opacity: 0.25;
+  }
+
+  30% {
+    opacity: 1;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .trigger {
     backdrop-filter: none;
+  }
+
+  .dot {
+    animation: none;
+    opacity: 0.6;
   }
 }

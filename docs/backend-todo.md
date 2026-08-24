@@ -132,6 +132,7 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [x] **B-S10.9** Project only approved registry seed/query entries into runtime configuration and persist their stable provenance.
   - [x] **B-S10.10** Keep enriched, boundary/control, and ordinary-monitoring strata separate and enforce the English-only MVP language gate.
   - [x] **B-S10.11** Test unknown/unapproved registry keys, unavailable seeds as coverage gaps, cap enforcement, and stratum provenance.
+  - [x] **B-S10.12** Activate the product-owner-approved five-video hackathon shortlist after official-API preflight, with four enriched seeds, one counterspeech/control seed, 100-item per-seed caps, stable runtime keys, and explicit non-prevalence provenance.
 
 - [x] **B-S11 — Implement safe user-URL retrieval**
   - [x] **B-S11.1** Accept and normalize only public HTTP(S) URLs.
@@ -342,11 +343,12 @@ checked because a test file exists.
 | Command | Result |
 |---|---|
 | `uv run --project backend pytest backend/tests` with `AMANAH_TEST_DATABASE_URL` set to a disposable Postgres 16 container | **937 passed, 0 skipped**, three consecutive runs. The previously-skipped 401 database, migration, constraint, and RLS tests now execute. Closing `BE-GATE-TEST-02` required fixing four real defects — see *Defects found by running the database gate* below. |
-| `uv run --project backend pytest backend/tests` with no database configured | 536 passed, 401 skipped. The skip is still reported rather than passing silently. |
+| `uv run --project backend pytest backend/tests` with no database configured | 556 passed, 418 skipped after YouTube catalogue activation and provider-side cap tests. The skip is still reported rather than passing silently. |
 | `uv run --project backend ruff check backend/src backend/tests backend/migrations` | All checks passed. |
-| `uv run --project backend ruff format --check backend/src backend/tests backend/migrations` | 239 files already formatted. |
-| `uv run --project backend mypy backend/src backend/tests` | Success: no issues found in 230 source files. |
-| `uv run --project backend --env-file backend/.env python -c "from amanah.main import create_app; create_app()"` | Starts; reports `disabled_connectors: [gemini, youtube, news]` because those keys are still placeholders. |
+| `uv run --project backend ruff format --check backend/src backend/tests backend/migrations` | 247 files already formatted. |
+| `uv run --project backend mypy backend/src backend/tests` | Success: no issues found in 236 source files. |
+| `uv run --project backend --env-file backend/.env python -c "from amanah.main import create_app; create_app()"` | Starts; reports `disabled_connectors: [news]`. Local YouTube and Gemini credentials are detected; connector detection is not evidence of a successful Gemini generation. |
+| Read-only official YouTube API preflight through the configured adapter | Connector health `ok`; all five reviewed video IDs expose comment threads. A one-item discovery returned exactly one video without unnecessary comment pagination; a fuller comment check correctly reported omitted replies as a lower-bound coverage warning. No provider content was stored or printed. |
 | OpenAPI enumeration from `create_app().openapi()` | 45 paths; `/healthz` and `/readyz` are the only unauthenticated ones. Every path the frontend live provider calls exists. |
 | `npm --prefix apps/web run verify` | Format check, lint, type check, **345 tests passed**. |
 | `npm --prefix apps/web run build` | Built clean; largest chunk 252 kB, under Vite's 500 kB warning. |
@@ -356,9 +358,11 @@ checked because a test file exists.
 | Running service, `GET /v1/me` with a malformed bearer token | 401 with the safe envelope `AUTHENTICATION_REQUIRED` and a `request_id`; no stack trace, no provider text. |
 | Response headers on `/healthz` | `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `Cache-Control: no-store`. |
 
-Still outstanding for the demo: real provider credentials for `BE-GATE-TEST-07`
-and `BE-GATE-DOC-09`, and the deployed smoke run for `BE-GATE-TEST-09` /
-`B-S23.10`.
+Still outstanding for the demo: production secret handoff and deployed-state
+inventory verification for `BE-GATE-DOC-09`, formal AI-eval acceptance for
+`BE-GATE-TEST-07`, and the deployed smoke run for `BE-GATE-TEST-09` /
+`B-S23.10`. The local YouTube credential and source preflight are no longer
+blockers; a successful live Gemini generation remains a separate provider check.
 
 ### Defects found by running the database gate, 24 August 2026
 

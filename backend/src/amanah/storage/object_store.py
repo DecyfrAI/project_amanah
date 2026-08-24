@@ -130,7 +130,7 @@ def build_object_reader(
 
     Requires the dedicated Storage credential. An earlier version presented
     `SUPABASE_JWT_SECRET` here, but that value is the secret used to *verify*
-    inbound access tokens â€” it is not an access token itself, so Storage
+    inbound access tokens — it is not an access token itself, so Storage
     authenticates nothing with it. The two are deliberately separate settings
     now, and their absence is reported rather than papered over.
     """

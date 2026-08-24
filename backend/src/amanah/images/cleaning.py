@@ -2,15 +2,15 @@
 
 Everything arriving here is hostile input. The filename is attacker-controlled,
 the declared `Content-Type` is attacker-controlled, and the declared length is
-attacker-controlled â€” so none of the three is trusted for anything. The format is
+attacker-controlled — so none of the three is trusted for anything. The format is
 decided by decoding the bytes, and the size limit is enforced while reading
 rather than checked afterwards, because a limit applied after the fact has
 already allocated the memory it was meant to prevent.
 
 The output is always a **re-encode**, never the original bytes passed through.
 That is what makes metadata removal reliable: rather than enumerating the EXIF,
-GPS, XMP, and maker-note tags to strip â€” a list that is wrong the moment a format
-adds one â€” the pixels are drawn onto a fresh image and written out, so anything
+GPS, XMP, and maker-note tags to strip — a list that is wrong the moment a format
+adds one — the pixels are drawn onto a fresh image and written out, so anything
 that was not a pixel is simply absent. It also collapses the polyglot problem: a
 file that is simultaneously a valid GIF and a valid HTML document stops being the
 second one once it has been through a decoder and an encoder.
@@ -178,7 +178,7 @@ def _reencode(payload: bytes, image_format: str) -> tuple[bytes, str, tuple[int,
             opened.load()
             frame = opened.convert("RGBA" if image_format in {"PNG", "WEBP"} else "RGB")
             # A fresh canvas rather than `frame` itself: `convert` may return the
-            # same object with its `info` dict â€” and therefore its metadata â€”
+            # same object with its `info` dict — and therefore its metadata —
             # still attached. Copying raw pixel data across leaves every
             # non-pixel chunk behind without having to enumerate them.
             stripped = Image.frombytes(frame.mode, frame.size, frame.tobytes())

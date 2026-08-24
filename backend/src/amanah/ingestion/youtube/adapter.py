@@ -143,7 +143,14 @@ class YouTubeAdapter(BaseSourceAdapter):
                 if len(references) >= request.item_cap or deferred:
                     break
                 try:
-                    collected = self._collect_seed(client, seed, request, counts, warnings)
+                    collected = self._collect_seed(
+                        client,
+                        seed,
+                        request,
+                        item_cap=min(seed.item_cap, request.item_cap - len(references)),
+                        counts=counts,
+                        warnings=warnings,
+                    )
                 except QuotaDeferredError:
                     deferred = True
                     warnings.append(
@@ -172,10 +179,13 @@ class YouTubeAdapter(BaseSourceAdapter):
         client: YouTubeClient,
         seed: SeedConfig,
         request: DiscoveryRequest,
+        item_cap: int,
         counts: dict[str, int],
         warnings: list[str],
     ) -> list[SourceReference]:
-        video_ids = self._video_ids(client, seed, request)
+        if item_cap <= 0:
+            return []
+        video_ids = self._video_ids(client, seed, request, item_cap=item_cap)
         provenance = _seed_provenance(seed)
         references: list[SourceReference] = []
 
@@ -183,6 +193,8 @@ class YouTubeAdapter(BaseSourceAdapter):
             str(item.get("id")): item for item in client.list_videos(tuple(video_ids)).items
         }
         for video_id in video_ids:
+            if len(references) >= item_cap:
+                break
             record = metadata.get(video_id)
             if record is None:
                 # A seed video that has been removed is a coverage gap, not an
@@ -202,13 +214,28 @@ class YouTubeAdapter(BaseSourceAdapter):
                     seed=provenance,
                 )
             )
-            references.extend(
-                self._comment_references(client, seed, video_id, record, counts, warnings)
-            )
+            remaining = item_cap - len(references)
+            if remaining > 0:
+                references.extend(
+                    self._comment_references(
+                        client,
+                        seed,
+                        video_id,
+                        record,
+                        item_cap=remaining,
+                        counts=counts,
+                        warnings=warnings,
+                    )
+                )
         return references
 
     def _video_ids(
-        self, client: YouTubeClient, seed: SeedConfig, request: DiscoveryRequest
+        self,
+        client: YouTubeClient,
+        seed: SeedConfig,
+        request: DiscoveryRequest,
+        *,
+        item_cap: int,
     ) -> list[str]:
         if seed.entry_kind is SeedEntryKind.seed_video:
             return [seed.provider_reference]
@@ -217,7 +244,7 @@ class YouTubeAdapter(BaseSourceAdapter):
             query=seed.provider_reference,
             published_after=_iso(request.window_start),
             published_before=_iso(request.window_end),
-            page_size=min(seed.item_cap, MAXIMUM_VIDEOS_PER_SEED),
+            page_size=min(seed.item_cap, item_cap, MAXIMUM_VIDEOS_PER_SEED),
             relevance_language=seed.language,
         )
         found: list[str] = []
@@ -236,18 +263,20 @@ class YouTubeAdapter(BaseSourceAdapter):
         seed: SeedConfig,
         video_id: str,
         video: Mapping[str, Any],
+        item_cap: int,
         counts: dict[str, int],
         warnings: list[str],
     ) -> list[SourceReference]:
         provenance = _seed_provenance(seed)
         references: list[SourceReference] = []
         page_token: str | None = None
+        comment_cap = min(item_cap, MAXIMUM_COMMENTS_PER_VIDEO)
 
-        while len(references) < MAXIMUM_COMMENTS_PER_VIDEO:
+        while len(references) < comment_cap:
             try:
                 page = client.list_comment_threads(
                     video_id=video_id,
-                    page_size=min(MAXIMUM_COMMENTS_PER_VIDEO - len(references), 50),
+                    page_size=min(comment_cap - len(references), 50),
                     page_token=page_token,
                 )
             except CommentsDisabledError:
@@ -259,6 +288,8 @@ class YouTubeAdapter(BaseSourceAdapter):
                 return references
 
             for thread in page.items:
+                if len(references) >= comment_cap:
+                    break
                 snippet = thread.get("snippet", {})
                 top_level = snippet.get("topLevelComment", {})
                 comment_id = str(top_level.get("id") or thread.get("id") or "")
@@ -287,7 +318,7 @@ class YouTubeAdapter(BaseSourceAdapter):
                     counts["replies_omitted"] += declared - returned
                 for reply in (thread.get("replies") or {}).get("comments") or []:
                     reply_id = str(reply.get("id") or "")
-                    if not reply_id or len(references) >= MAXIMUM_COMMENTS_PER_VIDEO:
+                    if not reply_id or len(references) >= comment_cap:
                         continue
                     references.append(
                         SourceReference(

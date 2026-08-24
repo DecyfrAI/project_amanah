@@ -12,7 +12,7 @@ like a signed URL and authenticated nothing.
 
 So signing is now a call to the provider's own signing endpoint, and the returned
 token is the provider's. The consequence worth stating: minting a link is I/O and
-can fail, where before it was a pure function that always "succeeded" â€” at
+can fail, where before it was a pure function that always "succeeded" — at
 producing something unusable.
 """
 

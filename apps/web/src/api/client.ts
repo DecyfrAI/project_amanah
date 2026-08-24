@@ -20,6 +20,11 @@ import type {
   ImageUpload,
   ReportDraft,
   ReportDraftRequest,
+  CreateResearchReportRequest,
+  ResearchReport,
+  AppendDecisionRequest,
+  ReviewQueuePage,
+  ReviewTaskDetail,
   ViewerPostList,
 } from './contracts';
 import type { OverviewFilters } from './fixture-derive';
@@ -28,7 +33,6 @@ import type {
   WirePolicyAnalysis,
   WirePreparedReport,
   WireProfile,
-  WireResearchReport,
 } from './wire';
 
 /**
@@ -72,12 +76,6 @@ export interface ReportOutcomeInput {
   outcomeNote?: string;
 }
 
-export interface CreateResearchReportInput {
-  title: string;
-  filters: OverviewFilters;
-  includeAggregateCsv: boolean;
-}
-
 export interface ApiClient {
   getOverview: (filters: OverviewFilters) => Promise<Overview>;
   getFilterOptions: () => Promise<FilterOptions>;
@@ -95,6 +93,9 @@ export interface ApiClient {
   createCapture: (input: CreateCaptureInput) => Promise<DashboardCapture>;
   askAssistant: (input: AssistantAskInput) => Promise<AssistantReply>;
   prepareReportDraft: (input: ReportDraftRequest) => Promise<ReportDraft>;
+  createResearchReport: (input: CreateResearchReportRequest) => Promise<ResearchReport>;
+  /** The frozen aggregate CSV as text, ready to hand to a download. */
+  downloadResearchReportCsv: (report: ResearchReport) => Promise<string>;
   listImageExamples: () => Promise<ImageExampleList>;
   /** Sends one file to the backend, which cleans and stores it (B-S28). */
   uploadImage: (file: File) => Promise<ImageUpload>;
@@ -105,9 +106,10 @@ export interface ApiClient {
   savePreparedReport: (input: PrepareReportInput) => Promise<WirePreparedReport>;
   recordReportOutcome: (reportId: string, input: ReportOutcomeInput) => Promise<WirePreparedReport>;
   listContributions: () => Promise<WireContributionsPage>;
-  createResearchReport: (input: CreateResearchReportInput) => Promise<WireResearchReport>;
-  getResearchReport: (reportId: string) => Promise<WireResearchReport>;
-  downloadResearchReportCsv: (reportId: string) => Promise<Blob>;
+  listReviewTasks: () => Promise<ReviewQueuePage>;
+  /** Take a task under a lease, or fail because another reviewer holds it. */
+  claimReviewTask: (taskId: string) => Promise<ReviewTaskDetail>;
+  appendReviewDecision: (taskId: string, input: AppendDecisionRequest) => Promise<ReviewTaskDetail>;
 }
 
 export const FIXTURE_VIEWER: { id: string; displayName: string } = {
@@ -153,7 +155,7 @@ export const queryKeys = {
   currentUser: ['current-user'] as const,
   contributions: ['contributions'] as const,
   policyAnalysis: (itemId: string) => ['policy-analysis', itemId] as const,
-  researchReport: (reportId: string) => ['research-reports', reportId] as const,
+  reviewTasks: ['review-tasks'] as const,
 };
 
 export type { OverviewFilters };

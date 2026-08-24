@@ -45,6 +45,8 @@ describe('InsightsListPage', () => {
     // tied to any insight. Media may appear only inside the discussion it
     // belongs to.
     expect(screen.queryByRole('heading', { name: 'Image evidence' })).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Reveal image' })).toBeNull();
+    // Named for the controls `SafeImage` actually renders (PA-01). Asserting on
+    // the old 'Reveal image' label would pass whether or not a feed came back.
+    expect(screen.queryByRole('button', { name: /^(Show|Hide) image$/ })).toBeNull();
   });
 });

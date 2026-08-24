@@ -1,13 +1,14 @@
 import { replyFromOverview } from '@/features/ask/ask-reply';
 import { readFixtureSession } from '@/features/auth/session';
+import { buildResearchReport } from '@/features/reports/build-research-report';
 import { validateEvidenceFile } from '@/features/reports/evidence-file';
 import { prepareReportDraft as buildReportDraft } from '@/features/reports/prepare-report-draft';
+import { renderAggregateCsv } from '@/features/reports/research-report-csv';
 import { classifyEvidenceFixture, loadImageExampleList } from './image-classification';
 
 import {
   FIXTURE_VIEWER,
   type ApiClient,
-  type CreateResearchReportInput,
   type ItemSearchFilters,
   type NewsFilters,
   type OverviewFilters,
@@ -21,7 +22,6 @@ import type {
   WirePolicyCandidate,
   WirePreparedReport,
   WireProfile,
-  WireResearchReport,
 } from './wire';
 import { itemMatchesQuery } from './item-search';
 import {
@@ -46,6 +46,13 @@ import {
   ImageUploadSchema,
   ReportDraftRequestSchema,
   ReportDraftSchema,
+  CreateResearchReportRequestSchema,
+  ResearchReportSchema,
+  AppendDecisionRequestSchema,
+  ReviewDecisionEntrySchema,
+  ReviewQueuePageSchema,
+  ReviewTaskDetailSchema,
+  ReviewTaskSchema,
   ViewerPostListSchema,
   type AssistantAskInput,
   type AssistantReply,
@@ -70,6 +77,13 @@ import {
   type ImageUpload,
   type ReportDraft,
   type ReportDraftRequest,
+  type CreateResearchReportRequest,
+  type ResearchReport,
+  type AppendDecisionRequest,
+  type ReviewDecisionEntry,
+  type ReviewQueuePage,
+  type ReviewTask,
+  type ReviewTaskDetail,
   type ViewerPostList,
 } from './contracts';
 import { ApiRequestError } from './errors';
@@ -86,6 +100,7 @@ import discussionsJson from '@/fixtures/discussions.json' with { type: 'json' };
 import insightsJson from '@/fixtures/insights.json' with { type: 'json' };
 import itemsJson from '@/fixtures/items.json' with { type: 'json' };
 import newsJson from '@/fixtures/news.json' with { type: 'json' };
+import reviewTasksJson from '@/fixtures/review-tasks.json' with { type: 'json' };
 
 let insightsCatalog: InsightList = InsightListSchema.parse(insightsJson);
 
@@ -150,7 +165,49 @@ function readFixturePreferences(): Record<string, boolean> {
 }
 
 let preparedReports: WirePreparedReport[] = [];
-let researchReports: WireResearchReport[] = [];
+
+/** Same lease window the service uses, so the two behave alike. */
+const CLAIM_LEASE_MINUTES = 30;
+
+/**
+ * The queue, mutable for the session.
+ *
+ * Claiming and deciding change state here exactly as they would server-side, so
+ * the flow a reviewer practises in fixture mode is the flow they get in live
+ * mode. Decisions accumulate; nothing is ever rewritten in place.
+ */
+const reviewTasks: ReviewTask[] = ReviewTaskSchema.array().parse(reviewTasksJson.items);
+const reviewDecisions = new Map<string, ReviewDecisionEntry[]>();
+const REVIEW_CLASSIFIED_IN_WINDOW = reviewTasksJson.classified_in_window;
+
+function replaceReviewTask(next: ReviewTask): void {
+  const index = reviewTasks.findIndex((task) => task.id === next.id);
+  if (index >= 0) {
+    reviewTasks[index] = next;
+  }
+}
+
+/**
+ * Queue-wide counts.
+ *
+ * Derived from the tasks and the decisions actually recorded, so a figure moves
+ * when a reviewer decides rather than staying a constant that contradicts the
+ * list beneath it.
+ */
+function reviewTotals(): {
+  open: number;
+  decided: number;
+  confirmed: number;
+  classified_in_window: number;
+} {
+  const appended = [...reviewDecisions.values()].flat();
+  return {
+    open: reviewTasks.filter((task) => task.status !== 'completed').length,
+    decided: reviewTasks.filter((task) => task.status === 'completed').length,
+    confirmed: appended.filter((entry) => entry.decision === 'confirmed').length,
+    classified_in_window: REVIEW_CLASSIFIED_IN_WINDOW,
+  };
+}
 
 function seedCatalog(): void {
   discussionCatalog = DiscussionCatalogSchema.parse(discussionsJson).threads.map((thread) =>
@@ -172,11 +229,20 @@ function seedInsights(): void {
   insightsCatalog = InsightListSchema.parse(structuredClone(insightsJson));
 }
 
+function seedReviewQueue(): void {
+  reviewTasks.splice(
+    0,
+    reviewTasks.length,
+    ...ReviewTaskSchema.array().parse(reviewTasksJson.items),
+  );
+  reviewDecisions.clear();
+}
+
 export function resetFixtureProvider(): void {
   seedInsights();
   seedCatalog();
+  seedReviewQueue();
   preparedReports = [];
-  researchReports = [];
   sessionStorage.removeItem(PREFERENCES_KEY);
 }
 
@@ -548,6 +614,120 @@ export const fixtureProvider: ApiClient = {
     return ReportDraftSchema.parse(buildReportDraft(parsed, 'fixture'));
   },
 
+  async createResearchReport(input: CreateResearchReportRequest): Promise<ResearchReport> {
+    const parsed = CreateResearchReportRequestSchema.parse(input);
+    // Read the same Overview the reader was looking at, so the snapshot and the
+    // dashboard it came from cannot disagree.
+    const overview = await fixtureProvider.getOverview({
+      ...(parsed.filters.date_from === undefined ? {} : { from: parsed.filters.date_from }),
+      ...(parsed.filters.date_to === undefined ? {} : { to: parsed.filters.date_to }),
+      platforms: parsed.filters.platforms ?? [],
+      hateTypes: [],
+      severityBands: parsed.filters.severities ?? [],
+      reviewStates: parsed.filters.review_states ?? [],
+    });
+    return ResearchReportSchema.parse(await buildResearchReport(parsed, overview, 'fixture'));
+  },
+
+  async downloadResearchReportCsv(report: ResearchReport): Promise<string> {
+    if (!report.aggregate_csv_available) {
+      throw new ApiRequestError(
+        'Aggregate CSV was not included when this snapshot was generated.',
+        409,
+      );
+    }
+    return renderAggregateCsv(report);
+  },
+
+  async listReviewTasks(): Promise<ReviewQueuePage> {
+    return ReviewQueuePageSchema.parse({
+      // Highest priority first, then oldest, matching the server's queue order.
+      items: reviewTasks.toSorted((left, right) =>
+        left.priority === right.priority
+          ? left.created_at.localeCompare(right.created_at)
+          : right.priority - left.priority,
+      ),
+      next_cursor: null,
+      totals: reviewTotals(),
+    });
+  },
+
+  async claimReviewTask(taskId: string): Promise<ReviewTaskDetail> {
+    const task = reviewTasks.find((candidate) => candidate.id === taskId);
+    if (task === undefined) {
+      throw new ApiRequestError('This review task was not found.', 404);
+    }
+    // A claim is a lease. Re-claiming one you already hold renews it rather than
+    // failing, so a reviewer whose page reloaded does not lose their place.
+    if (
+      task.status === 'claimed' &&
+      task.assigned_to !== null &&
+      task.assigned_to !== FIXTURE_VIEWER.id
+    ) {
+      throw new ApiRequestError('Another reviewer is working on this task.', 409);
+    }
+    if (task.status === 'completed') {
+      throw new ApiRequestError('This task has already been decided.', 409);
+    }
+    const claimed: ReviewTask = {
+      ...task,
+      status: 'claimed',
+      assigned_to: FIXTURE_VIEWER.id,
+      claim_expires_at: new Date(Date.now() + CLAIM_LEASE_MINUTES * 60_000).toISOString(),
+    };
+    replaceReviewTask(claimed);
+    return ReviewTaskDetailSchema.parse({
+      task: claimed,
+      decisions: reviewDecisions.get(taskId) ?? [],
+    });
+  },
+
+  async appendReviewDecision(
+    taskId: string,
+    input: AppendDecisionRequest,
+  ): Promise<ReviewTaskDetail> {
+    const parsed = AppendDecisionRequestSchema.parse(input);
+    const task = reviewTasks.find((candidate) => candidate.id === taskId);
+    if (task === undefined) {
+      throw new ApiRequestError('This review task was not found.', 404);
+    }
+    if (task.status !== 'claimed' || task.assigned_to !== FIXTURE_VIEWER.id) {
+      throw new ApiRequestError('Claim this task before deciding on it.', 409);
+    }
+
+    const moment = new Date().toISOString();
+    // Decisions append. The prediction on the task is left exactly as it was, so
+    // a later reader still sees what the model proposed beside who disagreed.
+    const appended = ReviewDecisionEntrySchema.parse({
+      id: `rve_${crypto.randomUUID().slice(0, 8)}`,
+      review_task_id: taskId,
+      reviewer_id: FIXTURE_VIEWER.id,
+      decision: parsed.decision,
+      corrected_labels: parsed.corrected_labels ?? null,
+      note: parsed.note ?? null,
+      is_training_candidate: parsed.is_training_candidate,
+      created_at: moment,
+    });
+    reviewDecisions.set(taskId, [...(reviewDecisions.get(taskId) ?? []), appended]);
+
+    // `needs_context` returns the task to the queue; every other decision closes
+    // it. The prediction fields are untouched under all of them.
+    const settled = parsed.decision !== 'needs_context';
+    const next: ReviewTask = {
+      ...task,
+      status: settled ? 'completed' : 'open',
+      assigned_to: settled ? task.assigned_to : null,
+      claim_expires_at: null,
+      completed_at: settled ? moment : null,
+    };
+    replaceReviewTask(next);
+
+    return ReviewTaskDetailSchema.parse({
+      task: next,
+      decisions: reviewDecisions.get(taskId) ?? [],
+    });
+  },
+
   async listImageExamples(): Promise<ImageExampleList> {
     return ImageExampleListSchema.parse(loadImageExampleList('fixture'));
   },
@@ -704,115 +884,6 @@ export const fixtureProvider: ApiClient = {
       page: { next_cursor: null, limit: 25 },
       meta: fixtureMeta(),
     };
-  },
-
-  async createResearchReport(input: CreateResearchReportInput): Promise<WireResearchReport> {
-    const overview = await fixtureProvider.getOverview(input.filters);
-    const rateMetric = overview.metrics.find((metric) => metric.id === 'rate');
-    const relevantMetric = overview.metrics.find((metric) => metric.id === 'relevant');
-    const likelyMetric = overview.metrics.find((metric) => metric.id === 'likely-hate');
-    const observedMetric = overview.metrics.find((metric) => metric.id === 'observed');
-    const now = new Date().toISOString();
-    const report: WireResearchReport = {
-      id: `rr_${crypto.randomUUID()}`,
-      user_id: FIXTURE_VIEWER.id,
-      title: input.title,
-      filter_hash: 'f1f1f1f1'.repeat(8),
-      filters: { from: overview.window.from, to: overview.window.to },
-      data_version: 'fixture-collection-1',
-      coverage: {
-        last_success_at: overview.coverage.lastSuccessfulRun,
-        coverage_score: null,
-        data_mode: 'fixture',
-        is_stale: false,
-        warnings: [...overview.coverage.warnings],
-      },
-      metrics: [
-        {
-          key: 'observed_count',
-          value: observedMetric?.value ?? null,
-          numerator: null,
-          denominator: null,
-        },
-        {
-          key: 'muslim_related_count',
-          value: relevantMetric?.value ?? null,
-          numerator: relevantMetric?.numerator ?? null,
-          denominator: relevantMetric?.denominator ?? null,
-        },
-        {
-          key: 'likely_anti_muslim_count',
-          value: likelyMetric?.value ?? null,
-          numerator: likelyMetric?.numerator ?? null,
-          denominator: likelyMetric?.denominator ?? null,
-        },
-        {
-          key: 'likely_anti_muslim_rate',
-          value: rateMetric?.value ?? null,
-          numerator: rateMetric?.numerator ?? null,
-          denominator: rateMetric?.denominator ?? null,
-        },
-      ],
-      findings: [
-        {
-          key: 'monitored_sample_rate',
-          statement:
-            rateMetric?.value === null || rateMetric === undefined
-              ? 'The monitored sample is too small in this window to state a rate.'
-              : `In the monitored sample, ${String(rateMetric.numerator ?? 0)} of ${String(rateMetric.denominator ?? 0)} Muslim-related items were classified as likely anti-Muslim rhetoric.`,
-          citation_ids: ['metric:likely_anti_muslim_rate'],
-        },
-      ],
-      citations: [
-        {
-          id: 'metric:likely_anti_muslim_rate',
-          kind: 'aggregate',
-          label: 'Likely anti-Muslim rate in the monitored sample',
-        },
-      ],
-      methodology_version: 'fixture-methodology-1',
-      methodology_disclosure: {
-        note: 'Fixture snapshot derived from the committed synthetic collection.',
-      },
-      limitations: [
-        'This snapshot describes the monitored sample only, never platform-wide prevalence.',
-        'Classifications are model output; human review may correct them.',
-      ],
-      source_scope: [...overview.coverage.sources],
-      window_start: `${overview.window.from}T00:00:00Z`,
-      window_end: `${overview.window.to}T23:59:59Z`,
-      data_mode: 'fixture',
-      redaction_mode: 'default_redacted',
-      status: 'ready',
-      aggregate_csv_available: input.includeAggregateCsv,
-      created_at: now,
-      completed_at: now,
-    };
-    researchReports = [report, ...researchReports];
-    return structuredClone(report);
-  },
-
-  async getResearchReport(reportId: string): Promise<WireResearchReport> {
-    const report = researchReports.find((entry) => entry.id === reportId);
-    if (report === undefined) {
-      throw new ApiRequestError('This research report was not found.', 404);
-    }
-    return structuredClone(report);
-  },
-
-  async downloadResearchReportCsv(reportId: string): Promise<Blob> {
-    const report = await fixtureProvider.getResearchReport(reportId);
-    if (!report.aggregate_csv_available) {
-      throw new ApiRequestError('This snapshot was created without an aggregate CSV.', 409);
-    }
-    const lines = [
-      'metric,value,numerator,denominator',
-      ...report.metrics.map(
-        (metric) =>
-          `${metric.key},${metric.value === null ? '' : String(metric.value)},${metric.numerator === null ? '' : String(metric.numerator)},${metric.denominator === null ? '' : String(metric.denominator)}`,
-      ),
-    ];
-    return new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8' });
   },
 };
 

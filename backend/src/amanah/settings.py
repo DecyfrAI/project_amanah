@@ -120,7 +120,7 @@ class Settings(BaseSettings):
     # authenticates nothing. Absent means the image catalogue reports itself
     # unavailable rather than serving links that would 401.
     #
-    # Either a new-style `sb_secret_â€¦` API key or a legacy service-role JWT
+    # Either a new-style `sb_secret_…` API key or a legacy service-role JWT
     # works; both are presented the same way. Named for what it is rather than
     # for the legacy key, since Supabase now issues the former by default.
     supabase_storage_secret_key: SecretStr | None = Field(

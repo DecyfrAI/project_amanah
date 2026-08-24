@@ -1,294 +1,306 @@
 import { useCallback, useState, type ChangeEvent, type FormEvent } from 'react';
 
-import { ApiRequestError, type WireResearchReport } from '@/api';
+import { ApiRequestError, type ResearchReport } from '@/api';
+import { Button } from '@/components/ui/Button';
 import { InfoTip } from '@/components/ui/InfoTip';
 import { useDashboardFilters } from '@/features/dashboard/useDashboardFilters';
 
-import { useCreateResearchReport, useDownloadResearchReportCsv } from './useResearchReport';
+import { downloadText } from './report-export';
+import { csvFilename, renderAggregateCsv } from './research-report-csv';
+import { useCreateResearchReport, useDownloadReportCsv } from './useResearchReport';
 
 import styles from './ResearchReportPanel.module.css';
 
-function errorMessage(error: unknown, fallback: string): string {
+const METRIC_LABELS: Record<string, string> = {
+  observed_count: 'Items collected',
+  muslim_related_count: 'Muslim-related items',
+  likely_anti_muslim_count: 'Classified as likely hate',
+  reviewed_count: 'Confirmed by review',
+  likely_anti_muslim_rate: 'Likely hate rate',
+};
+
+function errorMessage(error: unknown): string {
   if (error instanceof ApiRequestError) {
     return error.message;
   }
-  return fallback;
+  return 'The report could not be generated. Try again.';
+}
+
+function formatValue(metric: ResearchReport['metrics'][number]): string {
+  if (metric.value === null) {
+    return 'Not available';
+  }
+  if (metric.key === 'likely_anti_muslim_rate') {
+    return `${(metric.value * 100).toFixed(1)}%`;
+  }
+  return metric.value.toLocaleString();
+}
+
+function formatBasis(metric: ResearchReport['metrics'][number]): string | null {
+  if (metric.numerator === null || metric.denominator === null) {
+    return null;
+  }
+  return `${metric.numerator.toLocaleString()} of ${metric.denominator.toLocaleString()}`;
 }
 
 /**
- * Research-report snapshots (F-S16, completion guide step 7).
+ * Generate an immutable research snapshot and export it.
  *
- * Creation posts the dashboard filters to `POST /v1/research-reports`, which
- * freezes an immutable snapshot server-side. The panel then renders that stored
- * snapshot — its scope, coverage, metrics, findings, citations, methodology
- * version, and limitations — rather than a local illustration. Print styles let
- * the browser's own Save as PDF produce the report artifact.
+ * The scope is the filters already in the address bar, so a report describes the
+ * sample the reader was looking at rather than one re-chosen in a second form
+ * that could drift from it. Once frozen, the figures shown here are the stored
+ * ones: this panel never re-queries to refresh them.
  */
 export function ResearchReportPanel() {
   const { filters } = useDashboardFilters();
   const create = useCreateResearchReport();
-  const download = useDownloadResearchReportCsv();
-
+  const download = useDownloadReportCsv();
   const [title, setTitle] = useState('');
-  const [includeCsv, setIncludeCsv] = useState(true);
-  const [titleError, setTitleError] = useState<string | null>(null);
+  const [report, setReport] = useState<ResearchReport | null>(null);
 
-  const handleTitle = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
+  const handleTitleChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
     setTitle(event.currentTarget.value);
-    setTitleError(null);
   }, []);
 
-  const handleIncludeCsv = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-    setIncludeCsv(event.currentTarget.checked);
-  }, []);
-
-  const handleSubmit = useCallback(
+  const handleGenerate = useCallback(
     (event: FormEvent<HTMLFormElement>): void => {
       event.preventDefault();
       const trimmed = title.trim();
       if (trimmed.length < 3) {
-        setTitleError('Give the report a title of at least three characters.');
         return;
       }
-      if (create.isPending) {
-        return;
-      }
-      create.mutate({ title: trimmed, filters, includeAggregateCsv: includeCsv });
+      create.mutate(
+        {
+          title: trimmed,
+          filters: {
+            ...(filters.from === undefined ? {} : { date_from: filters.from }),
+            ...(filters.to === undefined ? {} : { date_to: filters.to }),
+            ...(filters.platforms === undefined || filters.platforms.length === 0
+              ? {}
+              : { platforms: [...filters.platforms] }),
+            ...(filters.severityBands === undefined || filters.severityBands.length === 0
+              ? {}
+              : { severities: [...filters.severityBands] }),
+            ...(filters.reviewStates === undefined || filters.reviewStates.length === 0
+              ? {}
+              : { review_states: [...filters.reviewStates] }),
+          },
+          metrics: [
+            'observed_count',
+            'muslim_related_count',
+            'likely_anti_muslim_count',
+            'reviewed_count',
+            'likely_anti_muslim_rate',
+          ],
+          findings: ['monitored_sample_rate', 'analysis_coverage'],
+          include_aggregate_csv: true,
+          redaction_mode: 'default_redacted',
+        },
+        { onSuccess: setReport },
+      );
     },
-    [create, filters, includeCsv, title],
+    [create, filters, title],
   );
 
-  const report = create.data;
-
-  const handleDownload = useCallback((): void => {
-    if (report !== undefined) {
-      download.mutate(report);
+  const handleDownloadCsv = useCallback((): void => {
+    if (report === null) {
+      return;
     }
+    download.mutate(report, {
+      onSuccess: (csv) => {
+        downloadText(csvFilename(report), csv, 'text/csv;charset=utf-8');
+      },
+      onError: () => {
+        // The stored snapshot is already in hand, so a transport failure does
+        // not have to cost the reader their export.
+        downloadText(csvFilename(report), renderAggregateCsv(report), 'text/csv;charset=utf-8');
+      },
+    });
   }, [download, report]);
 
   const handlePrint = useCallback((): void => {
     window.print();
   }, []);
 
+  const handleReset = useCallback((): void => {
+    setReport(null);
+    setTitle('');
+    create.reset();
+    download.reset();
+  }, [create, download]);
+
+  const hateTypeNote =
+    (filters.hateTypes?.length ?? 0) > 0
+      ? 'A hate-type selection is active on screen but is not carried into the snapshot: a report can only freeze a scope the service can reproduce.'
+      : null;
+
   return (
-    <section className={styles.card} aria-labelledby="research-report-heading">
+    <section className={styles.panel} aria-labelledby="research-report-heading">
       <div className={styles.headingRow}>
-        <h2 id="research-report-heading" className={styles.sectionHeading}>
+        <h2 id="research-report-heading" className={styles.heading}>
           Research report
         </h2>
         <InfoTip label="Research report">
-          A snapshot freezes the filters, coverage, and figures at the moment it is created, so the
-          report cannot drift from the query behind it. It describes the monitored sample it names,
-          never a whole platform.
+          A frozen claim about a bounded sample. Aggregate only: counts and their denominators,
+          never an item.
         </InfoTip>
       </div>
-      <p className={styles.lead}>
-        Freeze the figures for the filters currently applied on Overview into an immutable snapshot.
-        Aggregate counts and denominators only: no item-level rows leave through this export.
-      </p>
 
-      <form className={styles.form} onSubmit={handleSubmit}>
-        <div className={styles.field}>
-          <label className={styles.label} htmlFor="report-title">
-            Report title
-          </label>
-          <input
-            className={styles.control}
-            id="report-title"
-            name="report-title"
-            type="text"
-            value={title}
-            onChange={handleTitle}
-            maxLength={200}
-            aria-describedby="report-title-hint"
-            aria-invalid={titleError !== null}
-          />
-          <p className={styles.hint} id="report-title-hint">
-            Names the snapshot in your history. The scope below comes from the current filters.
+      {report === null ? (
+        <form className={styles.form} onSubmit={handleGenerate}>
+          <p className={styles.lead}>
+            Freezes the figures for the filters currently applied. Change the window or the filters
+            on Overview first; this report describes whatever scope is in the address bar when you
+            generate it.
           </p>
-          {titleError !== null && (
+
+          <dl className={styles.scope}>
+            <div className={styles.scopeRow}>
+              <dt className={styles.term}>Window</dt>
+              <dd className={styles.value}>
+                {filters.from ?? 'default start'} to {filters.to ?? 'default end'}
+              </dd>
+            </div>
+            <div className={styles.scopeRow}>
+              <dt className={styles.term}>Platforms</dt>
+              <dd className={styles.value}>
+                {(filters.platforms?.length ?? 0) === 0
+                  ? 'All configured platforms'
+                  : filters.platforms?.join(', ')}
+              </dd>
+            </div>
+            <div className={styles.scopeRow}>
+              <dt className={styles.term}>Severity</dt>
+              <dd className={styles.value}>
+                {(filters.severityBands?.length ?? 0) === 0
+                  ? 'All bands'
+                  : filters.severityBands?.join(', ')}
+              </dd>
+            </div>
+            <div className={styles.scopeRow}>
+              <dt className={styles.term}>Review state</dt>
+              <dd className={styles.value}>
+                {(filters.reviewStates?.length ?? 0) === 0
+                  ? 'All states'
+                  : filters.reviewStates?.join(', ')}
+              </dd>
+            </div>
+          </dl>
+
+          {hateTypeNote !== null && <p className={styles.note}>{hateTypeNote}</p>}
+
+          <div className={styles.field}>
+            <label className={styles.label} htmlFor="report-title">
+              Report title
+            </label>
+            <input
+              id="report-title"
+              className={styles.control}
+              value={title}
+              onChange={handleTitleChange}
+              minLength={3}
+              maxLength={200}
+              placeholder="Anti-Muslim hate in the monitored sample, August 2026"
+              required
+            />
+          </div>
+
+          {create.isError && (
             <p className={styles.error} role="alert">
-              {titleError}
+              {errorMessage(create.error)}
             </p>
           )}
-        </div>
 
-        <div className={styles.checkRow}>
-          <input
-            id="include-csv"
-            name="include-csv"
-            type="checkbox"
-            checked={includeCsv}
-            onChange={handleIncludeCsv}
-          />
-          <label className={styles.label} htmlFor="include-csv">
-            Include an aggregate CSV
-          </label>
-        </div>
-
-        <p className={styles.hint}>
-          Scope: {filters.from ?? 'earliest collected'} to {filters.to ?? 'latest collected'}
-          {(filters.platforms ?? []).length > 0 && `, ${(filters.platforms ?? []).join(', ')}`}.
-        </p>
-
-        <button type="submit" className={styles.primaryAction} disabled={create.isPending}>
-          {create.isPending ? 'Freezing snapshot…' : 'Generate report'}
-        </button>
-        {create.isError && (
-          <p className={styles.error} role="alert">
-            {errorMessage(create.error, 'The report could not be created. Try again.')}
-          </p>
-        )}
-      </form>
-
-      {report !== undefined && (
-        <ReportSnapshotView
-          report={report}
-          onDownload={handleDownload}
-          onPrint={handlePrint}
-          isDownloading={download.isPending}
-          downloadError={
-            download.isError
-              ? errorMessage(download.error, 'The CSV could not be downloaded. Try again.')
-              : null
-          }
-        />
-      )}
-    </section>
-  );
-}
-
-interface ReportSnapshotViewProps {
-  readonly report: WireResearchReport;
-  readonly onDownload: () => void;
-  readonly onPrint: () => void;
-  readonly isDownloading: boolean;
-  readonly downloadError: string | null;
-}
-
-function ReportSnapshotView({
-  report,
-  onDownload,
-  onPrint,
-  isDownloading,
-  downloadError,
-}: ReportSnapshotViewProps) {
-  return (
-    <article className={styles.snapshot} aria-labelledby={`${report.id}-title`}>
-      <h3 className={styles.snapshotTitle} id={`${report.id}-title`}>
-        {report.title}
-      </h3>
-
-      <dl className={styles.facts}>
-        <div className={styles.fact}>
-          <dt className={styles.term}>Window</dt>
-          <dd className={styles.value}>
-            {report.window_start.slice(0, 10)} to {report.window_end.slice(0, 10)}
-          </dd>
-        </div>
-        <div className={styles.fact}>
-          <dt className={styles.term}>Sources in scope</dt>
-          <dd className={styles.value}>
-            {report.source_scope.length === 0 ? 'None recorded' : report.source_scope.join(', ')}
-          </dd>
-        </div>
-        <div className={styles.fact}>
-          <dt className={styles.term}>Data mode</dt>
-          <dd className={styles.value}>{report.data_mode}</dd>
-        </div>
-        <div className={styles.fact}>
-          <dt className={styles.term}>Coverage</dt>
-          <dd className={styles.value}>
-            {report.coverage.last_success_at === null
-              ? 'No successful collection recorded'
-              : `Last successful run ${report.coverage.last_success_at.slice(0, 10)}`}
-            {report.coverage.is_stale && ' · stale'}
-          </dd>
-        </div>
-        <div className={styles.fact}>
-          <dt className={styles.term}>Methodology version</dt>
-          <dd className={styles.value}>{report.methodology_version}</dd>
-        </div>
-        <div className={styles.fact}>
-          <dt className={styles.term}>Reference</dt>
-          <dd className={styles.value}>{report.id}</dd>
-        </div>
-      </dl>
-
-      <h4 className={styles.label}>Figures</h4>
-      <dl className={styles.facts}>
-        {report.metrics.map((metric) => (
-          <div className={styles.fact} key={metric.key}>
-            <dt className={styles.term}>{metric.key.replaceAll('_', ' ')}</dt>
-            <dd className={styles.value}>
-              {metric.value === null ? 'Not available in this window' : metric.value}
-              {metric.numerator !== null &&
-                metric.denominator !== null &&
-                ` (${metric.numerator} of ${metric.denominator})`}
-            </dd>
+          <Button variant="primary" type="submit" disabled={create.isPending}>
+            {create.isPending ? 'Freezing figures…' : 'Generate report'}
+          </Button>
+        </form>
+      ) : (
+        <div className={styles.result}>
+          <div className={styles.resultHead}>
+            <h3 className={styles.resultTitle}>{report.title}</h3>
+            <button type="button" className={styles.reset} onClick={handleReset}>
+              New report
+            </button>
           </div>
-        ))}
-      </dl>
 
-      {report.findings.length > 0 && (
-        <>
-          <h4 className={styles.label}>Findings</h4>
-          <ul className={styles.list}>
-            {report.findings.map((finding) => (
-              <li key={finding.key}>{finding.statement}</li>
-            ))}
-          </ul>
-        </>
-      )}
+          <p className={styles.frozen}>
+            Frozen {new Date(report.completed_at).toLocaleString()}. Reference{' '}
+            <span className={styles.mono}>{report.filter_hash.slice(0, 12)}</span>. These figures do
+            not change when the data behind them does.
+          </p>
 
-      {report.citations.length > 0 && (
-        <>
-          <h4 className={styles.label}>Citations</h4>
-          <ul className={styles.list}>
-            {report.citations.map((citation) => (
-              <li key={citation.id}>
-                {citation.label} ({citation.kind})
+          <dl className={styles.scope}>
+            <div className={styles.scopeRow}>
+              <dt className={styles.term}>Window frozen</dt>
+              <dd className={styles.value}>
+                {report.window_start} to {report.window_end}
+              </dd>
+            </div>
+            <div className={styles.scopeRow}>
+              <dt className={styles.term}>Sources</dt>
+              <dd className={styles.value}>
+                {report.source_scope.length === 0
+                  ? 'None recorded'
+                  : report.source_scope.join(', ')}
+              </dd>
+            </div>
+          </dl>
+
+          {(report.window_start !== (filters.from ?? report.window_start) ||
+            report.window_end !== (filters.to ?? report.window_end)) && (
+            <p className={styles.note}>
+              The frozen window is narrower than the one requested, because collection does not
+              cover the whole range. The report describes the days that exist, not the days asked
+              for.
+            </p>
+          )}
+
+          <ul className={styles.metrics}>
+            {report.metrics.map((metric) => (
+              <li key={metric.key} className={styles.metric}>
+                <p className={styles.metricLabel}>{METRIC_LABELS[metric.key] ?? metric.key}</p>
+                <p className={styles.metricValue}>{formatValue(metric)}</p>
+                {formatBasis(metric) !== null && (
+                  <p className={styles.metricBasis}>{formatBasis(metric)}</p>
+                )}
               </li>
             ))}
           </ul>
-        </>
-      )}
 
-      {report.limitations.length > 0 && (
-        <>
-          <h4 className={styles.label}>Limitations</h4>
-          <ul className={styles.list}>
-            {report.limitations.map((limitation) => (
-              <li key={limitation}>{limitation}</li>
+          <ul className={styles.findings}>
+            {report.findings.map((finding) => (
+              <li key={finding.key} className={styles.finding}>
+                {finding.statement}
+              </li>
             ))}
           </ul>
-        </>
-      )}
 
-      <div className={styles.actions}>
-        <button
-          type="button"
-          className={styles.action}
-          onClick={onDownload}
-          disabled={!report.aggregate_csv_available || isDownloading}
-        >
-          {isDownloading ? 'Preparing CSV…' : 'Download aggregate CSV'}
-        </button>
-        <button type="button" className={styles.action} onClick={onPrint}>
-          Print or save as PDF
-        </button>
-      </div>
-      {!report.aggregate_csv_available && (
-        <p className={styles.pending}>
-          This snapshot was created without an aggregate CSV. Create another with the CSV option
-          selected to export one.
-        </p>
+          <section className={styles.limits} aria-labelledby="report-limits-heading">
+            <h4 id="report-limits-heading" className={styles.limitsHeading}>
+              Limitations
+            </h4>
+            <ul className={styles.limitList}>
+              {report.limitations.map((limitation) => (
+                <li key={limitation}>{limitation}</li>
+              ))}
+            </ul>
+          </section>
+
+          <div className={styles.actions}>
+            <Button variant="primary" type="button" onClick={handleDownloadCsv}>
+              {download.isPending ? 'Preparing CSV…' : 'Download aggregate CSV'}
+            </Button>
+            <button type="button" className={styles.action} onClick={handlePrint}>
+              Print or save as PDF
+            </button>
+          </div>
+          <p className={styles.exportNote}>
+            The CSV carries counts and denominators only. Item-level export needs elevated
+            permission and is not part of this view.
+          </p>
+        </div>
       )}
-      {downloadError !== null && (
-        <p className={styles.error} role="alert">
-          {downloadError}
-        </p>
-      )}
-    </article>
+    </section>
   );
 }

@@ -1,6 +1,5 @@
-﻿import {
+import {
   type ApiClient,
-  type CreateResearchReportInput,
   type ItemSearchFilters,
   type NewsFilters,
   type OverviewFilters,
@@ -16,6 +15,12 @@ import {
   NewsListSchema,
   EvidenceClassifyRequestSchema,
   ReportDraftRequestSchema,
+  CreateResearchReportRequestSchema,
+  ResearchReportSchema,
+  AppendDecisionRequestSchema,
+  ReviewQueuePageSchema,
+  ReviewTaskDetailSchema,
+  ReviewTaskSchema,
   type AssistantAskInput,
   type AssistantReply,
   type CreateCaptureInput,
@@ -41,6 +46,11 @@ import {
   type ImageUpload as ImageUploadResult,
   type ReportDraft,
   type ReportDraftRequest,
+  type CreateResearchReportRequest,
+  type ResearchReport,
+  type AppendDecisionRequest,
+  type ReviewQueuePage,
+  type ReviewTaskDetail,
   type ViewerPostList,
 } from './contracts';
 import { readApiBaseUrl } from './env';
@@ -66,7 +76,6 @@ import {
   WirePolicyAnalysisSchema,
   WirePostResponseSchema,
   WirePreparedReportResponseSchema,
-  WireResearchReportResponseSchema,
   WireViewerPostsPageSchema,
   type WireContributionsPage,
   type WireDashboardResponse,
@@ -76,13 +85,12 @@ import {
   type WirePolicyAnalysis,
   type WirePreparedReport,
   type WireProfile,
-  type WireResearchReport,
 } from './wire';
 
 /**
  * The live provider: authenticated requests to the deployed FastAPI service.
  *
- * Every request carries the Supabase access token as a bearer header â€” there is
+ * Every request carries the Supabase access token as a bearer header — there is
  * no unauthenticated `/v1` route (spec FR-HOME-006). Responses are validated
  * against the backend wire contracts in `wire.ts` and then mapped into the view
  * models the components consume. A failure here surfaces as an
@@ -131,7 +139,7 @@ async function request(path: string, init?: RequestInit): Promise<Response> {
   } catch (error) {
     if (error instanceof DOMException && error.name === 'TimeoutError') {
       throw new ApiRequestError(
-        'The live service did not answer in time. It may be waking up â€” try again.',
+        'The live service did not answer in time. It may be waking up — try again.',
         408,
       );
     }
@@ -166,7 +174,7 @@ async function requestJson(path: string, init?: RequestInit): Promise<unknown> {
 
 // -- filter translation -----------------------------------------------------
 
-/** `YYYY-MM-DD` â†’ an aware UTC instant at the start or end of that day. */
+/** `YYYY-MM-DD` → an aware UTC instant at the start or end of that day. */
 function toUtcInstant(date: string, boundary: 'start' | 'end'): string {
   return boundary === 'start' ? `${date}T00:00:00Z` : `${date}T23:59:59Z`;
 }
@@ -232,7 +240,7 @@ function newsQuery(filters: NewsFilters): string {
   return query === '' ? '' : `?${query}`;
 }
 
-// -- dashboard â†’ Overview view model ----------------------------------------
+// -- dashboard → Overview view model ----------------------------------------
 
 function dateOnly(instant: string): string {
   return instant.slice(0, 10);
@@ -375,7 +383,7 @@ function toOverview(wire: WireDashboardResponse, filters: OverviewFilters): Over
   };
 }
 
-// -- items â†’ Explorer view model ---------------------------------------------
+// -- items → Explorer view model ---------------------------------------------
 
 function toExplorerItem(wire: WireItemSummary): ExplorerItem {
   return {
@@ -413,7 +421,7 @@ function toExplorerItem(wire: WireItemSummary): ExplorerItem {
   };
 }
 
-// -- insights â†’ view model ----------------------------------------------------
+// -- insights → view model ----------------------------------------------------
 
 function toInsight(wire: WireInsightSummary): Insight {
   return {
@@ -711,13 +719,89 @@ export const liveProvider: ApiClient = {
 
   async prepareReportDraft(input: ReportDraftRequest): Promise<ReportDraft> {
     ReportDraftRequestSchema.parse(input);
-    // The live path is the policy-catalog flow (analyzePolicies â†’
+    // The live path is the policy-catalog flow (analyzePolicies →
     // savePreparedReport). The freeform email-style draft remains a declared
     // fixture rehearsal, so this surface is hidden outside fixture mode.
     throw new ApiRequestError(
       'The live service prepares reports through the policy-catalog flow. Select an item and analyse its policies instead.',
       501,
     );
+  },
+
+  /**
+   * Freeze a snapshot server-side. The response carries the report nested under
+   * `report`, alongside the standard response meta.
+   */
+  async createResearchReport(input: CreateResearchReportRequest): Promise<ResearchReport> {
+    const body = CreateResearchReportRequestSchema.parse(input);
+    const payload = await requestJson('/v1/research-reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return ResearchReportSchema.parse((payload as { report: unknown }).report);
+  },
+
+  /**
+   * Fetch the server's own CSV rendering rather than re-deriving it here, so the
+   * bytes a reader receives are the ones the service audited handing out.
+   *
+   * Goes through `request` rather than a bare `fetch`: every `/v1` route needs a
+   * bearer token, and this one is no exception — an unauthenticated download
+   * would simply `401`. The shared helper also maps a `409` onto the
+   * "no CSV in this snapshot" message the panel already handles.
+   */
+  async downloadResearchReportCsv(report: ResearchReport): Promise<string> {
+    const response = await request(`/v1/research-reports/${report.id}/summary.csv`, {
+      headers: { Accept: 'text/csv' },
+    });
+    return response.text();
+  },
+
+  /**
+   * The reviewer queue.
+   *
+   * The service returns a cursor page of tasks and no queue-wide totals, so the
+   * counts are derived from the page rather than invented. `classified_in_window`
+   * has no live source yet and is reported as zero, which the queue reads as
+   * "unknown" rather than as a real denominator.
+   */
+  async listReviewTasks(): Promise<ReviewQueuePage> {
+    const payload = (await requestJson('/v1/review/tasks')) as {
+      items: unknown[];
+      page: { next_cursor: string | null };
+    };
+    const items = ReviewTaskSchema.array().parse(payload.items);
+    return ReviewQueuePageSchema.parse({
+      items,
+      next_cursor: payload.page.next_cursor,
+      totals: {
+        open: items.filter((task) => task.status !== 'completed').length,
+        decided: items.filter((task) => task.status === 'completed').length,
+        confirmed: 0,
+        classified_in_window: 0,
+      },
+    });
+  },
+
+  async claimReviewTask(taskId: string): Promise<ReviewTaskDetail> {
+    const payload = await requestJson(`/v1/review/tasks/${taskId}/claim`, { method: 'POST' });
+    return ReviewTaskDetailSchema.parse(payload);
+  },
+
+  /**
+   * Append a decision, then re-read the task so the caller receives the full
+   * decision history rather than only the row just written.
+   */
+  async appendReviewDecision(
+    taskId: string,
+    input: AppendDecisionRequest,
+  ): Promise<ReviewTaskDetail> {
+    const body = AppendDecisionRequestSchema.parse(input);
+    await requestJson(`/v1/review/tasks/${taskId}/decisions`, {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return ReviewTaskDetailSchema.parse(await requestJson(`/v1/review/tasks/${taskId}`));
   },
 
   async listImageExamples(): Promise<ImageExampleList> {
@@ -866,54 +950,12 @@ export const liveProvider: ApiClient = {
   async listContributions(): Promise<WireContributionsPage> {
     return WireContributionsPageSchema.parse(await requestJson('/v1/me/contributions'));
   },
-
-  async createResearchReport(input: CreateResearchReportInput): Promise<WireResearchReport> {
-    const filters: Record<string, unknown> = {};
-    if (input.filters.from !== undefined) {
-      filters.date_from = toUtcInstant(input.filters.from, 'start');
-    }
-    if (input.filters.to !== undefined) {
-      filters.date_to = toUtcInstant(input.filters.to, 'end');
-    }
-    if (input.filters.platforms !== undefined && input.filters.platforms.length > 0) {
-      filters.platforms = input.filters.platforms;
-    }
-    if (input.filters.severityBands !== undefined && input.filters.severityBands.length > 0) {
-      filters.severities = input.filters.severityBands.map((band) => Number(band));
-    }
-    if (input.filters.reviewStates !== undefined && input.filters.reviewStates.length > 0) {
-      filters.review_states = input.filters.reviewStates;
-    }
-    const wire = WireResearchReportResponseSchema.parse(
-      await requestJson('/v1/research-reports', {
-        method: 'POST',
-        body: JSON.stringify({
-          title: input.title,
-          filters,
-          include_aggregate_csv: input.includeAggregateCsv,
-        }),
-      }),
-    );
-    return wire.report;
-  },
-
-  async getResearchReport(reportId: string): Promise<WireResearchReport> {
-    const wire = WireResearchReportResponseSchema.parse(
-      await requestJson(`/v1/research-reports/${reportId}`),
-    );
-    return wire.report;
-  },
-
-  async downloadResearchReportCsv(reportId: string): Promise<Blob> {
-    const response = await request(`/v1/research-reports/${reportId}/summary.csv`);
-    return response.blob();
-  },
 };
 
 /**
  * A stable hex digest of the Explorer state a figure was read under.
  *
- * The backend requires an 8â€“64 char hex `filter_hash`; the view layer carries
+ * The backend requires an 8–64 char hex `filter_hash`; the view layer carries
  * the href itself. FNV-1a over the href is enough: this identifies a filter
  * state, it is not a security control.
  */

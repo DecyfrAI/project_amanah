@@ -6,6 +6,16 @@ All notable project changes are documented here using the Keep a Changelog struc
 
 ### Added
 
+- **Live YouTube demo catalogue activation (B-S10).** Five product-owner-approved
+  video IDs from the project seed registry now run through the official Data API:
+  four enriched discussion seeds and one counterspeech/control seed. Every seed
+  was live-preflighted, is capped at 100 items, carries stable sampling
+  provenance, and remains disabled at runtime when `YOUTUBE_API_KEY` is missing.
+  The adapter applies the remaining run cap and the per-seed cap before comment
+  pagination, preventing a small dry run from spending quota on discarded rows.
+  Adding a key does not authorize arbitrary videos, queries, or scraping, and
+  this purposive hackathon sample cannot support YouTube-wide prevalence claims.
+
 - **Authenticated image upload (B-S28).** `POST /v1/image-uploads` takes one multipart image,
   and `POST /v1/image-classifications` now accepts either a catalogue `example_id` or an
   `upload_id` — exactly one, enforced by a check constraint so "whose image is this?" always
@@ -422,4 +432,3 @@ All notable project changes are documented here using the Keep a Changelog struc
   connection string is configured, so a configured-but-unreachable database is caught by
   readiness rather than by the first product request.
 - Limited anonymous product access to the marketing and authentication-entry surfaces. Dashboard, content, methodology, resources, reports, contributions, reviewer/admin views, and all `/v1` product endpoints now require authentication in the governing specification and implementation plans.
-

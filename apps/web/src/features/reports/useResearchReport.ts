@@ -1,52 +1,26 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, type UseMutationResult } from '@tanstack/react-query';
 
-import {
-  apiClient,
-  queryKeys,
-  type CreateResearchReportInput,
-  type WireResearchReport,
-} from '@/api';
+import { apiClient, type CreateResearchReportRequest, type ResearchReport } from '@/api';
 
 /**
- * Creates one immutable research-report snapshot (`POST /v1/research-reports`).
+ * Freeze a research-report snapshot.
  *
- * The snapshot is frozen server-side against the filters sent with it, so the
- * report cannot drift from the query behind it. A failure surfaces to the page;
- * nothing here substitutes a fixture snapshot.
+ * Deliberately not a query: generating a report is an action that records an
+ * audit event server-side, so it must not be retried or refetched on a window
+ * focus. The snapshot it returns is immutable.
  */
-export function useCreateResearchReport() {
-  const queryClient = useQueryClient();
-
+export function useCreateResearchReport(): UseMutationResult<
+  ResearchReport,
+  Error,
+  CreateResearchReportRequest
+> {
   return useMutation({
-    mutationFn: (input: CreateResearchReportInput) => apiClient.createResearchReport(input),
-    onSuccess: (report: WireResearchReport): void => {
-      queryClient.setQueryData(queryKeys.researchReport(report.id), report);
-    },
+    mutationFn: (input: CreateResearchReportRequest) => apiClient.createResearchReport(input),
   });
 }
 
-/**
- * Downloads the aggregate CSV for a stored snapshot.
- *
- * Aggregate counts and denominators only — never item-level rows. The browser
- * saves the blob the authenticated API returned; the URL is revoked straight
- * after so a signed download link does not linger in the document.
- */
-export function useDownloadResearchReportCsv() {
+export function useDownloadReportCsv(): UseMutationResult<string, Error, ResearchReport> {
   return useMutation({
-    mutationFn: async (report: WireResearchReport): Promise<void> => {
-      const blob = await apiClient.downloadResearchReportCsv(report.id);
-      const href = URL.createObjectURL(blob);
-      try {
-        const link = document.createElement('a');
-        link.href = href;
-        link.download = `research-report-${report.id}.csv`;
-        document.body.append(link);
-        link.click();
-        link.remove();
-      } finally {
-        URL.revokeObjectURL(href);
-      }
-    },
+    mutationFn: (report: ResearchReport) => apiClient.downloadResearchReportCsv(report),
   });
 }

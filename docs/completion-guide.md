@@ -612,7 +612,7 @@ frontend `F-S18`–`F-S20`.
 - [ ] Implement the persisted global image-display preference and per-image override from PA-01.
 - [ ] Remove the unscoped Image Evidence section from the Insights list under PA-02.
 - [ ] Replace the fixed nine-second entry hold with request-driven readiness under PA-03.
-- [ ] Add the explicit Overview â†’ created insight â†’ all Insights navigation under PA-04.
+- [ ] Add the explicit Overview → created insight → all Insights navigation under PA-04.
 - [ ] Implement the approved reply/attachment contract on both viewer and machine-generated insights under PA-05.
 - [ ] Create and verify the reviewer-focused root README and full-stack deployment documentation under PA-06.
 - [ ] Update API contracts, migrations when explicitly authorized, OpenAPI, tests,
