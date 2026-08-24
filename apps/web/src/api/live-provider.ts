@@ -15,6 +15,8 @@ import {
   OverviewSchema,
   EvidenceClassifyRequestSchema,
   ReportDraftRequestSchema,
+  CreateResearchReportRequestSchema,
+  ResearchReportSchema,
   ViewerPostListSchema,
   type AssistantAskInput,
   type AssistantReply,
@@ -35,6 +37,8 @@ import {
   type ImageExampleList,
   type ReportDraft,
   type ReportDraftRequest,
+  type CreateResearchReportRequest,
+  type ResearchReport,
   type ViewerPostList,
 } from './contracts';
 import { readApiBaseUrl } from './env';
@@ -202,6 +206,39 @@ export const liveProvider: ApiClient = {
       'The live service cannot prepare a report draft yet. Platform addresses come from a backend allow-list that is not connected. Use fixture mode to practise this flow.',
       501,
     );
+  },
+
+  /**
+   * Freeze a snapshot server-side. The response carries the report nested under
+   * `report`, alongside the standard response meta.
+   */
+  async createResearchReport(input: CreateResearchReportRequest): Promise<ResearchReport> {
+    const body = CreateResearchReportRequestSchema.parse(input);
+    const payload = await requestJson('/v1/research-reports', {
+      method: 'POST',
+      body: JSON.stringify(body),
+    });
+    return ResearchReportSchema.parse((payload as { report: unknown }).report);
+  },
+
+  /**
+   * Fetch the server's own CSV rendering rather than re-deriving it here, so the
+   * bytes a reader receives are the ones the service audited handing out.
+   */
+  async downloadResearchReportCsv(report: ResearchReport): Promise<string> {
+    const response = await fetch(
+      `${readApiBaseUrl()}/v1/research-reports/${report.id}/summary.csv`,
+      { headers: { Accept: 'text/csv' } },
+    );
+    if (!response.ok) {
+      throw new ApiRequestError(
+        response.status === 409
+          ? 'Aggregate CSV was not included when this snapshot was generated.'
+          : 'The live service could not produce the aggregate CSV.',
+        response.status,
+      );
+    }
+    return response.text();
   },
 
   async listImageExamples(): Promise<ImageExampleList> {

@@ -1,6 +1,8 @@
 import { replyFromOverview } from '@/features/ask/ask-reply';
 import { readFixtureSession } from '@/features/auth/session';
+import { buildResearchReport } from '@/features/reports/build-research-report';
 import { prepareReportDraft as buildReportDraft } from '@/features/reports/prepare-report-draft';
+import { renderAggregateCsv } from '@/features/reports/research-report-csv';
 import { classifyEvidenceFixture, loadImageExampleList } from './image-classification';
 
 import { FIXTURE_VIEWER, type ApiClient, type NewsFilters, type OverviewFilters } from './client';
@@ -25,6 +27,8 @@ import {
   ImageExampleListSchema,
   ReportDraftRequestSchema,
   ReportDraftSchema,
+  CreateResearchReportRequestSchema,
+  ResearchReportSchema,
   ViewerPostListSchema,
   type AssistantAskInput,
   type AssistantReply,
@@ -47,6 +51,8 @@ import {
   type ImageExampleList,
   type ReportDraft,
   type ReportDraftRequest,
+  type CreateResearchReportRequest,
+  type ResearchReport,
   type ViewerPostList,
 } from './contracts';
 import { ApiRequestError } from './errors';
@@ -450,6 +456,31 @@ export const fixtureProvider: ApiClient = {
   async prepareReportDraft(input: ReportDraftRequest): Promise<ReportDraft> {
     const parsed = ReportDraftRequestSchema.parse(input);
     return ReportDraftSchema.parse(buildReportDraft(parsed, 'fixture'));
+  },
+
+  async createResearchReport(input: CreateResearchReportRequest): Promise<ResearchReport> {
+    const parsed = CreateResearchReportRequestSchema.parse(input);
+    // Read the same Overview the reader was looking at, so the snapshot and the
+    // dashboard it came from cannot disagree.
+    const overview = await fixtureProvider.getOverview({
+      ...(parsed.filters.date_from === undefined ? {} : { from: parsed.filters.date_from }),
+      ...(parsed.filters.date_to === undefined ? {} : { to: parsed.filters.date_to }),
+      platforms: parsed.filters.platforms ?? [],
+      hateTypes: [],
+      severityBands: parsed.filters.severities ?? [],
+      reviewStates: parsed.filters.review_states ?? [],
+    });
+    return ResearchReportSchema.parse(await buildResearchReport(parsed, overview, 'fixture'));
+  },
+
+  async downloadResearchReportCsv(report: ResearchReport): Promise<string> {
+    if (!report.aggregate_csv_available) {
+      throw new ApiRequestError(
+        'Aggregate CSV was not included when this snapshot was generated.',
+        409,
+      );
+    }
+    return renderAggregateCsv(report);
   },
 
   async listImageExamples(): Promise<ImageExampleList> {

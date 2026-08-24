@@ -18,6 +18,8 @@ import type {
   ImageExampleList,
   ReportDraft,
   ReportDraftRequest,
+  CreateResearchReportRequest,
+  ResearchReport,
   ViewerPostList,
 } from './contracts';
 import type { OverviewFilters } from './fixture-derive';
@@ -51,6 +53,9 @@ export interface ApiClient {
   createCapture: (input: CreateCaptureInput) => Promise<DashboardCapture>;
   askAssistant: (input: AssistantAskInput) => Promise<AssistantReply>;
   prepareReportDraft: (input: ReportDraftRequest) => Promise<ReportDraft>;
+  createResearchReport: (input: CreateResearchReportRequest) => Promise<ResearchReport>;
+  /** The frozen aggregate CSV as text, ready to hand to a download. */
+  downloadResearchReportCsv: (report: ResearchReport) => Promise<string>;
   listImageExamples: () => Promise<ImageExampleList>;
   classifyEvidence: (input: EvidenceClassifyRequest) => Promise<ImageClassification>;
 }
