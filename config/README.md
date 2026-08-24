@@ -1,13 +1,16 @@
-# Reviewed collection configuration
+# Reviewed collection and policy configuration
 
-These two files decide what this product is allowed to collect from. Nothing else
-does. A source that is absent here cannot run, and a seed that is absent — or
-present but not `approved` — cannot run either.
+These files decide what this product is allowed to collect from, and which
+platform rules the reporting assistant may offer. Nothing else does. A source
+that is absent here cannot run, a seed that is absent — or present but not
+`approved` — cannot run either, and a policy that is not `published` here is
+never shown to a user.
 
 | File | Holds |
 |---|---|
 | `sources.example.yml` | Every configured origin of content: the fixture source, YouTube, user submissions, the single controlled open-datapack row, and each reviewed news outlet |
 | `source-seeds.example.yml` | Every feed, query, or seed a source may actually collect from, with its approval and sampling provenance |
+| `platform-policies.yml` | The reviewed platform rules the reporting assistant may offer, each with its official link, catalogue version, review date, and reporting channel (FR-TOS-010) |
 
 They are named `.example.yml` to match the repository layout, but they are the
 real, reviewed configuration and are loaded directly. They contain **no secrets**:

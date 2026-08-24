@@ -391,6 +391,19 @@ class PreparedReportStatus(StrEnum):
     closed = "closed"
 
 
+class ReportRecipientKind(StrEnum):
+    """Where a prepared report is meant to go (FR-TOS-010, spec v2.2).
+
+    `official_form` is the default: the platform runs a reporting form and the
+    user submits there themselves. `allowlist_email` covers a platform with no
+    form, where the product drafts an email to a reviewer-approved address. The
+    product never sends either one, so neither value claims delivery.
+    """
+
+    official_form = "official_form"
+    allowlist_email = "allowlist_email"
+
+
 class PreparedReportOutcome(StrEnum):
     """Outcome the user recorded after reporting to the platform themselves."""
 
@@ -414,3 +427,14 @@ class RedactionMode(StrEnum):
 
     default_redacted = "default_redacted"
     aggregate_only = "aggregate_only"
+
+
+class ReactionKind(StrEnum):
+    """The two reactions a discussion note may carry (ADR 0004).
+
+    They count on a post and nothing else. There is deliberately no reaction that
+    ranks an author, and no aggregate of these is ever computed per person.
+    """
+
+    useful = "useful"
+    needs_context = "needs_context"

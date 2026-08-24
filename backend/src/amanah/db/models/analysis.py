@@ -208,7 +208,13 @@ class ReviewEvent(Base):
     )
     reviewer_id: Mapped[UuidColumn] = mapped_column(nullable=False)
     decision: Mapped[ReviewDecision] = mapped_column(enum_column(ReviewDecision), nullable=False)
-    corrected_labels: Mapped[dict[str, object] | None] = mapped_column(JSONB)
+    corrected_labels: Mapped[dict[str, object] | None] = mapped_column(
+        # `none_as_null` so an absent value is SQL `NULL` rather than a JSON
+        # `null`. The check constraint above keys off `IS NOT NULL`, and a JSON
+        # `null` satisfies that — which would make every non-correction fail to
+        # insert.
+        JSONB(none_as_null=True)
+    )
     note: Mapped[str | None] = mapped_column(Text)
     is_training_candidate: Mapped[bool] = mapped_column(
         nullable=False,

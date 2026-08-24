@@ -29,6 +29,7 @@ from sqlalchemy.orm import Session
 
 from amanah.canonical.encryption import ContentCipher
 from amanah.canonical.store import ContentStore
+from amanah.contributions.submissions import SubmissionService
 from amanah.db.models.content import CollectionRun
 from amanah.db.models.jobs import BackgroundJob
 from amanah.db.models.sources import Source, SourceSeedEntry
@@ -47,6 +48,7 @@ from amanah.ingestion.contract import (
     SourceAdapter,
     SourceReference,
 )
+from amanah.ingestion.urls.adapter import submission_id_from
 from amanah.jobs.runs import CollectionRunService
 from amanah.jobs.service import JobService, LeaseLostError
 
@@ -261,6 +263,12 @@ class CollectionPipeline:
                 "is_duplicate": stored.is_duplicate,
             },
         )
+        # A user-submitted item has somebody waiting on a status. Linking it here,
+        # after the stage checkpoint is committed, is what turns "processing" in
+        # their contribution history into a link to the item (FR-SUBMIT-008).
+        submission_id = submission_id_from(item)
+        if submission_id is not None:
+            SubmissionService(self._session).link_stored_item(submission_id, stored)
         if stored.is_duplicate:
             return {"deduplicated": 1}
         return {"stored": 1} if stored.is_new else {"updated": 1}

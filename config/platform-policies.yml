@@ -1,0 +1,143 @@
+# Reviewed platform-policy catalogue (B-S18.1, spec.md FR-TOS-001/002/010).
+#
+# This file is configuration, not documentation. The reporting assistant may only
+# offer a rule that appears here, and it links to the platform's own page so a
+# user can read the rule for themselves rather than taking our summary for it.
+#
+# What `version` means. It is *our catalogue snapshot date*, not a version string
+# the platform publishes — none of these platforms versions its rules publicly.
+# It is frozen onto a prepared report so a later re-review cannot silently rewrite
+# what a user was shown at the time. `last_reviewed_at` is when a person on this
+# project last opened the page and confirmed the summary still matches it.
+#
+# HUMAN TASK BEFORE ANY DEMO OR DEPLOYMENT: re-open every `official_url` below,
+# confirm the rule still says what `summary` says, and move `last_reviewed_at`
+# and `version` forward together. A stale entry is worse than a missing one,
+# because a user will act on it.
+#
+# `recipient_kind` implements FR-TOS-010:
+#   official_form  — the platform runs a reporting flow. `official_report_url`
+#                    is where the *user* goes; this service never posts to it.
+#   allowlist_email — the platform has no reporting form. The assistant drafts an
+#                    email to `report_email`, which must be an address a reviewer
+#                    approved. The service never sends it.
+#
+# Nothing here is a claim that content violates a rule. A match is a *possible*
+# match until a human confirms it, and the product never says otherwise.
+
+config_version: "2026.08.23"
+
+policies:
+  - platform: youtube
+    policy_key: hate_speech
+    title: "Hate speech policy"
+    official_url: https://support.google.com/youtube/answer/2801939
+    summary: >-
+      Content that promotes violence or hatred against individuals or groups
+      based on protected attributes, including religion, is not allowed.
+    version: "2026.08.23"
+    last_reviewed_at: 2026-08-23
+    reviewed_by: "Project Amanah reviewer"
+    status: published
+    recipient_kind: official_form
+    official_report_url: https://support.google.com/youtube/answer/2802027
+    report_email: null
+    # Which classification outcomes make this rule a plausible candidate. Read as
+    # "this rule is about these things", never as "these things are this rule".
+    matches_hate_types:
+      - animosity
+      - derogation
+      - dehumanization
+      - collective_blame
+      - other
+    minimum_severity: 1
+
+  - platform: youtube
+    policy_key: violent_or_graphic_content
+    title: "Violent or graphic content policy"
+    official_url: https://support.google.com/youtube/answer/2802008
+    summary: >-
+      Content intended to shock, or that incites others to commit violent acts
+      against individuals or groups, is not allowed.
+    version: "2026.08.23"
+    last_reviewed_at: 2026-08-23
+    reviewed_by: "Project Amanah reviewer"
+    status: published
+    recipient_kind: official_form
+    official_report_url: https://support.google.com/youtube/answer/2802027
+    report_email: null
+    matches_hate_types:
+      - threat_or_incitement
+    minimum_severity: 2
+
+  - platform: youtube
+    policy_key: harassment_and_cyberbullying
+    title: "Harassment and cyberbullying policy"
+    official_url: https://support.google.com/youtube/answer/2802268
+    summary: >-
+      Content that targets an individual with prolonged insults or abuse based on
+      protected attributes is not allowed.
+    version: "2026.08.23"
+    last_reviewed_at: 2026-08-23
+    reviewed_by: "Project Amanah reviewer"
+    status: published
+    recipient_kind: official_form
+    official_report_url: https://support.google.com/youtube/answer/2802027
+    report_email: null
+    matches_hate_types:
+      - derogation
+      - exclusion
+    minimum_severity: 1
+
+  - platform: reddit
+    policy_key: content_policy_rule_one
+    title: "Content Policy — Rule 1: no hate based on identity or vulnerability"
+    official_url: https://redditinc.com/policies/content-policy
+    summary: >-
+      Communities and users that promote hate based on identity or vulnerability
+      are not allowed.
+    version: "2026.08.23"
+    last_reviewed_at: 2026-08-23
+    reviewed_by: "Project Amanah reviewer"
+    status: published
+    recipient_kind: official_form
+    official_report_url: https://www.reddit.com/report
+    report_email: null
+    matches_hate_types:
+      - animosity
+      - derogation
+      - dehumanization
+      - exclusion
+      - collective_blame
+      - threat_or_incitement
+      - other
+    minimum_severity: 1
+
+  # FR-TOS-010, the second half. A user-submitted page on an outlet's own website
+  # has no in-product reporting flow to point at, so the assistant drafts an
+  # email instead. The address is the project's own reviewed inbox, which is the
+  # only kind of address this catalogue may carry: drafting to an address a user
+  # or a page supplied would make the product a mail relay for arbitrary targets.
+  - platform: user_submitted
+    policy_key: no_official_reporting_form
+    title: "No official reporting form for this destination"
+    official_url: https://github.com/DecyfrAI/islamophobia
+    summary: >-
+      This destination has no reporting flow we can link to. The assistant
+      prepares an email-style draft for a reviewer to look at. Nothing is sent.
+    version: "2026.08.23"
+    last_reviewed_at: 2026-08-23
+    reviewed_by: "Project Amanah reviewer"
+    status: published
+    recipient_kind: allowlist_email
+    official_report_url: null
+    report_email: reviewers@amanah.invalid
+    matches_hate_types:
+      - animosity
+      - derogation
+      - dehumanization
+      - exclusion
+      - collective_blame
+      - threat_or_incitement
+      - other
+    minimum_severity: 1

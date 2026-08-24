@@ -55,7 +55,7 @@ Run commands from the repository root unless noted otherwise. The repository is 
 - Review the SQL first without connecting: the same command with `upgrade head --sql`
 - End-to-end tests: `pnpm --dir apps/web e2e`
 - ETL fixture run: `uv run --project backend --env-file backend/.env amanah-etl run --source fixtures --mode fixture --dry-run`
-- Sync reviewed source/seed configuration: `uv run --project backend --env-file backend/.env amanah-etl sync-config`
+- Sync reviewed source/seed/platform-policy configuration: `uv run --project backend --env-file backend/.env amanah-etl sync-config`
 - Historical backfill: `uv run --project backend --env-file backend/.env amanah-etl backfill --source <key> --from YYYY-MM-DD --to YYYY-MM-DD`
 
 If a listed command is not implemented yet, add or reconcile the smallest appropriate script as part of the relevant scaffold step. Do not replace the selected package managers or create parallel commands without explicit instruction.
@@ -97,7 +97,8 @@ If a listed command is not implemented yet, add or reconcile the smallest approp
 │   │       ├── jobs/            # Collection-run and job state machines
 │   │       ├── analysis/        # Gemini boundary, classification and insights
 │   │       ├── metrics/         # Deterministic aggregates and coverage
-│   │       ├── contributions/   # Submissions, disputes and timelines
+│   │       ├── contributions/   # Submissions, disputes, review decisions and timelines
+│   │       ├── discussion/      # Snapshot insights, invite-only notes, captures (ADR 0004)
 │   │       ├── reporting/       # Platform assistance and research reports
 │   │       ├── resources/       # Curated education-resource governance
 │   │       ├── observability/   # Redacted logs, metrics and correlation
@@ -115,7 +116,7 @@ If a listed command is not implemented yet, add or reconcile the smallest approp
 │   ├── sources.example.yml
 │   ├── source-seeds.example.yml # Approved versioned projection of selected registry entries
 │   ├── taxonomy.yml
-│   ├── platform-policies.yml
+│   ├── platform-policies.yml # Reviewed rules the report assistant may offer
 │   └── data-policy.yml
 ├── fixtures/                    # Licensed, synthetic or redacted shared fixtures
 ├── datapacks/

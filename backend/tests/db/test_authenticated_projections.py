@@ -16,12 +16,24 @@ from sqlalchemy import Connection, Table, text
 from amanah.db.views import (
     FORBIDDEN_PROJECTION_COLUMNS,
     authenticated_background_jobs,
+    authenticated_classification_disputes,
     authenticated_collection_runs,
+    authenticated_content_submissions,
+    authenticated_contribution_events,
+    authenticated_dashboard_captures,
+    authenticated_discussion_participation,
+    authenticated_discussion_posts,
     authenticated_items,
     authenticated_metric_buckets,
     authenticated_news,
+    authenticated_post_reactions,
+    authenticated_prepared_platform_reports,
     authenticated_resources,
+    authenticated_review_events,
+    authenticated_review_tasks,
+    authenticated_snapshot_insights,
     authenticated_source_status,
+    authenticated_user_profile,
 )
 from amanah.domain.enums import Role
 from tests.db import factories
@@ -35,6 +47,18 @@ DECLARED_PROJECTIONS: tuple[Table, ...] = (
     authenticated_news,
     authenticated_collection_runs,
     authenticated_background_jobs,
+    authenticated_user_profile,
+    authenticated_content_submissions,
+    authenticated_classification_disputes,
+    authenticated_contribution_events,
+    authenticated_prepared_platform_reports,
+    authenticated_review_tasks,
+    authenticated_review_events,
+    authenticated_snapshot_insights,
+    authenticated_dashboard_captures,
+    authenticated_discussion_posts,
+    authenticated_post_reactions,
+    authenticated_discussion_participation,
 )
 
 

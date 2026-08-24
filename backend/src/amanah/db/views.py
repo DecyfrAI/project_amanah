@@ -5,14 +5,15 @@ a projection is unreachable from an endpoint by construction rather than by
 review. `tests/db/test_authenticated_projections.py` compares each definition
 here against the real view, so the two cannot drift.
 
-Only the projections this milestone actually reads are declared. The owner-scoped
-views created in `0003` are exercised by the row-level-security tests and gain
-handles when the endpoints that read them arrive.
+Every projection an endpoint reads is declared here. The owner-scoped views
+created in `0003` gained handles in Milestone 5, when the contribution, dispute,
+review, and discussion endpoints that read them arrived.
 """
 
 from __future__ import annotations
 
 from sqlalchemy import (
+    BigInteger,
     Boolean,
     Column,
     DateTime,
@@ -191,6 +192,185 @@ authenticated_background_jobs = Table(
     Column("is_dead_lettered", Boolean),
     Column("created_at", DateTime(timezone=True)),
     Column("completed_at", DateTime(timezone=True)),
+)
+
+authenticated_user_profile = Table(
+    "authenticated_user_profile",
+    projection_metadata,
+    Column("user_id", UUID(as_uuid=True), primary_key=True),
+    Column("display_name", Text),
+    _text_column("role"),
+    _text_column("onboarding_status"),
+    Column("content_safety_preferences", JSONB),
+    Column("created_at", DateTime(timezone=True)),
+    Column("updated_at", DateTime(timezone=True)),
+)
+
+authenticated_content_submissions = Table(
+    "authenticated_content_submissions",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("user_id", UUID(as_uuid=True)),
+    Column("submitted_url", Text),
+    Column("canonical_url", Text),
+    Column("content_item_id", UUID(as_uuid=True)),
+    _text_column("status"),
+    Column("safe_error_code", Text),
+    Column("submitted_at", DateTime(timezone=True)),
+    Column("processed_at", DateTime(timezone=True)),
+)
+
+authenticated_classification_disputes = Table(
+    "authenticated_classification_disputes",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("user_id", UUID(as_uuid=True)),
+    Column("content_item_id", UUID(as_uuid=True)),
+    Column("prediction_id", UUID(as_uuid=True)),
+    Column("reason", Text),
+    _text_column("status"),
+    Column("resolution_summary", Text),
+    Column("created_at", DateTime(timezone=True)),
+    Column("resolved_at", DateTime(timezone=True)),
+)
+
+authenticated_contribution_events = Table(
+    "authenticated_contribution_events",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("user_id", UUID(as_uuid=True)),
+    _text_column("contribution_type"),
+    Column("contribution_id", UUID(as_uuid=True)),
+    _text_column("event_type"),
+    Column("public_message", Text),
+    Column("created_at", DateTime(timezone=True)),
+)
+
+authenticated_prepared_platform_reports = Table(
+    "authenticated_prepared_platform_reports",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("user_id", UUID(as_uuid=True)),
+    Column("content_item_id", UUID(as_uuid=True)),
+    Column("platform", Text),
+    Column("platform_policy_id", UUID(as_uuid=True)),
+    Column("policy_version", Text),
+    Column("evidence_summary", Text),
+    Column("suggested_text", Text),
+    _text_column("status"),
+    Column("submitted_at", DateTime(timezone=True)),
+    _text_column("outcome"),
+    Column("outcome_note", Text),
+    Column("created_at", DateTime(timezone=True)),
+    Column("updated_at", DateTime(timezone=True)),
+    _text_column("recipient_kind"),
+    Column("recipient_address", Text),
+    Column("draft_subject", Text),
+)
+
+authenticated_review_tasks = Table(
+    "authenticated_review_tasks",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("content_item_id", UUID(as_uuid=True)),
+    Column("prediction_id", UUID(as_uuid=True)),
+    _text_column("task_type"),
+    Column("reason", Text),
+    Column("priority", Integer),
+    _text_column("status"),
+    Column("assigned_to", UUID(as_uuid=True)),
+    Column("claim_expires_at", DateTime(timezone=True)),
+    Column("created_at", DateTime(timezone=True)),
+    Column("completed_at", DateTime(timezone=True)),
+    Column("title", Text),
+    Column("permitted_excerpt", Text),
+    Column("canonical_url", Text),
+    _text_column("platform"),
+    _text_column("relevance"),
+    _text_column("stance"),
+    Column("hate_types", ARRAY(Text)),
+    Column("severity", SmallInteger),
+    Column("score", Float),
+    _text_column("confidence_tier"),
+    Column("model_name", Text),
+    Column("model_version", Text),
+)
+
+authenticated_review_events = Table(
+    "authenticated_review_events",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("review_task_id", UUID(as_uuid=True)),
+    Column("reviewer_id", UUID(as_uuid=True)),
+    _text_column("decision"),
+    Column("corrected_labels", JSONB),
+    Column("note", Text),
+    Column("is_training_candidate", Boolean),
+    Column("created_at", DateTime(timezone=True)),
+)
+
+authenticated_snapshot_insights = Table(
+    "authenticated_snapshot_insights",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("user_id", UUID(as_uuid=True)),
+    Column("author_display_name", Text),
+    Column("title", Text),
+    Column("claim", Text),
+    Column("metric", Text),
+    Column("numerator", Integer),
+    Column("denominator", Integer),
+    Column("window_start", DateTime(timezone=True)),
+    Column("window_end", DateTime(timezone=True)),
+    Column("figure_label", Text),
+    Column("filter_hash", Text),
+    Column("explorer_href", Text),
+    Column("source_keys", ARRAY(Text)),
+    Column("items_observed", Integer),
+    Column("items_relevant", Integer),
+    Column("created_at", DateTime(timezone=True)),
+)
+
+authenticated_dashboard_captures = Table(
+    "authenticated_dashboard_captures",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("user_id", UUID(as_uuid=True)),
+    Column("alt_text", Text),
+    Column("image_source", Text),
+    Column("filter_hash", Text),
+    Column("explorer_href", Text),
+    Column("created_at", DateTime(timezone=True)),
+)
+
+authenticated_discussion_posts = Table(
+    "authenticated_discussion_posts",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("snapshot_insight_id", UUID(as_uuid=True)),
+    Column("insight_title", Text),
+    Column("user_id", UUID(as_uuid=True)),
+    Column("author_display_name", Text),
+    Column("body", Text),
+    Column("dashboard_capture_id", UUID(as_uuid=True)),
+    Column("created_at", DateTime(timezone=True)),
+    Column("retracted_at", DateTime(timezone=True)),
+)
+
+authenticated_post_reactions = Table(
+    "authenticated_post_reactions",
+    projection_metadata,
+    Column("discussion_post_id", UUID(as_uuid=True), primary_key=True),
+    Column("useful_count", BigInteger),
+    Column("needs_context_count", BigInteger),
+    _text_column("viewer_reaction"),
+)
+
+authenticated_discussion_participation = Table(
+    "authenticated_discussion_participation",
+    projection_metadata,
+    Column("user_id", UUID(as_uuid=True), primary_key=True),
+    Column("granted_at", DateTime(timezone=True)),
 )
 
 #: Columns that must never appear in any authenticated projection: raw or

@@ -42,9 +42,10 @@ from amanah.ingestion.configuration import (
 )
 from amanah.ingestion.contract import AdapterError, DiscoveryRequest, SourceAdapter
 from amanah.ingestion.pipeline import CollectionPipeline
-from amanah.ingestion.registry import UnknownSourceError, build_default_registry
+from amanah.ingestion.registry import AdapterContext, UnknownSourceError, build_default_registry
 from amanah.jobs.runs import CollectionRunService, RunDispatch, RunValidationError
 from amanah.observability.logging import configure_logging
+from amanah.reporting.policies import load_policy_catalogue, project_policies
 from amanah.settings import ConfigurationError, Settings, load_settings
 
 logger = logging.getLogger("amanah.etl")
@@ -107,7 +108,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     configure = subcommands.add_parser(
-        "sync-config", help="Project the reviewed source and seed catalogue into the database."
+        "sync-config",
+        help="Project the reviewed source, seed, and platform-policy catalogue.",
     )
     configure.add_argument("--directory", default=None)
     return parser
@@ -154,11 +156,20 @@ def _sync_config(session: Session, directory: str | None) -> int:
             extra={"sources": sources.config_version, "seeds": seeds.config_version},
         )
         return 2
+    policies = load_policy_catalogue(path)
     written_sources = project_sources(session, sources)
     written_seeds = project_seeds(session, seeds)
+    # The platform-policy catalogue is versioned on its own: a rule is
+    # re-reviewed on the platform's schedule, not on the collection catalogue's,
+    # so its `config_version` is deliberately not compared with the other two.
+    written_policies = project_policies(session, policies)
     logger.info(
         "configuration synchronised",
-        extra={"sources": written_sources, "approved_seeds": written_seeds},
+        extra={
+            "sources": written_sources,
+            "approved_seeds": written_seeds,
+            "platform_policies": written_policies,
+        },
     )
     return 0
 
@@ -169,7 +180,10 @@ def _run(session: Session, settings: Settings, arguments: argparse.Namespace) ->
     registry = build_default_registry(sources)
 
     try:
-        adapter = registry.build(arguments.source, settings=settings, sources=sources, seeds=seeds)
+        adapter = registry.build(
+            arguments.source,
+            AdapterContext(session=session, settings=settings, sources=sources, seeds=seeds),
+        )
     except UnknownSourceError:
         logger.error("no adapter is registered for that source", extra={"source": arguments.source})
         return 2
@@ -290,7 +304,10 @@ def _backfill(session: Session, settings: Settings, arguments: argparse.Namespac
     seeds = load_seed_configuration(settings.source_config_directory)
     registry = build_default_registry(sources)
     try:
-        adapter = registry.build(arguments.source, settings=settings, sources=sources, seeds=seeds)
+        adapter = registry.build(
+            arguments.source,
+            AdapterContext(session=session, settings=settings, sources=sources, seeds=seeds),
+        )
     except UnknownSourceError:
         logger.error("no adapter is registered for that source", extra={"source": arguments.source})
         return 2
