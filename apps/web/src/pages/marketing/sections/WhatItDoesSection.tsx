@@ -54,7 +54,7 @@ const PANELS: readonly ExpandingPanel[] = [
     id: 'review',
     name: 'Review',
     headline: 'Correct the model, and label an image',
-    body: 'Open an item to see its context, the model label with its score, and the provenance. Confirm, correct, or skip. A decision appends beside the original prediction. The research image catalog lives here, blurred until revealed. You can also upload an image to label it for later fine-tuning: filename and size only, no personal fields.',
+    body: 'Open an item to see its context, the model label with its score, and the provenance. Confirm, correct, or skip. A decision appends beside the original prediction. The research image catalog lives here, shown or blurred according to your own display preference, with a Show and Hide control on every image. You can also upload an image to label it for later fine-tuning: filename and size only, no personal fields.',
     outcome: 'An auditable human judgment, with the model output preserved',
   },
   {

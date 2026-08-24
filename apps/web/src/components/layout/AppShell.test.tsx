@@ -7,6 +7,7 @@ import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 
 import { ThemeProvider } from '@/app/ThemeProvider';
 import { endFixtureSession, hasFixtureSession, startFixtureSession } from '@/features/auth/session';
+import { SessionProvider } from '@/features/auth/SessionProvider';
 import { TOUR_STORAGE_KEY, writeTourCompletion } from '@/features/tour/tour-storage';
 
 import { AppShell } from './AppShell';
@@ -18,7 +19,9 @@ function withProviders(ui: ReactElement) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider>{ui}</ThemeProvider>
+      <SessionProvider>
+        <ThemeProvider>{ui}</ThemeProvider>
+      </SessionProvider>
     </QueryClientProvider>
   );
 }

@@ -3,3 +3,15 @@
   flex-direction: column;
   gap: var(--space-4);
 }
+
+.formError {
+  margin: 0;
+  color: var(--color-danger, #b3261e);
+  font-size: var(--text-sm, 0.875rem);
+}
+
+.formNotice {
+  margin: 0;
+  color: var(--color-text-muted, inherit);
+  font-size: var(--text-sm, 0.875rem);
+}

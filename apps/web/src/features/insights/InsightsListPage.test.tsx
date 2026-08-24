@@ -36,12 +36,15 @@ describe('InsightsListPage', () => {
     expect(within(card).getByText('Machine-generated')).toBeVisible();
   });
 
-  it('shows image posts with file metadata instead of a comment', async () => {
+  it('contains no unrelated image feed (PA-02)', async () => {
     renderList();
 
-    expect(await screen.findByRole('heading', { name: 'Image evidence' })).toBeVisible();
-    expect(await screen.findByText(/img-ex-01.png/i)).toBeVisible();
-    expect(screen.getByText(/70,182 bytes/i)).toBeVisible();
-    expect(screen.getAllByRole('button', { name: 'Reveal image' }).length).toBeGreaterThan(0);
+    expect(await screen.findByRole('heading', { name: 'Insights', level: 1 })).toBeVisible();
+    // The unscoped Image Evidence section queried an unfiltered Explorer page
+    // for anything with an image; it was removed because those images were not
+    // tied to any insight. Media may appear only inside the discussion it
+    // belongs to.
+    expect(screen.queryByRole('heading', { name: 'Image evidence' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Reveal image' })).toBeNull();
   });
 });

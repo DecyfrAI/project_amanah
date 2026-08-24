@@ -1,32 +1,44 @@
-import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useCallback, useState, type ChangeEvent, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 
-import { AppLoadingScreen, entryHoldMs } from '@/components/ui/AppLoadingScreen';
+import { AppLoadingScreen } from '@/components/ui/AppLoadingScreen';
 import { Button } from '@/components/ui/Button';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 import { AuthCard } from './AuthCard';
 import { AuthField } from './AuthField';
+import { useSession } from './SessionProvider';
 import { isEmailShaped } from './validation';
-import { startFixtureSession } from './session';
 
 import styles from './AuthForm.module.css';
+
+/** Only an in-app path may be returned to after login; anything else is /app. */
+export function safeInternalReturn(candidate: unknown): string {
+  if (typeof candidate !== 'string' || !candidate.startsWith('/app')) {
+    return '/app';
+  }
+  return candidate;
+}
 
 /**
  * Login.
  *
- * The credentials are checked for shape and then discarded: in fixture mode
- * there is no account to authenticate against, so the form starts a local demo
- * session instead. See docs/adr/0005-self-serve-sign-up.md.
+ * In live and demo modes this authenticates against Supabase and navigates the
+ * moment the session exists (PA-03) — the loading screen lasts exactly as long
+ * as the sign-in request, never a fixed timer. In fixture mode the form starts
+ * the tab-scoped demo session (ADR 0005).
  */
 export function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const { signIn } = useSession();
   usePageTitle('Log in');
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [emailError, setEmailError] = useState<string>();
   const [passwordError, setPasswordError] = useState<string>();
+  const [submitError, setSubmitError] = useState<string>();
   const [isPending, setIsPending] = useState(false);
 
   const handleEmailChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
@@ -50,31 +62,32 @@ export function LoginPage() {
 
       setEmailError(nextEmailError);
       setPasswordError(nextPasswordError);
+      setSubmitError(undefined);
 
       if (nextEmailError !== undefined || nextPasswordError !== undefined) {
         return;
       }
 
       setIsPending(true);
-      startFixtureSession(undefined, email);
+      const returnTo = safeInternalReturn(
+        (location.state as { from?: unknown } | null)?.from ?? null,
+      );
+      signIn(email, password)
+        .then(() => {
+          void navigate(returnTo);
+        })
+        .catch((error: unknown) => {
+          setIsPending(false);
+          setSubmitError(
+            error instanceof Error ? error.message : 'Sign-in failed. Try again in a moment.',
+          );
+        });
     },
-    [email, password],
+    [email, location.state, navigate, password, signIn],
   );
 
-  useEffect(() => {
-    if (!isPending) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      void navigate('/app');
-    }, entryHoldMs());
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [isPending, navigate]);
-
   if (isPending) {
-    return <AppLoadingScreen message="Insights await" hold />;
+    return <AppLoadingScreen message="Signing you in" hold />;
   }
 
   return (
@@ -111,8 +124,13 @@ export function LoginPage() {
           autoComplete="current-password"
           error={passwordError}
         />
+        {submitError !== undefined && (
+          <p role="alert" className={styles.formError}>
+            {submitError}
+          </p>
+        )}
         <Button variant="primary" type="submit" disabled={isPending}>
-          {isPending ? 'Opening the workspace' : 'Log in'}
+          {isPending ? 'Signing in' : 'Log in'}
         </Button>
       </form>
     </AuthCard>

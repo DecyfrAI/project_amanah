@@ -1,59 +1,11 @@
-/**
- * Local constants behind the Reports mockup.
+﻿/**
+ * Editorial copy describing what a research report contains.
  *
- * The snapshots below describe reports nobody prepared. They exist so the layout
- * of a snapshot list can be reviewed, and they are labelled as illustrations on
- * screen. Report creation belongs to `POST /v1/research-reports`, which this
- * frontend cannot call yet, so nothing here implies a report exists to open.
+ * This is documentation of the report's structure, not data: report creation
+ * and reading go through `/v1/research-reports` in `ResearchReportPanel`. The
+ * inert scope form and the illustrative snapshot list that used to live here
+ * were removed when that flow was connected.
  */
-
-import type { StatusIndicator } from '@/components/ui/StatusPill';
-
-export interface ScopeField {
-  readonly id: string;
-  readonly label: string;
-  /** The value the control shows while it is inert. */
-  readonly value: string;
-  readonly options: readonly string[];
-}
-
-export const SCOPE_FIELDS: readonly ScopeField[] = [
-  {
-    id: 'platform',
-    label: 'Platform',
-    value: 'All configured platforms',
-    options: [
-      'All configured platforms',
-      'YouTube',
-      'Reddit',
-      'Bluesky',
-      'Mastodon (single instance)',
-      'Open datapack (source shown as N/A)',
-    ],
-  },
-  {
-    id: 'severity',
-    label: 'Severity band',
-    value: 'Any band, 0 to 3',
-    options: ['Any band, 0 to 3', '1 and above', '2 and above', '3 only'],
-  },
-  {
-    id: 'review-state',
-    label: 'Review state',
-    value: 'Model classification and human review',
-    options: [
-      'Model classification and human review',
-      'Reviewed by a person only',
-      'Awaiting review only',
-      'Corrected by a reviewer only',
-    ],
-  },
-];
-
-export const SCOPE_DATE_RANGE = {
-  from: '2026-08-09',
-  to: '2026-08-22',
-} as const;
 
 export interface ReportSection {
   readonly id: string;
@@ -116,52 +68,5 @@ export const REPORT_SECTIONS: readonly ReportSection[] = [
     name: 'Limitations',
     detail:
       'What this report cannot support, at full weight: a bounded sample is not a platform, a country, or a group of people.',
-  },
-];
-
-export interface ReportSnapshot {
-  readonly id: string;
-  readonly title: string;
-  readonly window: string;
-  readonly filters: string;
-  readonly createdAt: string;
-  readonly indicator: StatusIndicator;
-  readonly statusLabel: string;
-  /** What a reader has to know before quoting this snapshot. */
-  readonly caveat: string;
-}
-
-export const REPORT_SNAPSHOTS: readonly ReportSnapshot[] = [
-  {
-    id: 'rep_5b21c8',
-    title: 'Planning decision coverage, two weeks',
-    window: '9 August 2026 to 22 August 2026',
-    filters: 'YouTube and Reddit, any severity, model and reviewed',
-    createdAt: '22 August 2026, 08:40 UTC',
-    indicator: 'ok',
-    statusLabel: 'Prepared',
-    caveat: 'Covers 214 containers, 1,208 classified items, and 14 of 14 days collected.',
-  },
-  {
-    id: 'rep_9c4470',
-    title: 'Threat and incitement band, one month',
-    window: '18 July 2026 to 18 August 2026',
-    filters: 'All configured platforms, band 3 only, reviewed only',
-    createdAt: '18 August 2026, 17:05 UTC',
-    indicator: 'degraded',
-    statusLabel: 'Prepared with a coverage gap',
-    caveat:
-      'The Mastodon connector failed on 5 of the 31 days. Those days are reported as gaps, so the totals describe 26 collected days.',
-  },
-  {
-    id: 'rep_1f7de3',
-    title: 'Open datapack baseline, historical rows',
-    window: '1 January 2024 to 31 December 2024',
-    filters: 'Open datapack only, any severity, awaiting review only',
-    createdAt: '11 August 2026, 12:22 UTC',
-    indicator: 'absent',
-    statusLabel: 'Trend section is a gap',
-    caveat:
-      'A one-off import has no daily collection, so the trend section reports no daily rate rather than a flat line at zero.',
   },
 ];

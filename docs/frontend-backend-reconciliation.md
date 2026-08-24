@@ -1,6 +1,25 @@
 # Frontend ↔ backend reconciliation
 
-Date: 23 August 2026.
+Date: 23 August 2026. Gap status updated 24 August 2026.
+
+## Gap status, 24 August 2026
+
+| Gap | Status |
+|---|---|
+| G1 Authorization header | **Closed.** Every `live-provider.ts` request carries the Supabase access token; `401` clears the session, `403` does not. |
+| G2 `/v1/overview` → `/v1/dashboard` | **Closed.** The frontend calls `/v1/dashboard` and maps `DashboardResponse` into the Overview view model. Per-source daily stacks and composition breakdowns are not computed live, so they render as an honest absence rather than an invented split. |
+| G3 `/v1/items` shape and parameters | **Closed.** Backend parameter names, snake_case item shape, and cursor pagination adopted. `matched` is nullable because keyset pagination returns no total, and the UI no longer promises one. `hate_types` and `q` have no server filter, so they are not sent and the `applied` echo reports the scope actually requested. |
+| G4 `/v1/filters` shape | **Closed.** The backend response is adopted. `available` is null (the service reports no available-data window), so the date picker bounds the *query* and says so instead of claiming data exists. |
+| G5 `/v1/news` contract | **Closed.** Nullable `published_at` and `scope` absorbed; an absent publication time renders as "Publication time not stated", never the retrieval time. |
+| G6 Insights, discussion, captures | **Closed.** All routes wired; the composer respects the server's `can_participate` (ADR 0004 invite-only). |
+| G7 Grounded assistant | **Closed.** `POST /v1/assistant/query` wired with filters, citations, limitations, and `grounded_in`. |
+| G8 Image catalogue and classification | **Partly closed.** The catalogue and classification of a catalogued image are wired. **Upload of a user's own file has no backend route** (`B-S28`); the live path refuses visibly. |
+| G9 Assisted-report flow | **Closed.** `PolicyReportFlow` implements the policy-catalogue path with explicit version confirmation and the allow-listed email-draft split. |
+| G10 `PATCH /v1/me` | **Closed.** Used by the PA-01 media preference. |
+| G11 Public `/resources` | **Closed** by decision; no code change. |
+
+Carried-over flags still open: the repository must stay private, line-ending
+renormalisation, and the Qur'anic translation check below.
 Inputs: shipped frontend (`apps/web`, see `apps/web/HANDOFF.md`), backend through
 Milestone 2 (`backend/`), `spec.md` §13, `docs/news-rss-sources.md`, and the
 product owner's change requests of 23 August 2026.

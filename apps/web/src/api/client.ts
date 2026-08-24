@@ -21,6 +21,13 @@ import type {
   ViewerPostList,
 } from './contracts';
 import type { OverviewFilters } from './fixture-derive';
+import type {
+  WireContributionsPage,
+  WirePolicyAnalysis,
+  WirePreparedReport,
+  WireProfile,
+  WireResearchReport,
+} from './wire';
 
 /**
  * The single data-access surface. Views never call fetch or read a fixture.
@@ -35,11 +42,45 @@ export interface NewsFilters {
   cursor?: string | undefined;
 }
 
+/** Cursor-paged item search: the same filters plus an opaque page cursor. */
+export interface ItemSearchFilters extends OverviewFilters {
+  cursor?: string | undefined;
+}
+
+export interface UpdateProfileInput {
+  displayName?: string;
+  onboardingStatus?: 'not_started' | 'in_progress' | 'completed';
+  /** Reveal preferences for redacted text and blurred media (PA-01). */
+  contentSafetyPreferences?: Record<string, boolean>;
+}
+
+export interface PrepareReportInput {
+  contentItemId: string;
+  platformPolicyId: string;
+  policyVersion: string;
+  evidenceSummary: string;
+  suggestedText: string;
+  /** Only for `allowlist_email` policies (FR-TOS-010); forbidden otherwise. */
+  draftSubject?: string;
+}
+
+export interface ReportOutcomeInput {
+  status: 'submitted' | 'closed';
+  outcome?: 'no_response' | 'content_removed' | 'content_restricted' | 'no_violation' | 'other';
+  outcomeNote?: string;
+}
+
+export interface CreateResearchReportInput {
+  title: string;
+  filters: OverviewFilters;
+  includeAggregateCsv: boolean;
+}
+
 export interface ApiClient {
   getOverview: (filters: OverviewFilters) => Promise<Overview>;
   getFilterOptions: () => Promise<FilterOptions>;
   listNews: (filters: NewsFilters) => Promise<NewsList>;
-  searchItems: (filters: OverviewFilters) => Promise<ExplorerPage>;
+  searchItems: (filters: ItemSearchFilters) => Promise<ExplorerPage>;
   listInsights: () => Promise<InsightList>;
   getInsight: (insightId: string) => Promise<Insight>;
   createInsight: (input: CreateInsightInput) => Promise<Insight>;
@@ -53,6 +94,15 @@ export interface ApiClient {
   prepareReportDraft: (input: ReportDraftRequest) => Promise<ReportDraft>;
   listImageExamples: () => Promise<ImageExampleList>;
   classifyEvidence: (input: EvidenceClassifyRequest) => Promise<ImageClassification>;
+  getCurrentUser: () => Promise<WireProfile>;
+  updateProfile: (input: UpdateProfileInput) => Promise<WireProfile>;
+  analyzePolicies: (contentItemId: string) => Promise<WirePolicyAnalysis>;
+  savePreparedReport: (input: PrepareReportInput) => Promise<WirePreparedReport>;
+  recordReportOutcome: (reportId: string, input: ReportOutcomeInput) => Promise<WirePreparedReport>;
+  listContributions: () => Promise<WireContributionsPage>;
+  createResearchReport: (input: CreateResearchReportInput) => Promise<WireResearchReport>;
+  getResearchReport: (reportId: string) => Promise<WireResearchReport>;
+  downloadResearchReportCsv: (reportId: string) => Promise<Blob>;
 }
 
 export const FIXTURE_VIEWER: { id: string; displayName: string } = {
@@ -87,12 +137,17 @@ export const queryKeys = {
    */
   news: (filters: NewsFilters) =>
     ['news', filters.from ?? null, filters.to ?? null, filters.cursor ?? null] as const,
-  items: (filters: OverviewFilters) => ['items', ...filterKey(filters)] as const,
+  items: (filters: ItemSearchFilters) =>
+    ['items', ...filterKey(filters), filters.cursor ?? null] as const,
   insights: ['insights'] as const,
   insight: (id: string) => ['insights', id] as const,
   viewerPosts: ['viewer-posts'] as const,
   discussion: (insightId: string) => ['discussion', insightId] as const,
   imageExamples: ['image-examples'] as const,
+  currentUser: ['current-user'] as const,
+  contributions: ['contributions'] as const,
+  policyAnalysis: (itemId: string) => ['policy-analysis', itemId] as const,
+  researchReport: (reportId: string) => ['research-reports', reportId] as const,
 };
 
 export type { OverviewFilters };

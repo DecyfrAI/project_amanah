@@ -5,7 +5,16 @@ import { ApiRequestError } from './errors';
 import type { ApiClient } from './client';
 
 export { FIXTURE_VIEWER, queryKeys } from './client';
-export type { ApiClient, NewsFilters, OverviewFilters } from './client';
+export type {
+  ApiClient,
+  CreateResearchReportInput,
+  ItemSearchFilters,
+  NewsFilters,
+  OverviewFilters,
+  PrepareReportInput,
+  ReportOutcomeInput,
+  UpdateProfileInput,
+} from './client';
 export type {
   AppliedFilters,
   AssistantAskInput,
@@ -13,6 +22,7 @@ export type {
   BreakdownRow,
   CreateInsightInput,
   ExplorerItem,
+  ExplorerItemDataset,
   ExplorerItemImage,
   ExplorerPage,
   FilterOption,
@@ -34,10 +44,20 @@ export type {
   ViewerPost,
   ViewerPostList,
 } from './contracts';
+export type {
+  WireContributionsPage,
+  WireContributionSummary,
+  WirePolicyAnalysis,
+  WirePolicyCandidate,
+  WirePreparedReport,
+  WireProfile,
+  WireResearchReport,
+} from './wire';
 export { hateTypeLabel, platformLabel, reviewLabel, severityLabel } from './fixture-derive';
 export { ApiRequestError } from './errors';
-export { isFixtureVisible, readDataMode } from './env';
+export { isFixtureVisible, readDataMode, usesLiveAuthentication } from './env';
 export type { DataMode } from './env';
+export { isSupabaseConfigured } from './supabase';
 
 let fallbackActive = false;
 
@@ -78,6 +98,60 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
     prepareReportDraft: (input) => tryLive((client) => client.prepareReportDraft(input)),
     listImageExamples: () => tryLive((client) => client.listImageExamples()),
     classifyEvidence: (input) => tryLive((client) => client.classifyEvidence(input)),
+    getCurrentUser: () => tryLive((client) => client.getCurrentUser()),
+    updateProfile: (input) => tryLive((client) => client.updateProfile(input)),
+    analyzePolicies: (itemId) => tryLive((client) => client.analyzePolicies(itemId)),
+    savePreparedReport: (input) => tryLive((client) => client.savePreparedReport(input)),
+    recordReportOutcome: (reportId, input) =>
+      tryLive((client) => client.recordReportOutcome(reportId, input)),
+    listContributions: () => tryLive((client) => client.listContributions()),
+    createResearchReport: (input) => tryLive((client) => client.createResearchReport(input)),
+    getResearchReport: (reportId) => tryLive((client) => client.getResearchReport(reportId)),
+    downloadResearchReportCsv: (reportId) =>
+      tryLive((client) => client.downloadResearchReportCsv(reportId)),
+  };
+}
+
+/**
+ * The hackathon demo provider (completion guide, step 2).
+ *
+ * Every product method routes to the live, authenticated service: news, the
+ * dashboard and item reads (including datapack-backed rows), the grounded
+ * assistant, insights and discussion, platform and research reports, and the
+ * image catalogue/classification. No method here catches a live failure and
+ * substitutes fixture data — a failure surfaces to the screen that made the
+ * request. The surfaces that remain mocked (the review queue and connections
+ * walkthroughs, and the local-file upload rehearsal) do not read through this
+ * client at all and are labelled in place.
+ */
+function createDemoProvider(live: ApiClient): ApiClient {
+  return {
+    getOverview: live.getOverview,
+    getFilterOptions: live.getFilterOptions,
+    listNews: live.listNews,
+    searchItems: live.searchItems,
+    listInsights: live.listInsights,
+    getInsight: live.getInsight,
+    createInsight: live.createInsight,
+    listViewerPosts: live.listViewerPosts,
+    getDiscussion: live.getDiscussion,
+    createPost: live.createPost,
+    reactToPost: live.reactToPost,
+    retractPost: live.retractPost,
+    createCapture: live.createCapture,
+    askAssistant: live.askAssistant,
+    prepareReportDraft: live.prepareReportDraft,
+    listImageExamples: live.listImageExamples,
+    classifyEvidence: live.classifyEvidence,
+    getCurrentUser: live.getCurrentUser,
+    updateProfile: live.updateProfile,
+    analyzePolicies: live.analyzePolicies,
+    savePreparedReport: live.savePreparedReport,
+    recordReportOutcome: live.recordReportOutcome,
+    listContributions: live.listContributions,
+    createResearchReport: live.createResearchReport,
+    getResearchReport: live.getResearchReport,
+    downloadResearchReportCsv: live.downloadResearchReportCsv,
   };
 }
 
@@ -85,6 +159,9 @@ export function createApiClient(): ApiClient {
   const mode = readDataMode();
   if (mode === 'live') {
     return liveProvider;
+  }
+  if (mode === 'demo') {
+    return createDemoProvider(liveProvider);
   }
   if (mode === 'fallback') {
     return withFallback(liveProvider, fixtureProvider);

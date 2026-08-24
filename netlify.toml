@@ -14,3 +14,28 @@
   from = "/*"
   to = "/index.html"
   status = 200
+
+# Baseline response security headers for the SPA.
+#
+# `connect-src` has to allow the two origins the browser legitimately talks to:
+# the FastAPI service and Supabase Auth. Both are per-deploy hostnames, so the
+# wildcards below are the narrowest form that does not hard-code one project;
+# tighten them to the exact origins once a deploy target is fixed.
+#
+# No `unsafe-inline` for scripts: Vite emits external bundles, so nothing needs
+# it. Styles still need it because CSS modules are injected at runtime.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Strict-Transport-Security = "max-age=31536000; includeSubDomains"
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+    Content-Security-Policy = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.supabase.co; font-src 'self'; connect-src 'self' https://*.supabase.co https://*.onrender.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'"
+
+# Immutable, content-hashed build output can be cached hard.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"

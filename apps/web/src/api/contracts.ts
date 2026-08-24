@@ -21,7 +21,8 @@ export const CoverageSchema = z.object({
  * 1483 observed" means something different across 22 videos than across 2.
  */
 export const OverviewCoverageSchema = CoverageSchema.extend({
-  containersMonitored: z.number().int().nonnegative(),
+  /** Null when the provider does not report container counts (live dashboard). */
+  containersMonitored: z.number().int().nonnegative().nullable(),
   containerLabel: z.string(),
 });
 
@@ -162,9 +163,11 @@ export const FilterOptionSchema = z.object({
  * to mistake an empty response for a quiet day.
  */
 export const FilterOptionsSchema = z.object({
-  available: DateWindowSchema,
+  /** Null when the provider does not report an available-data window (live). */
+  available: DateWindowSchema.nullable(),
   defaultWindowDays: z.number().int().positive(),
   platforms: z.array(FilterOptionSchema),
+  /** Empty when the provider does not support this filter axis. */
   hateTypes: z.array(FilterOptionSchema),
   severityBands: z.array(FilterOptionSchema),
   reviewStates: z.array(FilterOptionSchema),
@@ -196,28 +199,58 @@ export const ExplorerItemImageSchema = z.object({
   formNote: z.string(),
 });
 
+/**
+ * Dataset lineage for an item imported from a reviewed open datapack.
+ * Such items publish `N/A` as their platform; this block is how a reader
+ * still learns where the row came from.
+ */
+export const ExplorerItemDatasetSchema = z.object({
+  provider: z.string(),
+  name: z.string(),
+  version: z.string(),
+  licenseId: z.string().nullable(),
+  landingPageUrl: z.string().nullable(),
+});
+
 export const ExplorerItemSchema = z.object({
   id: z.string(),
   date: z.string(),
   platform: z.string(),
-  containerTitle: z.string(),
-  containerUrl: z.string(),
-  redactedExcerpt: z.string(),
-  relevance: z.enum(['muslim_related', 'not_related']),
-  classification: z.enum(['likely_hate', 'not_hate']),
+  /** Human-facing platform label; open-datapack rows display as `N/A`. */
+  platformDisplay: z.string().optional(),
+  containerTitle: z.string().nullable(),
+  containerUrl: z.string().nullable(),
+  /** Licensed or fair-use excerpt only. Null when none is permitted. */
+  redactedExcerpt: z.string().nullable(),
+  /**
+   * Null until the item has a successful prediction. "Collected, not yet
+   * analysed" is a real state and must never default to a judgement.
+   */
+  relevance: z.enum(['muslim_related', 'not_related', 'uncertain']).nullable(),
+  classification: z.enum(['likely_hate', 'not_hate']).nullable(),
   hateType: z.string().nullable(),
   severity: z.number().int().min(0).max(3).nullable(),
-  /** Model score, never described to a reader as certainty. */
-  modelScore: z.number().min(0).max(1),
-  reviewState: z.enum(['pending', 'confirmed', 'corrected']),
+  /** Model score, never described to a reader as certainty. Null when unclassified. */
+  modelScore: z.number().min(0).max(1).nullable(),
+  /**
+   * Provider vocabulary: the live service uses `model_only`, `pending_review`,
+   * `confirmed`, `corrected`, `disputed`, `needs_context`; older fixtures use
+   * `pending`, `confirmed`, `corrected`. Labels come from `reviewLabel`.
+   */
+  reviewState: z.string(),
   reviewNote: z.string().nullable(),
+  isFixture: z.boolean().optional(),
+  dataset: ExplorerItemDatasetSchema.nullable().optional(),
   image: ExplorerItemImageSchema.nullable().optional(),
 });
 
 export const ExplorerPageSchema = z.object({
   applied: AppliedFiltersSchema,
-  matched: z.number().int().nonnegative(),
+  /** Total matches, or null when keyset pagination cannot count them. */
+  matched: z.number().int().nonnegative().nullable(),
   returned: z.number().int().nonnegative(),
+  /** Opaque cursor for the next page, or null on the last page. */
+  nextCursor: z.string().nullable(),
   items: z.array(ExplorerItemSchema),
 });
 
@@ -291,6 +324,8 @@ export const DiscussionSchema = z.object({
   insightId: z.string(),
   threadId: z.string(),
   posts: z.array(DiscussionPostSchema),
+  /** Whether the caller holds an invitation to post (ADR 0004). Absent means yes. */
+  canParticipate: z.boolean().optional(),
 });
 
 export const DiscussionCatalogSchema = z.object({
@@ -391,10 +426,12 @@ export const NewsItemSchema = z.object({
   /** Plain text only. HTML from a feed description must be stripped first. */
   summary: z.string(),
   url: z.string(),
-  published_at: z.string(),
+  /** Null when the feed stated no publication time; never the retrieval time. */
+  published_at: z.string().nullable(),
   retrieved_at: z.string(),
   language: z.string(),
-  scope: z.enum(['local', 'global']),
+  /** Null when the source stated no scope; never coerced to the nearer value. */
+  scope: z.enum(['local', 'global']).nullable(),
   location: z.string().nullable(),
 });
 
@@ -474,6 +511,7 @@ export type Overview = z.infer<typeof OverviewSchema>;
 export type FilterOption = z.infer<typeof FilterOptionSchema>;
 export type FilterOptions = z.infer<typeof FilterOptionsSchema>;
 export type ExplorerItemImage = z.infer<typeof ExplorerItemImageSchema>;
+export type ExplorerItemDataset = z.infer<typeof ExplorerItemDatasetSchema>;
 export type ExplorerItem = z.infer<typeof ExplorerItemSchema>;
 export type ExplorerPage = z.infer<typeof ExplorerPageSchema>;
 export type Insight = z.infer<typeof InsightSchema>;
@@ -533,8 +571,8 @@ export const EvidenceClassifyRequestSchema = z.object({
 });
 
 export const DatasetAnnotationSchema = z.object({
-  hate_types: z.array(HateTypeSchema).min(1),
-  severity: z.number().int().min(0).max(3),
+  hate_types: z.array(HateTypeSchema),
+  severity: z.number().int().min(0).max(3).nullable(),
   note: z.string(),
 });
 
@@ -562,26 +600,30 @@ export const ImageClassificationSchema = z.object({
 export const ImageExampleSchema = z.object({
   id: z.string(),
   title: z.string(),
+  /** Fixture asset path, or a short-lived signed URL on live. Never store it. */
   image_src: z.string(),
   alt_text: z.string().min(1),
   form_note: z.string(),
   dataset_annotation: DatasetAnnotationSchema,
-  score: z.number().min(0).max(1),
+  /** Null when the image has not been classified. Never means "safe". */
+  score: z.number().min(0).max(1).nullable(),
   narrative_tags: z.array(z.string()),
-  rationale: z.string(),
+  rationale: z.string().nullable(),
 });
 
 export const ImageExampleListSchema = z.object({
   data_mode: z.enum(['fixture', 'live', 'fallback', 'stale', 'unavailable']),
-  manifest: z.object({
-    dataset_provider: z.string(),
-    dataset_name: z.string(),
-    dataset_version: z.string(),
-    license_identifier: z.string(),
-    schema_mapping_version: z.string(),
-    approval_state: z.string(),
-    reviewer: z.string(),
-  }),
+  manifest: z
+    .object({
+      dataset_provider: z.string(),
+      dataset_name: z.string(),
+      dataset_version: z.string(),
+      license_identifier: z.string(),
+      schema_mapping_version: z.string(),
+      approval_state: z.string(),
+      reviewer: z.string(),
+    })
+    .nullable(),
   items: z.array(ImageExampleSchema),
 });
 

@@ -146,12 +146,18 @@ export function replyFromOverview(
     const typeNote =
       item.hateType === null ? 'no hate type assigned' : hateTypeLabel(item.hateType);
     const classNote =
-      item.classification === 'likely_hate'
-        ? 'classified as likely anti-Muslim hate'
-        : 'classified as not hate';
+      item.classification === null
+        ? 'not yet classified'
+        : item.classification === 'likely_hate'
+          ? 'classified as likely anti-Muslim hate'
+          : 'classified as not hate';
+    const scoreNote =
+      item.modelScore === null
+        ? 'It has no model score yet.'
+        : `The model score is ${item.modelScore.toFixed(2)}, not a measure of certainty.`;
 
     return {
-      answer: `One Explorer row from this sample is ${item.id} (${platformLabel(item.platform)}, ${item.date}). Container: ${item.containerTitle}. It is ${classNote}, ${typeNote}, ${reviewLabel(item.reviewState)}. The model score is ${item.modelScore.toFixed(2)}, not a measure of certainty. There is no author field.`,
+      answer: `One Explorer row from this sample is ${item.id} (${platformLabel(item.platform)}, ${item.date}). Container: ${item.containerTitle ?? 'no public context'}. It is ${classNote}, ${typeNote}, ${reviewLabel(item.reviewState)}. ${scoreNote} There is no author field.`,
       citations: [
         {
           kind: 'coverage',

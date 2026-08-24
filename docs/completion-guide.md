@@ -1,9 +1,44 @@
 # Hackathon production demo completion checklist
 
 **Document type:** How-to and completion reference  
-**Last reviewed:** 23 August 2026  
+**Last reviewed:** 24 August 2026  
 **Target:** Publicly reachable hackathon production demo  
 **Status:** Active — not yet accepted
+
+## Progress, 24 August 2026
+
+Work packages **1, 2, 6, 7, 9** and partner adjustments **PA-01 to PA-04** and
+**PA-06** are implemented in the working tree. Gate evidence is recorded in
+[`backend-todo.md`](./backend-todo.md) under *Gate evidence recorded 24 August
+2026*.
+
+What is implemented:
+
+- Supabase authentication, session restoration, bearer tokens on every live
+  request, `401` clearing the session, `403` kept distinct.
+- A `demo` data mode that routes product data to the live API with no
+  catch-and-fallback; remaining mocks are labelled in place.
+- The frontend live provider reconciled against the shipped backend contracts
+  (G1–G5, G7, G8 read paths), with wire schemas mirroring the Pydantic models.
+- Assisted platform reporting through the policy catalogue, and research-report
+  snapshot creation, CSV download, and print/PDF.
+- PA-01 media preference (ADR 0010), PA-02 removal, PA-03 request-driven
+  readiness, PA-04 return navigation, PA-06 root README.
+
+What still blocks a **go**, and needs the operator rather than more code:
+
+1. **Real credentials.** `GEMINI_API_KEY`, `GEMINI_MODEL`, Supabase Storage, and
+   `VITE_SUPABASE_*` are still placeholders, so those connectors report
+   themselves disabled.
+2. **A Postgres target for the database gate.** 401 backend tests skip without
+   `AMANAH_TEST_DATABASE_URL`.
+3. **One reviewed RSS feed ingested,** and one reviewed datapack imported
+   (work packages 3 and 5).
+4. **Authenticated multipart image upload** (work package 8) — tracked as
+   backend `B-S28`; the live path refuses visibly rather than pretending.
+5. **PA-05 attachments** — needs an ADR 0004 supersede and migration
+   authorization before implementation.
+6. **Deployment and the deployed smoke run** (work package 12).
 
 This document collects the work that remains for the hackathon demo. It does
 not replace the product specification, implementation plans, TODOs, ADRs, or

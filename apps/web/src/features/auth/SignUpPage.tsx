@@ -1,30 +1,30 @@
-import { useCallback, useEffect, useState, type ChangeEvent, type FormEvent } from 'react';
+import { useCallback, useState, type ChangeEvent, type FormEvent } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 
-import { AppLoadingScreen, entryHoldMs } from '@/components/ui/AppLoadingScreen';
+import { AppLoadingScreen } from '@/components/ui/AppLoadingScreen';
 import { Button } from '@/components/ui/Button';
 import { usePageTitle } from '@/hooks/usePageTitle';
+import { clearTourCompletion } from '@/features/tour/tour-storage';
 
 import { AuthCard } from './AuthCard';
 import { AuthField } from './AuthField';
+import { useSession } from './SessionProvider';
 import { isEmailShaped, isPasswordLongEnough, MINIMUM_PASSWORD_LENGTH } from './validation';
-import { clearTourCompletion } from '@/features/tour/tour-storage';
-
-import { startFixtureSession } from './session';
 
 import styles from './AuthForm.module.css';
 
 /**
  * Sign-up.
  *
- * A deliberate deviation from the planning documents, which close registration
- * for this build. It is safe here only because nothing is registered: the form
- * validates, starts a local demo session under the name given, and transmits and
- * stores nothing else. The reasoning, the risk, and how to revert are in
- * docs/adr/0005-self-serve-sign-up.md.
+ * In live and demo modes this registers a Supabase account (ADR 0005 as amended
+ * by spec v2.2 self-serve sign-up) and either opens the workspace immediately
+ * or asks the person to confirm their email, depending on the project's Auth
+ * settings. In fixture mode it starts the tab-scoped demo session under the
+ * name given and transmits nothing.
  */
 export function SignUpPage() {
   const navigate = useNavigate();
+  const { signUp } = useSession();
   usePageTitle('Sign up');
 
   const [name, setName] = useState('');
@@ -33,6 +33,8 @@ export function SignUpPage() {
   const [nameError, setNameError] = useState<string>();
   const [emailError, setEmailError] = useState<string>();
   const [passwordError, setPasswordError] = useState<string>();
+  const [submitError, setSubmitError] = useState<string>();
+  const [awaitingConfirmation, setAwaitingConfirmation] = useState(false);
   const [isPending, setIsPending] = useState(false);
 
   const handleNameChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
@@ -66,6 +68,7 @@ export function SignUpPage() {
       setNameError(nextNameError);
       setEmailError(nextEmailError);
       setPasswordError(nextPasswordError);
+      setSubmitError(undefined);
 
       if (
         nextNameError !== undefined ||
@@ -77,25 +80,27 @@ export function SignUpPage() {
 
       setIsPending(true);
       clearTourCompletion();
-      startFixtureSession(name, email);
+      signUp(name.trim(), email, password)
+        .then((result) => {
+          if (result === 'signed_in') {
+            void navigate('/app');
+            return;
+          }
+          setIsPending(false);
+          setAwaitingConfirmation(true);
+        })
+        .catch((error: unknown) => {
+          setIsPending(false);
+          setSubmitError(
+            error instanceof Error ? error.message : 'Sign-up failed. Try again in a moment.',
+          );
+        });
     },
-    [name, email, password],
+    [name, email, navigate, password, signUp],
   );
 
-  useEffect(() => {
-    if (!isPending) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      void navigate('/app');
-    }, entryHoldMs());
-    return () => {
-      window.clearTimeout(timer);
-    };
-  }, [isPending, navigate]);
-
   if (isPending) {
-    return <AppLoadingScreen message="Insights await" hold />;
+    return <AppLoadingScreen message="Creating your account" hold />;
   }
 
   return (
@@ -143,6 +148,16 @@ export function SignUpPage() {
           hint={`At least ${MINIMUM_PASSWORD_LENGTH} characters.`}
           error={passwordError}
         />
+        {submitError !== undefined && (
+          <p role="alert" className={styles.formError}>
+            {submitError}
+          </p>
+        )}
+        {awaitingConfirmation && (
+          <output className={styles.formNotice}>
+            Check your inbox: confirm your email address, then log in to open the workspace.
+          </output>
+        )}
         <Button variant="primary" type="submit" disabled={isPending}>
           {isPending ? 'Signing up' : 'Sign up'}
         </Button>

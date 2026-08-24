@@ -1,6 +1,5 @@
-import { useCallback, useState } from 'react';
-
 import { platformLabel, reviewLabel, type ExplorerItem, type ExplorerItemImage } from '@/api';
+import { SafeImage } from '@/components/ui/SafeImage';
 import { StatusPill, type StatusIndicator } from '@/components/ui/StatusPill';
 
 import { classificationLabel, itemSeverityLabel, itemTypeLabel } from './item-copy';
@@ -11,20 +10,34 @@ interface ItemRowProps {
   item: ExplorerItem;
 }
 
-const REVIEW_INDICATOR: Record<ExplorerItem['reviewState'], StatusIndicator> = {
+/**
+ * Both the fixture vocabulary (`pending`) and the live service vocabulary
+ * (`model_only`, `pending_review`, `disputed`, `needs_context`) map onto the
+ * three visual states. An unknown future state renders as pending rather than
+ * as a false confirmation.
+ */
+const REVIEW_INDICATOR: Record<string, StatusIndicator> = {
   confirmed: 'ok',
   pending: 'pending',
+  pending_review: 'pending',
+  model_only: 'pending',
   corrected: 'degraded',
+  disputed: 'degraded',
+  needs_context: 'degraded',
 };
 
 /**
  * Dense table labels. The full review phrase stays on `title` for hover and
  * assistive tech that reads the accessible name from the pill text plus title.
  */
-const REVIEW_TABLE_LABEL: Record<ExplorerItem['reviewState'], string> = {
+const REVIEW_TABLE_LABEL: Record<string, string> = {
   pending: 'Awaiting review',
+  pending_review: 'Awaiting review',
+  model_only: 'Model only',
   confirmed: 'Confirmed',
   corrected: 'Corrected',
+  disputed: 'Disputed',
+  needs_context: 'Needs context',
 };
 
 /**
@@ -42,24 +55,26 @@ export function ItemRow({ item }: ItemRowProps) {
         <span className={styles.date}>{item.date}</span>
         <span className={styles.itemId}>item {item.id}</span>
       </th>
-      <td>{platformLabel(item.platform)}</td>
-      <td className={styles.context}>{item.containerTitle}</td>
+      <td>{item.platformDisplay ?? platformLabel(item.platform)}</td>
+      <td className={styles.context}>{item.containerTitle ?? 'No public context'}</td>
       <td className={styles.excerptCell}>
         {item.image !== undefined && item.image !== null ? (
-          <ImageContent itemId={item.id} image={item.image} />
+          <ImageContent image={item.image} />
         ) : (
-          <p className={styles.excerpt}>{item.redactedExcerpt}</p>
+          <p className={styles.excerpt}>{item.redactedExcerpt ?? 'No permitted excerpt'}</p>
         )}
       </td>
       <td className={styles.classification}>{classificationLabel(item.classification)}</td>
       <td>{itemTypeLabel(item.hateType)}</td>
-      <td className={styles.numeric}>{item.modelScore.toFixed(2)}</td>
+      <td className={styles.numeric}>
+        {item.modelScore === null ? '—' : item.modelScore.toFixed(2)}
+      </td>
       <td className={styles.severity}>{itemSeverityLabel(item.severity)}</td>
       <td className={styles.review}>
         <div className={styles.reviewBody}>
           <StatusPill
-            indicator={REVIEW_INDICATOR[item.reviewState]}
-            label={REVIEW_TABLE_LABEL[item.reviewState]}
+            indicator={REVIEW_INDICATOR[item.reviewState] ?? 'pending'}
+            label={REVIEW_TABLE_LABEL[item.reviewState] ?? fullReview}
             title={fullReview}
           />
           {item.reviewNote !== null && <p className={styles.note}>{item.reviewNote}</p>}
@@ -69,12 +84,7 @@ export function ItemRow({ item }: ItemRowProps) {
   );
 }
 
-function ImageContent({ itemId, image }: { itemId: string; image: ExplorerItemImage }) {
-  const [revealed, setRevealed] = useState(false);
-  const handleToggle = useCallback((): void => {
-    setRevealed((current) => !current);
-  }, []);
-
+function ImageContent({ image }: { image: ExplorerItemImage }) {
   return (
     <div className={styles.imageBlock}>
       <p className={styles.excerpt}>{image.formNote}</p>
@@ -86,21 +96,7 @@ function ImageContent({ itemId, image }: { itemId: string; image: ExplorerItemIm
           </dd>
         </div>
       </dl>
-      <button
-        type="button"
-        className={styles.reveal}
-        aria-expanded={revealed}
-        aria-controls={`${itemId}-image`}
-        onClick={handleToggle}
-      >
-        {revealed ? 'Hide image' : 'Reveal image'}
-      </button>
-      <img
-        id={`${itemId}-image`}
-        className={revealed ? styles.thumb : `${styles.thumb} ${styles.thumbBlurred}`}
-        src={image.imageSrc}
-        alt={image.altText}
-      />
+      <SafeImage src={image.imageSrc} alt={image.altText} />
     </div>
   );
 }

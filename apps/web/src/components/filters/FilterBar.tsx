@@ -75,8 +75,9 @@ export function FilterBar({
         <DateRangePicker
           from={applied.from}
           to={applied.to}
-          availableFrom={options.available.from}
-          availableTo={options.available.to}
+          availableFrom={options.available?.from ?? fallbackAvailableFrom()}
+          availableTo={options.available?.to ?? todayUtc()}
+          isAvailabilityKnown={options.available !== null}
           onChange={onRangeChange}
         />
 
@@ -120,7 +121,29 @@ export function FilterBar({
   );
 }
 
+function todayUtc(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+/**
+ * When the provider does not report an available-data window (the live
+ * service does not yet), the picker is bounded to the service's maximum
+ * query window ending today. This bounds what can be *asked*; it does not
+ * claim data exists on any of those days.
+ */
+function fallbackAvailableFrom(): string {
+  const start = new Date();
+  start.setUTCDate(start.getUTCDate() - 365);
+  return start.toISOString().slice(0, 10);
+}
+
 function ChipGroup({ legend, hint, param, options, selected, onToggle }: ChipGroupProps) {
+  if (options.length === 0) {
+    // The provider does not support this filter axis (live `/v1/items` has no
+    // hate-type filter yet, reconciliation G3). Offering chips that would be
+    // ignored is a false control, so the group is omitted entirely.
+    return null;
+  }
   return (
     <fieldset className={styles.group}>
       <legend className={styles.legend}>{legend}</legend>

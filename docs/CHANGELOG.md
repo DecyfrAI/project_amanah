@@ -6,6 +6,53 @@ All notable project changes are documented here using the Keep a Changelog struc
 
 ### Added
 
+- **Frontend/backend integration — the demo is wired end to end.** Supabase Auth
+  replaces the fixture session: `SessionProvider` restores a real session before any
+  protected route renders, every `live-provider.ts` request carries the access token as
+  a bearer header, a `401` clears the spent session so the guard returns to login, and a
+  `403` stays a permission denial without signing the person out. A new `demo` data mode
+  routes product data to the live API with no catch-and-fallback, so a live failure stays
+  a visible failure and never becomes fixture data.
+- `apps/web/src/api/wire.ts`: Zod schemas mirroring the backend Pydantic contracts. Live
+  responses are validated against those before being mapped into view models, which
+  closes reconciliation gaps G1–G5, G7, G10, and the read half of G8.
+- Assisted platform reporting through the reviewed policy catalogue (`PolicyReportFlow`):
+  candidates with their official links, versions, and last-reviewed dates; explicit
+  policy-version confirmation before saving; persistence through `POST /v1/prepared-reports`;
+  and outcome recording through `PATCH`. Nothing in the flow can submit a report.
+- Research-report snapshots (`ResearchReportPanel`): real creation through
+  `POST /v1/research-reports`, the stored snapshot rendered with its scope, coverage,
+  figures, citations, methodology version, and limitations, aggregate CSV download, and
+  print styles for Save as PDF. The inert scope form and illustrative snapshot list are gone.
+- Vendor bundle splitting: the entry chunk is ~252 kB, under Vite's 500 kB warning (F-S21.6).
+- Security headers and immutable asset caching in `netlify.toml`.
+- A reviewer-focused root `README.md` (PA-06).
+- Backend `B-S28`: authenticated multipart image upload, recorded as **not implemented**.
+
+### Changed
+
+- **Media display is now controlled by the viewer (ADR 0010, amending ADR 0007).** Images
+  are visible by default on authenticated surfaces; "Blur media by default" is an opt-in
+  preference persisted on the profile through `PATCH /v1/me`, applied across Explorer,
+  Review, Insights, and Reports at once and immediately, with an accessible per-image
+  Show/Hide override on every image. Blur is a display treatment only — it changes no
+  authorization, ownership check, RLS rule, or signed-URL handling, and text redaction is
+  untouched. `spec.md` §18 updated.
+- The nine-second post-login hold is gone. Navigation follows the real authentication and
+  request lifecycle, with a bounded 60-second request timeout so a dead API ends in a
+  retryable error rather than an infinite loader (PA-03).
+- Insight detail pages carry a `View all insights` action and a success notice after
+  creation, and a second click while the create is in flight no longer writes a duplicate
+  (PA-04).
+- The discussion composer respects the server's `can_participate`, so an uninvited reader
+  is not offered a control whose every use would be refused (ADR 0004).
+
+### Removed
+
+- The unscoped Image Evidence section on the Insights list, with its hook and component.
+  It requested an unfiltered Explorer page and showed every image it found, none of which
+  was tied to the insights on the page (PA-02).
+
 - **Milestone 7 — scheduling, resilience, observability, CI, and deployment readiness
   (B-S21–B-S23).** Scheduled and manual eight-hour collection now share the validated,
   checkpointed `amanah-etl run-from-env` command and constrain source, stable seed/config,

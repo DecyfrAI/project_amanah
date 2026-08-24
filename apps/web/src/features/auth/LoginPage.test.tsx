@@ -1,20 +1,13 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { ThemeProvider } from '@/app/ThemeProvider';
 
 import { endFixtureSession, hasFixtureSession } from './session';
 import { LoginPage } from './LoginPage';
-
-vi.mock('@/components/ui/AppLoadingScreen', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/ui/AppLoadingScreen')>();
-  return {
-    ...actual,
-    entryHoldMs: () => 0,
-  };
-});
+import { SessionProvider } from './SessionProvider';
 
 afterEach(() => {
   endFixtureSession();
@@ -24,14 +17,16 @@ afterEach(() => {
 
 function renderLogin() {
   return render(
-    <ThemeProvider>
-      <MemoryRouter initialEntries={['/login']}>
-        <Routes>
-          <Route path="/login" element={<LoginPage />} />
-          <Route path="/app" element={<p>Overview</p>} />
-        </Routes>
-      </MemoryRouter>
-    </ThemeProvider>,
+    <SessionProvider>
+      <ThemeProvider>
+        <MemoryRouter initialEntries={['/login']}>
+          <Routes>
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/app" element={<p>Overview</p>} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
+    </SessionProvider>,
   );
 }
 

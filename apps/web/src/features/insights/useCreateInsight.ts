@@ -16,7 +16,9 @@ export function useCreateInsight() {
     mutationFn: (input: CreateInsightInput) => apiClient.createInsight(input),
     onSuccess: (insight: Insight): void => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.insights });
-      void navigate(`/app/insights/${insight.id}`);
+      // `created: true` lets the detail page show its "added to Insights"
+      // confirmation (PA-04) without treating every later visit as a creation.
+      void navigate(`/app/insights/${insight.id}`, { state: { created: true } });
     },
   });
 }
