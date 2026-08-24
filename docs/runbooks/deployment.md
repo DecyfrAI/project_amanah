@@ -13,6 +13,19 @@ connector/encryption credentials as Render secrets, never in Git or browser
 variables. Set `APP_ORIGIN` to the exact frontend HTTPS origin. Missing optional
 connector keys leave only that connector disabled.
 
+For image upload and classification, also configure these server-side Render
+values:
+
+- `SUPABASE_STORAGE_SECRET_KEY`: a dedicated Supabase secret/service-role key,
+  never the JWT signing secret and never a browser variable.
+- `SUPABASE_STORAGE_BUCKET=research-images`: the private bucket created by the
+  reviewed migration/setup process.
+- `GEMINI_API_KEY` and `GEMINI_MODEL`: use a model that the key can currently
+  access, then verify one safe synthetic request after deployment.
+- `ALLOW_THIRD_PARTY_CONTENT_INFERENCE=true`: set this only after deliberately
+  approving transfer of a signed-in user's uploaded pixels to Gemini. With it
+  absent or false, private upload works but classification is refused.
+
 For live YouTube collection, add `YOUTUBE_API_KEY` to the GitHub
 `etl-production` environment secrets. The browser and Netlify must never receive
 this key. The reviewed runtime catalogue, not possession of the key, determines
@@ -34,6 +47,24 @@ allow only the exact Netlify authentication callback/recovery origins.
 
 The pre-deploy command applies Alembic migrations separately from application
 startup. Review the generated SQL before the first production deploy.
+
+## Prepare the reviewer demo account
+
+The frontend intentionally has no role-based Review-page gate; every signed-in
+person can navigate there. The API remains the security boundary and accepts
+queue reads and decisions only from `reviewer` or `administrator` tokens.
+
+1. In Supabase Authentication, locate the dedicated hackathon demo user and
+   copy its user ID.
+2. Using a trusted server-side admin operation, set that user's Auth
+   `app_metadata.role` to `reviewer`. Do not use user-editable `user_metadata`
+   and never run the admin credential in the browser.
+3. Sign the demo user out and back in so Supabase issues a JWT containing the
+   new `app_metadata.role` claim.
+4. Open `/app/profile` and confirm the effective role is Reviewer.
+5. Open `/app/review`, claim one item, and record one safe fixture/synthetic
+   decision. A claim is still required because it is the concurrency lease, not
+   a frontend permission gate.
 
 ## Deploy and smoke check
 

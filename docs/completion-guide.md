@@ -33,34 +33,39 @@ Closing it required fixing four real defects, recorded in
 [`backend-todo.md`](./backend-todo.md); one of them, a branched Alembic history,
 would have broken the first Render deployment.
 
-What still blocks a **go**, and needs the operator rather than more code:
-
-Work package **8 (image upload)** is complete as backend `B-S28`:
+The core of work package **8 (image upload)** is implemented:
 `POST /v1/image-uploads` cleans and stores one image privately, and
 `POST /v1/image-classifications` accepts either a catalogue example or an upload.
-Storage is verified working against the real Supabase bucket. **PA-05 is formally
-descoped** — see its entry below.
+The Review **Label an image** picker now performs that upload before requesting
+classification. Storage was previously verified against the real Supabase bucket.
+Retention deletion/expiry automation and its negative tests remain open in
+`B-S28.10`–`.11`. **PA-05 is formally descoped** — see its entry below.
 
-What still blocks a **go**, and needs the operator rather than more code:
+What still blocks a **go**:
 
-1. **Gemini credentials.** `GEMINI_API_KEY` and `GEMINI_MODEL` are still
-   placeholders, so classification and the assistant report themselves
-   unavailable. News is ingested but unclassified, which is the honest state.
+1. **Gemini deployed verification.** Confirm `GEMINI_API_KEY` and a model that
+   is available to that key are set on Render, then complete one safe live
+   generation. The client now uses Gemini's JSON-schema generation field, but
+   local tests never call the live provider.
 2. **The upload transfer opt-in.** `ALLOW_THIRD_PARTY_CONTENT_INFERENCE` is off
    by default, so classifying an *upload* is refused until a deployment turns it
    on deliberately. Upload and private storage work regardless.
-3. **Migrations applied to Supabase.** The project database sits at
-   `0006_policy_channel_checks` — one of the old branch heads — and is missing
-   `image_examples`, `image_classifications`, the two audit tables, and now
-   `image_uploads`. Review the SQL, then `alembic upgrade head`.
-4. **Catalogue objects uploaded** to the bucket at the paths stored in
+3. **Catalogue objects uploaded** to the bucket at the paths stored in
    `image_examples`; creating the bucket does not populate it.
-5. **One reviewed datapack imported** (work package 5). This needs a human to
+4. **One reviewed datapack imported** (work package 5). This needs a human to
    choose a dataset and accept its licence; `config/datapacks.example.yml` is
    still `packages: []` and must not be filled in without that review.
-6. **Automated E2E coverage.** None exists: there is no Playwright and no `e2e/`
+5. **Automated E2E coverage.** None exists: there is no Playwright and no `e2e/`
    directory, though `AGENTS.md` documents a command for one.
-7. **Deployment and the deployed smoke run** (work package 12).
+6. **Deployment and the deployed smoke run** (work package 12).
+7. **Upload retention hardening.** Add an owner/operator deletion endpoint or
+   expiry sweep, document it, and close the remaining missing-object,
+   provider-failure, deletion, and expiry tests in `B-S28.10`–`.11`.
+
+Completed operator action, 24 August 2026: the configured Supabase database was
+upgraded transactionally from `0006_policy_channel_checks` to
+`0008_user_image_uploads`; a follow-up `alembic current` reported
+`0008_user_image_uploads (head)`.
 
 This document collects the work that remains for the hackathon demo. It does
 not replace the product specification, implementation plans, TODOs, ADRs, or
@@ -537,14 +542,16 @@ Acceptance:
 References: backend `B-S20`; frontend `F-S16`, `F-S20.4`;
 [`resource-report-governance.md`](./resource-report-governance.md).
 
-- [ ] Replace the inert research-report controls and mock snapshot list.
-- [ ] Send supported dashboard/report filters to `POST /v1/research-reports`.
-- [ ] Read the authorized immutable snapshot from `GET /v1/research-reports/{id}`.
-- [ ] Render scope, dates, sources, coverage, denominators, findings, citations, methodology, model disclosure, versions, and limitations.
-- [ ] Connect aggregate CSV download.
-- [ ] Add print styles and enable browser Print/Save as PDF.
-- [ ] Redact harmful content and personal identifiers by default.
-- [ ] Test owner/reviewer authorization, cross-user denial, filter fidelity, immutable ready snapshots, coverage gaps, redaction, CSV schema, and print layout.
+- [x] Replace the inert research-report controls and mock snapshot list.
+- [x] Send supported dashboard/report filters to `POST /v1/research-reports`.
+- [ ] Restore a generated snapshot through `GET /v1/research-reports/{id}` after a page refresh. *(The generation response is rendered now; the frontend does not yet call the read route.)*
+- [x] Render scope, dates, sources, coverage, denominators, findings, citations, methodology, model disclosure, versions, and limitations.
+- [x] Connect aggregate CSV download.
+- [x] Add print styles and enable browser Print/Save as PDF.
+- [x] Redact harmful content and personal identifiers by default.
+- [ ] Finish deployed/browser print-layout verification. *(Backend authorization,
+  cross-user denial, filter fidelity, immutable snapshots, coverage gaps,
+  redaction, and CSV schema have automated coverage.)*
 
 Acceptance:
 
@@ -557,22 +564,23 @@ References: backend `B-S26`; reconciliation `G8`;
 [`adr/0007-research-image-corpus.md`](./adr/0007-research-image-corpus.md);
 [`synthetic-image-datapack.md`](./synthetic-image-datapack.md).
 
-- [ ] Define an authenticated multipart upload contract and update `spec.md`, OpenAPI, contract tests, and frontend schemas together.
-- [ ] Accept one bounded JPEG, PNG, or WebP image; document the exact size and dimension limits.
-- [ ] Validate MIME from bytes, reject malformed/polyglot/decompression-bomb files, and do not trust the filename.
-- [ ] Remove or avoid retaining EXIF metadata and other unnecessary personal metadata.
-- [ ] Calculate SHA-256 and enforce a documented duplicate policy.
-- [ ] Store bytes in a private first-party object-storage bucket, never base64 in PostgreSQL.
-- [ ] Replace use of the Supabase JWT signing secret as a Storage credential with a dedicated server-only provider credential.
-- [ ] Replace custom HMAC URLs with signed URLs created through the official Storage API, or serve the object through an authenticated backend stream.
-- [ ] Store owner, path, hash, MIME, byte size, timestamps, retention state, and classification references in PostgreSQL.
-- [ ] If the current schema cannot represent a user upload safely, obtain explicit authorization before adding a migration.
-- [ ] Fetch the stored bytes server-side and classify through the controlled Gemini boundary.
-- [ ] Keep user upload, dataset annotation, model prediction, and human review as separate concepts.
-- [ ] Connect the frontend file picker to the multipart route; remove the filename/size-only fixture behavior in the live path.
-- [ ] Apply the PA-01 image-display preference to the upload preview and returned
+- [x] Define an authenticated multipart upload contract and update `spec.md`, OpenAPI, contract tests, and frontend schemas together.
+- [x] Accept one bounded JPEG, PNG, or WebP image; document the exact size and dimension limits.
+- [x] Validate MIME from bytes, reject malformed/polyglot/decompression-bomb files, and do not trust the filename.
+- [x] Remove or avoid retaining EXIF metadata and other unnecessary personal metadata.
+- [x] Calculate SHA-256 and enforce a documented duplicate policy.
+- [x] Store bytes in a private first-party object-storage bucket, never base64 in PostgreSQL.
+- [x] Replace use of the Supabase JWT signing secret as a Storage credential with a dedicated server-only provider credential.
+- [x] Replace custom HMAC URLs with signed URLs created through the official Storage API, or serve the object through an authenticated backend stream.
+- [x] Store owner, path, hash, MIME, byte size, timestamps, retention state, and classification references in PostgreSQL.
+- [x] If the current schema cannot represent a user upload safely, obtain explicit authorization before adding a migration.
+- [x] Fetch the stored bytes server-side and classify through the controlled Gemini boundary.
+- [x] Keep user upload, dataset annotation, model prediction, and human review as separate concepts.
+- [x] Connect the Review **Label an image** file picker to the multipart route and classify the returned `upload_id`.
+- [x] Apply the PA-01 image-display preference to the upload preview and returned
   result, with images visible by default and an accessible per-image Show/Hide override.
-- [ ] Define demo retention and deletion behavior for user uploads.
+- [ ] Complete demo deletion/expiry behavior for user uploads. *(Thirty-day
+  retention and an owner-delete service exist; no API/operator sweep exists.)*
 - [ ] Add rate limits and tests for anonymous denial, ownership, wrong MIME, oversized body, malformed image, metadata stripping, duplicate hash, missing object, signed-URL expiry, Gemini failure, logging redaction, and deletion.
 
 Acceptance:
@@ -631,7 +639,7 @@ Acceptance:
 References: all cross-cutting gates in [`backend-todo.md`](./backend-todo.md)
 and [`frontend-todo.md`](./frontend-todo.md); [`architecture/backend-threat-model.md`](./architecture/backend-threat-model.md).
 
-- [ ] Update the threat model for multipart image upload, private object storage, signed URLs, and the hybrid provider.
+- [x] Update the threat model for multipart image upload, private object storage, signed URLs, and the hybrid provider.
 - [ ] Complete backend security gates `BE-GATE-SEC-01`–`BE-GATE-SEC-11`.
 - [ ] Complete backend testing gates `BE-GATE-TEST-01`–`BE-GATE-TEST-12`.
 - [ ] Complete backend documentation gates `BE-GATE-DOC-01`–`BE-GATE-DOC-12`.

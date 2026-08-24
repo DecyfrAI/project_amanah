@@ -27,12 +27,8 @@ describe('ImageWorkbench', () => {
 
     expect(screen.getByRole('radio', { name: /Label an image/ })).toBeChecked();
     expect(screen.getByRole('radio', { name: /Test the model/ })).not.toBeChecked();
-    expect(
-      screen.getByText(/Record a training annotation for later fine-tuning. This is saved./),
-    ).toBeVisible();
-    expect(
-      screen.getByText(/See how the classifier reads an image.*Nothing is saved/s),
-    ).toBeVisible();
+    expect(screen.getByText(/keep a demo annotation in this browser session/i)).toBeVisible();
+    expect(screen.getByText(/Rehearse the classifier response.*Nothing is saved/s)).toBeVisible();
   });
 
   it('opens on the labelling path, so testing is a deliberate choice', () => {
@@ -50,8 +46,19 @@ describe('ImageWorkbench', () => {
 
     expect(screen.getByLabelText('Image to test')).toBeVisible();
     // Nothing on this path can record a label.
-    expect(screen.queryByRole('button', { name: 'Save training label' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Save label in this session' })).toBeNull();
     expect(screen.queryByLabelText('Research image')).toBeNull();
+  });
+
+  it('uploads the label image and classifies the stored copy', async () => {
+    const user = userEvent.setup();
+    renderWorkbench();
+
+    await user.upload(screen.getByLabelText('Research image'), imageFile());
+
+    expect(await screen.findByText('Stored privately.', { exact: false })).toBeVisible();
+    expect(await screen.findByRole('heading', { name: 'Image classification' })).toBeVisible();
+    expect(screen.queryByText(/file stays in this tab/i)).toBeNull();
   });
 
   it('answers in ordinary words rather than taxonomy field names', async () => {

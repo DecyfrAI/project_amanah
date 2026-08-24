@@ -28,6 +28,12 @@ New work cites **F-S** identifiers. Demo scope and its remaining work live in
 - [x] **F-S16** Research reports. `ResearchReportPanel` creates a real snapshot,
       renders its stored scope/coverage/figures/citations/limitations, downloads
       the aggregate CSV, and has print styles for Save as PDF.
+- [x] **F-S14 / B-S28 frontend** The Review **Label an image** path uploads the
+      selected image to private storage and classifies the returned owner-scoped
+      upload identifier. The aggregate CSV and Print/Save as PDF actions have no
+      frontend role gate; they become available after their required immutable
+      snapshot exists. **Test the model** remains an explicitly labelled local
+      fixture rehearsal and never impersonates a live pixel reading.
 - [x] Demo provider. `VITE_DATA_MODE=demo` routes product data to the live
       service with no catch-and-fallback; remaining mocks are labelled in place.
 - [x] **PA-01** Persisted media-display preference, images visible by default,

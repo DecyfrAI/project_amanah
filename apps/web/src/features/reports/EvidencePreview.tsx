@@ -8,19 +8,15 @@ interface EvidencePreviewProps {
 }
 
 /**
- * Screenshot stays in this tab as an object URL. It follows the viewer's own
- * display preference (PA-01) and keeps a per-image Show/Hide control. Quoted
- * words in the draft are not redacted.
+ * The preview is a tab-local object URL even when another part of the flow also
+ * uploads a cleaned copy. It follows the viewer's own display preference
+ * (PA-01) and keeps a per-image Show/Hide control.
  */
 export function EvidencePreview({ src, filename }: EvidencePreviewProps) {
   return (
     <div className={styles.figure}>
-      <p className={styles.warning}>The file has not left this tab.</p>
-      <SafeImage
-        src={src}
-        alt={`Screenshot ${filename}, still on this device.`}
-        subject="screenshot"
-      />
+      <p className={styles.warning}>Local preview of the file you selected.</p>
+      <SafeImage src={src} alt={`Preview of ${filename}.`} subject="screenshot" />
     </div>
   );
 }

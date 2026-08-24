@@ -1,7 +1,7 @@
 # Project Amanah — Developer-Ready Product Specification
 
-**Version:** 2.2  
-**Date:** 2026-08-23  
+**Version:** 2.4
+**Date:** 2026-08-24
 **Status:** Approved product direction; ready for hackathon implementation  
 **Delivery constraint:** 48-hour hackathon  
 **Primary language:** English  
@@ -707,7 +707,18 @@ nothing above changes meaning.
 | GET | `/v1/me/posts` | The caller's own discussion notes |
 | POST | `/v1/assistant/query` | Grounded question about the current filtered window; answers only from stored fact bundles and methodology, cites every number, and refuses causal claims |
 | GET | `/v1/image-examples` | Authenticated image-evidence catalog with manifest provenance and short-lived signed URLs (ADR 0007) |
+| POST | `/v1/image-uploads` | Upload one bounded JPEG, PNG, or WebP; the server validates and re-encodes it before owner-only private storage |
 | POST | `/v1/image-classifications` | Server-side staged classification of a catalog or uploaded image; pixels never cross the browser API boundary |
+
+The image-upload route was added in v2.4 (24 August 2026) by product-owner
+request. Its default limits are 5 MiB, 12,000 pixels on either dimension, and
+50 megapixels. The server decides the media type from decoded bytes, strips
+metadata by re-encoding, deduplicates cleaned bytes per owner, retains uploads
+for 30 days by default, and never stores the original filename. Upload and
+classification are separate calls. Classification accepts exactly one
+`example_id` or owner-scoped `upload_id`, reads pixels from private storage on
+the server, and may send user-submitted pixels to Gemini only when the
+deployment explicitly enables `ALLOW_THIRD_PARTY_CONTENT_INFERENCE`.
 
 The following row was added in v2.3 (23 August 2026) while implementing B-S16. It
 is additive: nothing above changes meaning.
@@ -961,6 +972,9 @@ For open-datapack items, provenance MUST additionally retain dataset provider, n
 - No item enters training automatically.
 - A training release MUST have a versioned manifest, source permissions, label definitions, reviewer provenance, hashes, and documented exclusions.
 - Deleted or policy-restricted items MUST be removed from future training releases when required.
+- A user-uploaded image and its model prediction do not become training data. A
+  separately recorded human annotation is only a quarantined training candidate
+  until the normal human-review and release-manifest requirements are satisfied.
 
 ## 16. Authentication and authorization
 

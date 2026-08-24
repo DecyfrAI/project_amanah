@@ -296,8 +296,8 @@ export function ResearchReportPanel() {
             </button>
           </div>
           <p className={styles.exportNote}>
-            The CSV carries counts and denominators only. Item-level export needs elevated
-            permission and is not part of this view.
+            The CSV contains the aggregate counts and denominators shown in this report. It does not
+            include item-level content or personal identifiers.
           </p>
         </div>
       )}

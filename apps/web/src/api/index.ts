@@ -143,7 +143,7 @@ function withFallback(live: ApiClient, fixture: ApiClient): ApiClient {
  * image catalogue/classification, and the review queue. No method here catches
  * a live failure and substitutes fixture data — a failure surfaces to the screen that made the
  * request. The surfaces that remain mocked (the connections walkthrough and
- * the local-file upload rehearsal) do not read through this client at all and
+ * the local-file model-test rehearsal) do not read through this client at all and
  * are labelled in place.
  */
 function createDemoProvider(live: ApiClient): ApiClient {

@@ -110,7 +110,10 @@ All notable project changes are documented here using the Keep a Changelog struc
 - Vendor bundle splitting: the entry chunk is ~252 kB, under Vite's 500 kB warning (F-S21.6).
 - Security headers and immutable asset caching in `netlify.toml`.
 - A reviewer-focused root `README.md` (PA-06).
-- Backend `B-S28`: authenticated multipart image upload, recorded as **not implemented**.
+- Review **Label an image** now uploads through `POST /v1/image-uploads` and
+  classifies the returned owner-scoped identifier instead of sending only a
+  filename and size. Report CSV and Print/Save as PDF actions carry no frontend
+  role gate; reviewer authorization remains enforced by the API.
 
 ### Changed
 

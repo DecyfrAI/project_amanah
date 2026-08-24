@@ -445,6 +445,22 @@ def test_an_image_travels_as_its_own_part_not_as_text() -> None:
     assert "inlineData" not in parts[0]
 
 
+def test_structured_output_uses_the_json_schema_generation_field() -> None:
+    captured: dict[str, Any] = {}
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        captured.update(json.loads(request.content))
+        return _answer(VALID_OUTPUT)
+
+    result = _build_client(handler).infer(_request(), ClassificationOutput)
+
+    assert isinstance(result, InferenceSuccess)
+    generation_config = captured["generationConfig"]
+    assert generation_config["responseMimeType"] == "application/json"
+    assert "responseJsonSchema" in generation_config
+    assert "responseSchema" not in generation_config
+
+
 def test_asking_a_prompt_for_a_model_it_does_not_produce_is_refused() -> None:
     class Unrelated(BaseModel):
         model_config = ConfigDict(extra="forbid")
