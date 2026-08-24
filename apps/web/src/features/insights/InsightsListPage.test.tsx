@@ -36,12 +36,10 @@ describe('InsightsListPage', () => {
     expect(within(card).getByText('Machine-generated')).toBeVisible();
   });
 
-  it('shows image posts with file metadata instead of a comment', async () => {
+  it('does not carry the image evidence list', async () => {
     renderList();
 
-    expect(await screen.findByRole('heading', { name: 'Image evidence' })).toBeVisible();
-    expect(await screen.findByText(/img-ex-01.png/i)).toBeVisible();
-    expect(screen.getByText(/70,182 bytes/i)).toBeVisible();
-    expect(screen.getAllByRole('button', { name: 'Reveal image' }).length).toBeGreaterThan(0);
+    await screen.findByRole('heading', { name: 'Insights' });
+    expect(screen.queryByRole('heading', { name: 'Image evidence' })).toBeNull();
   });
 });

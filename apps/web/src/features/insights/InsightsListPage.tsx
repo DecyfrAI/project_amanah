@@ -4,7 +4,6 @@ import { ApiRequestError } from '@/api';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
-import { ImageEvidenceList } from './ImageEvidenceList';
 import { InsightCard } from './InsightCard';
 import { useInsightList } from './useInsightList';
 
@@ -47,8 +46,7 @@ export function InsightsListPage() {
       <header className={styles.header}>
         <h1 className={styles.title}>Insights</h1>
         <p className={styles.lead}>
-          Snapshots of a figure or a day, and image posts from the same window. Each insight carries
-          the counts it rests on. Image cards show file metadata and form, not a comment. Start a
+          Snapshots of a figure or a day. Each insight carries the counts it rests on. Start a
           snapshot from Overview. Colleagues attach notes to the same finding; this is not a public
           forum.
         </p>
@@ -68,8 +66,6 @@ export function InsightsListPage() {
           ))}
         </ul>
       )}
-
-      <ImageEvidenceList />
     </div>
   );
 }

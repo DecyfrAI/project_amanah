@@ -14,10 +14,15 @@ a silently ignored typo, and an entry whose `approval_status` is anything but
 `approved` is loaded but never projected into a runnable state.
 
 `topical_filter` is a *relevance* filter and never a harm signal. Its keep terms
-name the subject matter a feed is monitored for — religion, hate crime, public
-affairs — and Muslim-related vocabulary appearing there says only that an article
-is on topic. Deciding whether something is hateful is a separate, later, staged
+name the subject matter a feed is monitored for — Islam and Muslim communities —
+and that vocabulary appearing there says only that an article is on topic.
+Deciding whether something is hateful is a separate, later, staged
 classification.
+
+A general news desk carries keep terms; a feed whose whole remit is already the
+subject, such as Tell MAMA or CAIR, carries none, because a relevance filter over
+an already-relevant feed only drops reporting that does not happen to repeat the
+word in its headline.
 """
 
 from __future__ import annotations
@@ -78,6 +83,11 @@ class TopicalFilter(BaseModel):
     desks that share a feed but not a purpose, such as sport and celebrity. A
     kept item is on topic, nothing more: neutral reporting is in scope and
     Muslim-related vocabulary is never treated as harm.
+
+    Terms match as substrings, which is why the reviewed list prefers stems:
+    "islam" covers Islamic, Islamist and Islamophobia in one entry. Empty
+    `keep_terms` keeps everything the drop terms do not remove, which is the
+    right setting for a feed that is already dedicated to the subject.
     """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
