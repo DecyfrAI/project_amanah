@@ -10,7 +10,7 @@
 # rejected -- Reuters, AP, the old CTV path -- are deliberately absent, and
 # replacing them with a guess is prohibited.
 
-config_version: "2026.08.23"
+config_version: "2026.08.24"
 
 sources:
   - source_key: fixtures
