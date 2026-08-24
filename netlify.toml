@@ -1,0 +1,16 @@
+# Frontend-only deploy for the Vite SPA in apps/web.
+# See docs/planning/PROJECT_AMANAH_IMPLEMENTATION_DEPLOYMENT.md § Netlify.
+
+[build]
+  base = "apps/web"
+  command = "npm ci && npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# React Router client routes (e.g. /app, /login) must fall back to index.html.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
