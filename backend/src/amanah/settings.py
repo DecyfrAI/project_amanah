@@ -113,6 +113,19 @@ class Settings(BaseSettings):
 
     gemini_api_key: SecretStr | None = Field(default=None)
     gemini_model: str | None = Field(default=None)
+
+    # Bounds every Gemini call shares (`spec.md` section 11.2). None of them may
+    # be disabled, same reasoning as the generic HTTP bounds above: a Flash-class
+    # model that hangs or free-runs its output is a real failure mode.
+    gemini_timeout_seconds: float = Field(default=20.0, gt=0, le=120)
+    gemini_max_retries: int = Field(default=2, ge=0, le=5)
+    gemini_max_input_characters: int = Field(default=8000, ge=100, le=100_000)
+    gemini_max_output_tokens: int = Field(default=1024, ge=16, le=8192)
+    # Budgets are enforced by the caller-supplied tracker
+    # (`amanah.ml.budgets`); these are its configured ceilings.
+    gemini_per_run_token_budget: int = Field(default=200_000, ge=1)
+    gemini_daily_token_budget: int = Field(default=2_000_000, ge=1)
+
     youtube_api_key: SecretStr | None = Field(default=None)
     news_api_key: SecretStr | None = Field(default=None)
     reddit_client_id: str | None = Field(default=None)

@@ -90,6 +90,7 @@ authenticated_metric_buckets = Table(
     Column("source_id", UUID(as_uuid=True)),
     Column("source_name", Text),
     _text_column("platform"),
+    _text_column("sampling_stratum"),
     _text_column("interval"),
     Column("bucket_start", DateTime(timezone=True)),
     Column("observed_count", Integer),
@@ -193,6 +194,41 @@ authenticated_background_jobs = Table(
     Column("completed_at", DateTime(timezone=True)),
 )
 
+authenticated_image_examples = Table(
+    "authenticated_image_examples",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("title", Text),
+    Column("alt_text", Text),
+    Column("form_note", Text),
+    Column("mime_type", Text),
+    Column("byte_size", Integer),
+    Column("sha256", Text),
+    Column("annotation_hate_types", ARRAY(Text)),
+    Column("annotation_severity", SmallInteger),
+    Column("annotation_note", Text),
+    Column("dataset_provider", Text),
+    Column("dataset_name", Text),
+    Column("dataset_version", Text),
+    Column("dataset_license_id", Text),
+    Column("dataset_schema_mapping_version", Text),
+    Column("dataset_approval_status", Text),
+    Column("dataset_reviewer", Text),
+    Column("score", Float),
+    Column("narrative_tags", ARRAY(Text)),
+    Column("rationale", Text),
+    _text_column("relevance"),
+    _text_column("stance"),
+    _text_column("confidence_tier"),
+    Column("predicted_severity", SmallInteger),
+    Column("predicted_hate_types", ARRAY(Text)),
+    Column("requires_review", Boolean),
+    Column("model_name", Text),
+    Column("model_version", Text),
+    Column("taxonomy_version", Text),
+    Column("created_at", DateTime(timezone=True)),
+)
+
 #: Columns that must never appear in any authenticated projection: raw or
 #: encrypted source text, private storage keys, opaque provider payloads, and
 #: provider-side identifiers that could re-identify an author.
@@ -205,6 +241,9 @@ FORBIDDEN_PROJECTION_COLUMNS = frozenset(
         "source_item_id",
         "submitted_origin",
         "text_ciphertext",
+        # A durable object-storage key. A reader gets a signed URL that expires;
+        # the path itself would outlive it (ADR 0007).
+        "storage_path",
         # Queue internals. A checkpoint can carry a provider cursor and a lease
         # owner names a worker; neither belongs in an API response.
         "checkpoint",

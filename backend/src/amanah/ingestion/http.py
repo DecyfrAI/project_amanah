@@ -116,7 +116,24 @@ def read_bounded(
     limits: HttpLimits,
     headers: Mapping[str, str] | None = None,
 ) -> HttpResponse:
-    """Perform one GET and read at most `limits.max_response_bytes`.
+    """Perform one GET and read at most `limits.max_response_bytes`."""
+    return request_bounded(client, "GET", url, limits=limits, headers=headers)
+
+
+def request_bounded(
+    client: httpx2.Client,
+    method: str,
+    url: str,
+    *,
+    limits: HttpLimits,
+    headers: Mapping[str, str] | None = None,
+    json_body: object | None = None,
+) -> HttpResponse:
+    """Perform one bounded request and read at most `limits.max_response_bytes`.
+
+    Shared by every outbound call regardless of method, so the byte budget and
+    the exception-to-`AdapterError` mapping cannot drift between a `GET`
+    provider (news, YouTube) and a `POST` one (Gemini).
 
     Raises `AdapterError` with a stable code and a retry judgement rather than
     letting a transport exception escape: whether a failure is worth retrying is
@@ -124,7 +141,7 @@ def read_bounded(
     machine downstream needs the answer, not the exception.
     """
     try:
-        with client.stream("GET", url, headers=dict(headers or {})) as response:
+        with client.stream(method, url, headers=dict(headers or {}), json=json_body) as response:
             body = bytearray()
             for chunk in response.iter_bytes(_CHUNK_BYTES):
                 body.extend(chunk)

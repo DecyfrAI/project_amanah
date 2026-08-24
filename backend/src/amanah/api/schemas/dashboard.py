@@ -84,6 +84,30 @@ class DashboardTrend(ResponseModel):
     points: list[TrendPoint] = Field(default_factory=list)
 
 
+class DashboardInsight(ResponseModel):
+    """A validated narrative summary of the figures above it.
+
+    Every field is optional except the separation itself. `observations` restates
+    what the stored facts say; `interpretation` is what a reader might take from
+    that; `possible_association` is co-occurrence and never a cause; `unknowns`
+    is what this data cannot answer. Keeping them apart is what stops a reader
+    from absorbing an interpretation as an observation.
+
+    `citations` names the figure behind every quantitative claim, each already
+    verified against the fact bundle server-side. An insight that failed that
+    verification is not returned at all.
+    """
+
+    answer: str
+    observations: list[str] = Field(default_factory=list)
+    interpretation: list[str] = Field(default_factory=list)
+    possible_association: list[str] = Field(default_factory=list)
+    unknowns: list[str] = Field(default_factory=list)
+    citations: list[str] = Field(
+        default_factory=list, description="Fact ids supporting the quantitative claims."
+    )
+
+
 class DashboardResponse(ResponseModel):
     """`GET /v1/dashboard` payload.
 
@@ -95,5 +119,13 @@ class DashboardResponse(ResponseModel):
     metrics: DashboardMetrics
     trend: DashboardTrend
     headlines: list[HeadlineCard] = Field(default_factory=list)
+    #: Null whenever AI is unavailable, over budget, or its output failed
+    #: citation validation. `spec.md` FR-INSIGHT-007: the deterministic figures
+    #: above are unaffected and the page stays useful without this.
+    insight: DashboardInsight | None = None
+    insight_unavailable_reason: str | None = Field(
+        default=None,
+        description="Stable code explaining an absent narrative. Never a provider message.",
+    )
     sampling_disclosure: str
     meta: ResponseMeta

@@ -17,6 +17,7 @@ from amanah.db.views import (
     FORBIDDEN_PROJECTION_COLUMNS,
     authenticated_background_jobs,
     authenticated_collection_runs,
+    authenticated_image_examples,
     authenticated_items,
     authenticated_metric_buckets,
     authenticated_news,
@@ -35,6 +36,7 @@ DECLARED_PROJECTIONS: tuple[Table, ...] = (
     authenticated_news,
     authenticated_collection_runs,
     authenticated_background_jobs,
+    authenticated_image_examples,
 )
 
 

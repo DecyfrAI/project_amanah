@@ -39,6 +39,10 @@ _STATUS_TO_ERROR_CODE: dict[int, ErrorCode] = {
 
 ErrorDetails = dict[str, str | int | bool | list[str]]
 
+#: Detail key a rate-limited error uses to say when to try again. Named once so
+#: the raiser and the `Retry-After` header cannot disagree about the spelling.
+RETRY_AFTER_DETAIL = "retry_after_seconds"
+
 
 class ApiError(Exception):
     """A failure that already knows its safe public representation."""
@@ -127,6 +131,11 @@ def build_error_response(
     headers = {REQUEST_ID_HEADER: request_id}
     if status_code == 401:
         headers["WWW-Authenticate"] = "Bearer"
+    retry_after = (details or {}).get(RETRY_AFTER_DETAIL)
+    if status_code == 429 and isinstance(retry_after, int):
+        # A client that is being throttled needs to know for how long, and
+        # `Retry-After` is where an HTTP client looks rather than in a body.
+        headers["Retry-After"] = str(retry_after)
     return JSONResponse(
         status_code=status_code, content=envelope.model_dump(mode="json"), headers=headers
     )
