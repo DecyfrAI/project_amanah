@@ -18,7 +18,12 @@ from amanah.db.models.datasets import DatasetImportRun, DatasetPackage
 from amanah.db.models.jobs import BackgroundJob
 from amanah.db.models.metrics import InsightSnapshot, MetricBucket, NewsEventLink
 from amanah.db.models.reporting import PlatformPolicy, PolicyMatch, PreparedPlatformReport
-from amanah.db.models.resources import ResearchReport, ResourceEntry
+from amanah.db.models.resources import (
+    ResearchReport,
+    ResearchReportAuditEvent,
+    ResourceAuditEvent,
+    ResourceEntry,
+)
 from amanah.db.models.sources import Source, SourceSeedEntry
 
 __all__ = [
@@ -39,6 +44,8 @@ __all__ = [
     "Prediction",
     "PreparedPlatformReport",
     "ResearchReport",
+    "ResearchReportAuditEvent",
+    "ResourceAuditEvent",
     "ResourceEntry",
     "ReviewEvent",
     "ReviewTask",

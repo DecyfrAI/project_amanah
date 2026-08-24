@@ -204,22 +204,22 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
 
 ### Milestone 6 — Research reports and curated resources
 
-- [ ] **B-S19 — Implement curated resource administration and governance**
-  - [ ] **B-S19.1** Add reviewer/admin create, update, publish, archive, and list operations.
-  - [ ] **B-S19.2** Validate HTTPS URL, organization, category, country/scope, summary, reviewer, and last-reviewed date.
-  - [ ] **B-S19.3** Implement draft, published, and archived lifecycle.
-  - [ ] **B-S19.4** Keep audit history and publish only reviewed entries.
-  - [ ] **B-S19.5** Keep unreviewed candidate content in draft; do not publish raw AI-generated descriptions.
-  - [ ] **B-S19.6** Test roles, validation, publication, archive, audit, anonymous denial, and authenticated base-role projection.
+- [x] **B-S19 — Implement curated resource administration and governance** *(Done 23 Aug 2026.)*
+  - [x] **B-S19.1** Add reviewer/admin create, update, publish, archive, and list operations.
+  - [x] **B-S19.2** Validate HTTPS URL, organization, category, country/scope, summary, reviewer, and last-reviewed date.
+  - [x] **B-S19.3** Implement draft, published, and archived lifecycle.
+  - [x] **B-S19.4** Keep audit history and publish only reviewed entries.
+  - [x] **B-S19.5** Keep unreviewed candidate content in draft; do not publish raw AI-generated descriptions.
+  - [x] **B-S19.6** Test roles, validation, publication, archive, audit, anonymous denial, and authenticated base-role projection.
 
-- [ ] **B-S20 — Implement research-report snapshots and aggregate export**
-  - [ ] **B-S20.1** Validate authorized report filters and resolve the exact data/methodology versions.
-  - [ ] **B-S20.2** Freeze coverage, denominators, selected metrics/findings, and citation IDs.
-  - [ ] **B-S20.3** Apply redaction and exclude raw harmful content, authors, and item-level bulk data by default.
-  - [ ] **B-S20.4** Make ready snapshots immutable; regenerate under a new ID.
-  - [ ] **B-S20.5** Generate aggregate CSV from the stored snapshot if included in scope.
-  - [ ] **B-S20.6** Enforce owner/reviewer authorization and audit generation/download.
-  - [ ] **B-S20.7** Test filter/citation fidelity, immutability, redaction, CSV schema, and cross-user denial.
+- [x] **B-S20 — Implement research-report snapshots and aggregate export** *(Done 23 Aug 2026.)*
+  - [x] **B-S20.1** Validate authorized report filters and resolve the exact data/methodology versions.
+  - [x] **B-S20.2** Freeze coverage, denominators, selected metrics/findings, and citation IDs.
+  - [x] **B-S20.3** Apply redaction and exclude raw harmful content, authors, and item-level bulk data by default.
+  - [x] **B-S20.4** Make ready snapshots immutable; regenerate under a new ID.
+  - [x] **B-S20.5** Generate aggregate CSV from the stored snapshot if included in scope.
+  - [x] **B-S20.6** Enforce owner/reviewer authorization and audit generation/download.
+  - [x] **B-S20.7** Test filter/citation fidelity, immutability, redaction, CSV schema, and cross-user denial.
 
 ### Milestone 7 — Production resilience and observability
 

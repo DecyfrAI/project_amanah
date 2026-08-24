@@ -6,6 +6,16 @@ All notable project changes are documented here using the Keep a Changelog struc
 
 ### Added
 
+- **Milestone 6 — governed resources and immutable research reports (B-S19–B-S20).**
+  Reviewer/admin resource creation, revision, explicit human-confirmed publication, archive,
+  and append-only audit history; published wording changes return to draft and only reviewed
+  entries reach authenticated base-role readers. Authenticated filter-scoped research-report
+  generation now freezes data and methodology versions, coverage, denominators, selected
+  aggregate metrics, deterministic findings, citations, disclosures, and limitations under a
+  new immutable snapshot ID. Optional aggregate CSV is rendered only from the stored snapshot,
+  with owner/reviewer authorization and durable generation/download audit events; raw harmful
+  content, authors, and item-level bulk rows are excluded.
+
 - **Milestone 3 — collection and canonical processing (B-S7–B-S12, B-S24).** Collection runs
   and background jobs as an explicit state machine: transactional claims with leases,
   `FOR UPDATE SKIP LOCKED` so concurrent workers never take the same job, checkpoint-before-

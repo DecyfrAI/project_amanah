@@ -32,6 +32,7 @@ _STATUS_TO_ERROR_CODE: dict[int, ErrorCode] = {
     401: ErrorCode.authentication_required,
     403: ErrorCode.permission_denied,
     404: ErrorCode.resource_not_found,
+    409: ErrorCode.conflict,
     405: ErrorCode.method_not_allowed,
     429: ErrorCode.rate_limited,
     503: ErrorCode.service_unavailable,
