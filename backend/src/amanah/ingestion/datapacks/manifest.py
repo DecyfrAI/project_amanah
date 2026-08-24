@@ -92,6 +92,7 @@ class DatapackManifest(BaseModel):
     file_format: str
     schema_mapping_version: str = Field(min_length=1, max_length=50)
     schema_mapping: SchemaMapping
+    is_fixture: bool = False
     approval_status: ApprovalStatus = ApprovalStatus.pending
     approved_by: str | None = None
     row_limit: int | None = Field(default=None, gt=0)

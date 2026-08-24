@@ -4,6 +4,7 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
+import yaml
 
 from amanah.ingestion.cli import _incremental_window
 from amanah.ingestion.configuration import (
@@ -12,6 +13,7 @@ from amanah.ingestion.configuration import (
     load_seed_configuration,
     load_source_configuration,
 )
+from amanah.ingestion.datapacks.manifest import DatapackManifest, verify_file
 from amanah.ingestion.operations import (
     ApprovedDatapack,
     DatapackConfiguration,
@@ -19,6 +21,7 @@ from amanah.ingestion.operations import (
     EtlValidationError,
     RedactedRunSummary,
     dispatch_from_environment,
+    load_datapack_configuration,
     resolve_approved_datapack,
     validate_dispatch,
     write_redacted_summary,
@@ -124,6 +127,42 @@ def test_datapack_ids_are_allowlisted() -> None:
             seeds=seeds,
             datapacks=datapacks,
         )
+
+
+def test_repository_synthetic_demo_datapack_is_approved_and_hash_verified() -> None:
+    repository_root = Path(__file__).resolve().parents[3]
+    configuration = load_datapack_configuration(repository_root / "config")
+    package = configuration.by_id("amanah-synthetic-demo-v1")
+    sources, seeds = configured()
+
+    assert package is not None
+    assert package.is_enabled is True
+    manifest_path, data_path = resolve_approved_datapack(package, repository_root=repository_root)
+    manifest = DatapackManifest.model_validate(
+        yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+    )
+
+    manifest.require_approved()
+    verify_file(manifest, data_path)
+    assert manifest.is_fixture is True
+    assert manifest.row_limit == 12
+
+    dispatch = dispatch_from_environment(
+        {
+            "ETL_SOURCES": "fixtures",
+            "ETL_DATAPACK_IDS": "amanah-synthetic-demo-v1",
+            "ETL_MAX_ITEMS": "100",
+        }
+    )
+    assert (
+        validate_dispatch(
+            dispatch,
+            sources=sources,
+            seeds=seeds,
+            datapacks=configuration,
+        )
+        is dispatch
+    )
 
 
 def test_datapack_paths_cannot_escape_repository(tmp_path: Path) -> None:

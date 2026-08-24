@@ -40,6 +40,14 @@ Use the **Amanah ETL** workflow. Seed keys must match the selected source and
 exact reviewed config version. Datapack inputs are stable IDs from
 `config/datapacks.example.yml`, never paths or URLs. Dry-run a new live source.
 
+For the repository-owned demo datapack, set `ETL_DATAPACK_IDS` (or the manual
+workflow's `datapack_ids` input) to `amanah-synthetic-demo-v1`. It is an approved
+synthetic fixture under CC0-1.0, not an external live dataset. Its manifest hash
+is verified before import, every imported row remains `is_fixture=true`, and
+the `expected_*` columns remain dataset annotations rather than predictions.
+First run the workflow with source `fixtures` and `dry_run=true`; after that
+succeeds, repeat with `dry_run=false` to persist and analyze the 12 rows.
+
 When provider access is unavailable for a demo, explicitly select `fixtures`.
 Fixture mode remains labelled in run provenance and every item; it is never
 silently substituted for failed live data.

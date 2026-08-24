@@ -6,6 +6,12 @@ All notable project changes are documented here using the Keep a Changelog struc
 
 ### Added
 
+- A reviewed, project-owned `amanah-synthetic-demo-v1` datapack for safe demo
+  imports: 12 CC0 synthetic rows, a stable ETL allowlist ID, manifest and dataset
+  card, exact SHA-256 verification, and explicit fixture propagation so approval
+  can never make synthetic records appear live. Dataset annotations remain
+  separate from Amanah predictions and review decisions.
+
 - **Frontend/backend integration — the demo is wired end to end.** Supabase Auth
   replaces the fixture session: `SessionProvider` restores a real session before any
   protected route renders, every `live-provider.ts` request carries the access token as

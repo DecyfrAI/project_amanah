@@ -1,0 +1,29 @@
+provider: Project Amanah
+name: Amanah Synthetic Demo Research Datapack
+version: 1.0.0
+landing_page_url: https://github.com/DecyfrAI/project_amanah/tree/main/datapacks
+license_id: CC0-1.0
+license_url: https://creativecommons.org/publicdomain/zero/1.0/
+permitted_uses: >-
+  Public demonstration, testing, research, modification, and redistribution.
+  The artifact is wholly synthetic and contains no real people or copied posts.
+retrieved_at: 2026-08-24T00:00:00Z
+file_sha256: 6ea040f24b281e1c88a9fb618cbd5cb8bc43e52eb082afaf053dc76b50356ce4
+file_format: csv
+schema_mapping_version: "1"
+schema_mapping:
+  text_column: text
+  row_id_column: row_id
+  published_at_column: published_at
+  language_column: language
+  country_column: country_code
+  annotation_columns:
+    - scenario
+    - expected_relevance
+    - expected_stance
+    - expected_hate_type
+    - expected_severity
+is_fixture: true
+approval_status: approved
+approved_by: Project owner request for a synthetic demo datapack, 2026-08-24
+row_limit: 12

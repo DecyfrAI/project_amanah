@@ -198,7 +198,11 @@ class DatapackImporter:
             source_item_id=source_item_id,
             content_kind=ContentKind.dataset_record,
             observed_at=manifest.retrieved_at,
-            is_fixture=False,
+            # A project-authored synthetic datapack remains visibly fixture data
+            # through storage and every API projection. A reviewed manifest may
+            # authorize import, but approval must never make synthetic rows look
+            # like live provider observations.
+            is_fixture=manifest.is_fixture,
             canonical_url=_cell(row, mapping.url_column),
             title=_cell(row, mapping.title_column),
             # A dataset row's text is the record. There is no separate licensed

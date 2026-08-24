@@ -91,6 +91,7 @@ def _manifest(path: Path, **overrides: Any) -> DatapackManifest:
         "schema_mapping": SchemaMapping(
             text_column="text", row_id_column="row_id", annotation_columns=("label",)
         ),
+        "is_fixture": False,
         "approval_status": ApprovalStatus.approved,
         "approved_by": "reviewer",
     }
@@ -271,6 +272,20 @@ def test_dataset_labels_are_annotations_and_never_predictions(
     predictions = session.execute(text("SELECT count(*) FROM public.predictions")).scalar_one()
     assert predictions == 0
     assert all(item.effective_review_state.value == "model_only" for item in items.values())
+
+
+def test_a_synthetic_datapack_remains_fixture_data(
+    session: Session, datapack_source: None, tmp_path: Path
+) -> None:
+    """Manifest approval must never make synthetic rows look live."""
+    del datapack_source
+    path = _write_csv(tmp_path)
+
+    DatapackImporter(session).import_package(_manifest(path, is_fixture=True), path)
+
+    items = list(session.execute(select(ContentItem)).scalars())
+    assert items
+    assert all(item.is_fixture for item in items)
 
 
 def test_a_source_item_id_is_deterministic_and_namespaced(

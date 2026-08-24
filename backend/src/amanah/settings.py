@@ -195,6 +195,16 @@ class Settings(BaseSettings):
         return f"{self.supabase_url}/auth/v1"
 
     @cached_property
+    def supabase_jwks_url(self) -> str:
+        """Where Supabase publishes the public keys for asymmetric access tokens.
+
+        Projects that sign with an ECC or RSA key expose the public half here.
+        Reading it at verification time rather than baking a key into the
+        environment means a signing-key rotation needs no redeploy.
+        """
+        return f"{self.supabase_url}/auth/v1/.well-known/jwks.json"
+
+    @cached_property
     def connectors(self) -> tuple[ConnectorConfiguration, ...]:
         """Optional connectors and whether each one has usable credentials."""
         return (

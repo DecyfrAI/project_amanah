@@ -119,6 +119,7 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [x] **B-S9A.7** Enforce `(dataset_package_id, dataset_row_id)` idempotency and cross-package collision safety.
   - [x] **B-S9A.8** Stream/batch within configured limits and record imported/skipped/error counts without harmful raw text in logs.
   - [x] **B-S9A.9** Test valid CSV/JSONL, duplicate/cross-package rows, malformed rows, wrong hash, bad encoding, unapproved license, retry, and `N/A` projection.
+  - [x] **B-S9A.10** Add the project-owned `amanah-synthetic-demo-v1` CSV, reviewed manifest, dataset card, stable ETL allowlist ID, exact hash verification, and explicit fixture propagation for a safe demo fallback. *(Completed 24 Aug 2026; the pack is synthetic CC0 data and its annotations never become Amanah predictions.)*
 
 - [x] **B-S10 — Implement bounded YouTube ingestion**
   - [x] **B-S10.1** Enable the adapter only when an API key and approved configuration are present.

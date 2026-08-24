@@ -1,0 +1,13 @@
+row_id,text,published_at,language,country_code,scenario,expected_relevance,expected_stance,expected_hate_type,expected_severity
+demo-001,"The neighborhood mosque is hosting an open house and community meal this weekend.",2026-08-18T14:00:00Z,en,CA,benign_muslim_speech,muslim_related,non_hateful_discussion,,none
+demo-002,"Calling every Muslim dangerous is hateful and wrong; people should challenge that stereotype.",2026-08-18T16:30:00Z,en,GB,counterspeech,muslim_related,counterspeech_or_quotation,,none
+demo-003,"A city council report documents an increase in anti-Muslim harassment without endorsing the abuse.",2026-08-19T09:15:00Z,en,US,neutral_reporting,muslim_related,non_hateful_discussion,,none
+demo-004,"Muslim families should be barred from moving into this neighborhood.",2026-08-19T12:00:00Z,en,CA,synthetic_exclusion,muslim_related,likely_anti_muslim,exclusion,moderate
+demo-005,"Every Muslim is responsible for violence committed by an extremist group.",2026-08-20T08:45:00Z,en,GB,synthetic_collective_blame,muslim_related,likely_anti_muslim,collective_blame,moderate
+demo-006,"People should refuse to hire anyone who wears a hijab.",2026-08-20T17:20:00Z,en,US,synthetic_discrimination,muslim_related,likely_anti_muslim,exclusion,moderate
+demo-007,"The library added new books about Islamic art and architecture.",2026-08-21T11:10:00Z,en,CA,benign_cultural_discussion,muslim_related,non_hateful_discussion,,none
+demo-008,"I disagree with the government's foreign policy; that criticism is about policy and not Muslims.",2026-08-21T15:40:00Z,en,GB,policy_criticism,muslim_related,non_hateful_discussion,,none
+demo-009,"They do not belong here.",2026-08-22T07:05:00Z,en,US,missing_context,uncertain,uncertain,,none
+demo-010,"A speaker quoted an anti-Muslim slogan only to explain why the audience rejected it.",2026-08-22T10:25:00Z,en,CA,quotation_context,muslim_related,counterspeech_or_quotation,,none
+demo-011,"Muslims should be removed from public office solely because of their faith.",2026-08-23T13:35:00Z,en,GB,synthetic_civic_exclusion,muslim_related,likely_anti_muslim,exclusion,high
+demo-012,"The weather forecast predicts heavy rain across the region tomorrow.",2026-08-23T18:50:00Z,en,US,not_related_control,not_related,non_hateful_discussion,,none
