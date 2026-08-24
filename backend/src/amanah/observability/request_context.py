@@ -6,7 +6,8 @@ failure can be traced to server logs without exposing anything sensitive.
 """
 
 import re
-from collections.abc import Awaitable, Callable
+from collections.abc import Awaitable, Callable, Iterator
+from contextlib import contextmanager
 from contextvars import ContextVar
 from uuid import uuid4
 
@@ -22,6 +23,9 @@ REQUEST_ID_HEADER = "X-Request-Id"
 _SAFE_REQUEST_ID = re.compile(r"^[A-Za-z0-9_-]{1,64}$")
 
 _request_id: ContextVar[str | None] = ContextVar("amanah_request_id", default=None)
+_operation_context: ContextVar[dict[str, str] | None] = ContextVar(
+    "amanah_operation_context", default=None
+)
 
 
 def new_request_id() -> str:
@@ -32,6 +36,26 @@ def new_request_id() -> str:
 def current_request_id() -> str | None:
     """Identifier of the request being handled, or `None` outside a request."""
     return _request_id.get()
+
+
+def current_operation_context() -> dict[str, str]:
+    """Return safe run/job correlation attached to the current execution."""
+    return dict(_operation_context.get() or {})
+
+
+@contextmanager
+def bind_operation_context(**values: object) -> Iterator[None]:
+    """Temporarily attach run/job/stage identifiers to every emitted log line."""
+    safe = {
+        key: str(value)
+        for key, value in values.items()
+        if value is not None and key in {"run_id", "job_id", "stage", "source_key"}
+    }
+    token = _operation_context.set({**(_operation_context.get() or {}), **safe})
+    try:
+        yield
+    finally:
+        _operation_context.reset(token)
 
 
 def resolve_request_id(candidate: str | None) -> str:

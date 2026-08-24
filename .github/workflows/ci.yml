@@ -1,0 +1,62 @@
+name: Safe CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      AMANAH_TEST_DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/postgres
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v9
+        with:
+          enable-cache: true
+          cache-dependency-glob: backend/uv.lock
+      - run: uv sync --locked --project backend --all-groups
+      - run: uv run --project backend ruff format --check backend/src backend/tests backend/migrations backend/scripts
+      - run: uv run --project backend ruff check backend/src backend/tests backend/migrations backend/scripts
+      - run: uv run --project backend mypy backend/src backend/tests
+      - run: uv run --project backend pytest backend/tests
+      - name: Startup contract
+        env:
+          APP_ORIGIN: https://example.test
+          SUPABASE_URL: https://example.supabase.co
+          SUPABASE_JWT_SECRET: ci-only-ci-only-ci-only-ci-only-0000
+        run: uv run --project backend python -c "from amanah.main import create_app; create_app()"
+      - run: uv run --project backend python backend/scripts/security_scan.py
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm ci --prefix apps/web
+      - run: npm run format:check --prefix apps/web
+      - run: npm run lint --prefix apps/web
+      - run: npm run typecheck --prefix apps/web
+      - run: npm test --prefix apps/web -- --run
+      - run: npm run build --prefix apps/web
+      - run: python3 backend/scripts/bundle_scan.py apps/web/dist
+      - run: npm audit --prefix apps/web --omit=dev --audit-level=high

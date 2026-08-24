@@ -25,8 +25,11 @@ import socket
 import sys
 from datetime import UTC, date, datetime, time, timedelta
 from os import getpid
+from pathlib import Path
 from uuid import uuid4
 
+import yaml
+from sqlalchemy import select
 from sqlalchemy.orm import Session, sessionmaker
 
 from amanah.canonical.encryption import build_cipher
@@ -35,14 +38,31 @@ from amanah.db.session import create_database_engine
 from amanah.domain.enums import CollectionMode, JobState
 from amanah.ingestion.backfill import DEFAULT_WINDOW_DAYS, BackfillPlanner, plan_backfill
 from amanah.ingestion.configuration import (
+    config_directory,
     load_seed_configuration,
     load_source_configuration,
     project_seeds,
     project_sources,
 )
 from amanah.ingestion.contract import AdapterError, DiscoveryRequest, SourceAdapter
+from amanah.ingestion.datapacks.importer import DatapackImporter
+from amanah.ingestion.datapacks.manifest import DatapackManifest, verify_file
+from amanah.ingestion.operations import (
+    EtlValidationError,
+    RedactedRunSummary,
+    dispatch_from_environment,
+    load_datapack_configuration,
+    resolve_approved_datapack,
+    validate_dispatch,
+    write_redacted_summary,
+)
 from amanah.ingestion.pipeline import CollectionPipeline, utc_now
-from amanah.ingestion.registry import AdapterContext, UnknownSourceError, build_default_registry
+from amanah.ingestion.registry import (
+    AdapterContext,
+    SourceDisabledError,
+    UnknownSourceError,
+    build_default_registry,
+)
 from amanah.jobs.runs import CollectionRunService, RunDispatch, RunValidationError
 from amanah.ml.batch import DEFAULT_BATCH_SIZE, analyze
 from amanah.ml.budgets import TokenBudget
@@ -50,6 +70,7 @@ from amanah.ml.catalog import build_registry
 from amanah.ml.classification import ClassificationService
 from amanah.ml.gemini import GeminiClient
 from amanah.observability.logging import configure_logging
+from amanah.observability.metrics import MetricName, record_metric
 from amanah.reporting.policies import load_policy_catalogue, project_policies
 from amanah.settings import ConfigurationError, Settings, load_settings
 
@@ -133,6 +154,17 @@ def build_parser() -> argparse.ArgumentParser:
         help="Project the reviewed source, seed, and platform-policy catalogue.",
     )
     configure.add_argument("--directory", default=None)
+
+    subcommands.add_parser(
+        "validate-config", help="Validate schedule inputs against reviewed configuration."
+    )
+    orchestrate = subcommands.add_parser(
+        "run-from-env",
+        help="Run every configured ETL stage from the constrained environment contract.",
+    )
+    orchestrate.add_argument(
+        "--summary-path", default="work/etl-run-summary.json", help=argparse.SUPPRESS
+    )
     return parser
 
 
@@ -154,6 +186,13 @@ def main(argv: list[str] | None = None) -> int:
     factory = sessionmaker(bind=engine, expire_on_commit=False)
     try:
         with factory() as session:
+            if arguments.command in {"validate-config", "run-from-env"}:
+                return _scheduled(
+                    session,
+                    settings,
+                    arguments,
+                    validate_only=arguments.command == "validate-config",
+                )
             if arguments.command == "sync-config":
                 return _sync_config(session, arguments.directory)
             if arguments.command == "backfill":
@@ -163,6 +202,162 @@ def main(argv: list[str] | None = None) -> int:
             return _run(session, settings, arguments)
     finally:
         engine.dispose()
+
+
+def _scheduled(
+    session: Session,
+    settings: Settings,
+    arguments: argparse.Namespace,
+    *,
+    validate_only: bool,
+) -> int:
+    """Validate and execute the exact contract shared by cron and manual dispatch."""
+    try:
+        sources = load_source_configuration(settings.source_config_directory)
+        seeds = load_seed_configuration(settings.source_config_directory)
+        configuration_directory = config_directory(settings.source_config_directory)
+        datapacks = load_datapack_configuration(configuration_directory)
+        dispatch = validate_dispatch(
+            dispatch_from_environment(), sources=sources, seeds=seeds, datapacks=datapacks
+        )
+    except (EtlValidationError, OSError, ValueError, yaml.YAMLError):
+        logger.error("scheduled dispatch refused", extra={"safe_error_code": "etl_config_invalid"})
+        return 2
+    if validate_only:
+        logger.info(
+            "scheduled configuration valid",
+            extra={"sources": list(dispatch.sources), "item_cap": dispatch.item_cap},
+        )
+        return 0
+
+    if (
+        _sync_config(
+            session,
+            str(settings.source_config_directory) if settings.source_config_directory else None,
+        )
+        != 0
+    ):
+        return 2
+    started = utc_now()
+    window_start, window_end = _incremental_window(started)
+    summaries: list[RedactedRunSummary] = []
+    failures = 0
+    for source_key in dispatch.sources:
+        idempotency_key = (
+            f"{source_key}:fixture:{window_end.isoformat()}"
+            if source_key == "fixtures"
+            else f"{source_key}:scheduled:{window_start.isoformat()}:{window_end.isoformat()}"
+        )
+        namespace = argparse.Namespace(
+            source=source_key,
+            mode="fixture" if source_key == "fixtures" else "scheduled",
+            window_start=None if source_key == "fixtures" else window_start,
+            window_end=None if source_key == "fixtures" else window_end,
+            item_cap=dispatch.item_cap,
+            idempotency_key=idempotency_key,
+            dry_run=dispatch.dry_run,
+        )
+        code = _run(session, settings, namespace, selected_registry_keys=dispatch.registry_keys)
+        failures += int(code != 0)
+        row = session.execute(
+            select(CollectionRun).where(CollectionRun.idempotency_key == idempotency_key)
+        ).scalar_one_or_none()
+        summaries.append(
+            RedactedRunSummary(
+                source=source_key,
+                status=(
+                    "validated"
+                    if dispatch.dry_run
+                    else (row.status.value if row is not None else "failed")
+                ),
+                started_at=started.isoformat(),
+                completed_at=utc_now().isoformat(),
+                counts=dict(row.counts or {}) if row is not None else {},
+                coverage_warnings=tuple(row.coverage_warnings or ()) if row is not None else (),
+                safe_error_codes=(
+                    (row.safe_error_code,)
+                    if row is not None and row.safe_error_code
+                    else (() if code == 0 else ("etl_source_failed",))
+                ),
+                run_id=str(row.id) if row is not None else None,
+            )
+        )
+        record_metric(
+            MetricName.connector_runs,
+            source_key=source_key,
+            outcome="succeeded" if code == 0 else "failed",
+        )
+        if code != 0:
+            record_metric(
+                MetricName.connector_failures,
+                source_key=source_key,
+                outcome="failed",
+            )
+    for manifest_id in dispatch.datapack_ids:
+        package = datapacks.by_id(manifest_id)
+        if package is None:  # already validated; keeps the type checker honest
+            continue
+        try:
+            manifest_path, data_path = resolve_approved_datapack(
+                package, repository_root=configuration_directory.parent
+            )
+            document = yaml.safe_load(manifest_path.read_text(encoding="utf-8"))
+            manifest = DatapackManifest.model_validate(document)
+            if dispatch.dry_run:
+                manifest.require_approved()
+                verify_file(manifest, data_path)
+                counts: dict[str, int] = {}
+            else:
+                imported = DatapackImporter(
+                    session,
+                    cipher=build_cipher(
+                        settings.content_encryption_key.get_secret_value()
+                        if settings.content_encryption_key is not None
+                        else None
+                    ),
+                ).import_package(manifest, data_path)
+                counts = {
+                    "imported": imported.imported,
+                    "skipped": imported.skipped,
+                    "errors": imported.errors,
+                }
+        except Exception:
+            session.rollback()
+            failures += 1
+            logger.error(
+                "datapack import failed",
+                extra={"safe_error_code": "datapack_import_failed"},
+            )
+            summaries.append(
+                RedactedRunSummary(
+                    source="open_datapack",
+                    status="failed",
+                    started_at=started.isoformat(),
+                    completed_at=utc_now().isoformat(),
+                    counts={},
+                    safe_error_codes=("datapack_import_failed",),
+                    run_id=manifest_id,
+                )
+            )
+            continue
+        summaries.append(
+            RedactedRunSummary(
+                source="open_datapack",
+                status="validated" if dispatch.dry_run else "succeeded",
+                started_at=started.isoformat(),
+                completed_at=utc_now().isoformat(),
+                counts=counts,
+                safe_error_codes=(),
+                run_id=manifest_id,
+            )
+        )
+    if not dispatch.dry_run:
+        analysis = argparse.Namespace(
+            window_start=None, window_end=None, batch_size=DEFAULT_BATCH_SIZE
+        )
+        failures += int(_analyze(session, settings, analysis) != 0)
+    write_redacted_summary(Path(arguments.summary_path), tuple(summaries))
+    return 1 if failures else 0
 
 
 def _sync_config(session: Session, directory: str | None) -> int:
@@ -234,9 +429,23 @@ def _analyze(session: Session, settings: Settings, arguments: argparse.Namespace
     return 0
 
 
-def _run(session: Session, settings: Settings, arguments: argparse.Namespace) -> int:
+def _run(
+    session: Session,
+    settings: Settings,
+    arguments: argparse.Namespace,
+    *,
+    selected_registry_keys: tuple[str, ...] = (),
+) -> int:
     sources = load_source_configuration(settings.source_config_directory)
     seeds = load_seed_configuration(settings.source_config_directory)
+    if selected_registry_keys:
+        seeds = seeds.model_copy(
+            update={
+                "seeds": tuple(
+                    seed for seed in seeds.seeds if seed.registry_key in selected_registry_keys
+                )
+            }
+        )
     registry = build_default_registry(sources)
 
     try:
@@ -246,6 +455,9 @@ def _run(session: Session, settings: Settings, arguments: argparse.Namespace) ->
         )
     except UnknownSourceError:
         logger.error("no adapter is registered for that source", extra={"source": arguments.source})
+        return 2
+    except SourceDisabledError:
+        logger.warning("source is disabled", extra={"source": arguments.source})
         return 2
 
     mode = CollectionMode(arguments.mode)
@@ -343,9 +555,20 @@ def _default_key(arguments: argparse.Namespace, mode: CollectionMode) -> str:
     moment it was launched, because a key containing a timestamp would make every
     redelivery a new run and defeat the idempotency it is meant to provide.
     """
-    start = arguments.window_start.date().isoformat() if arguments.window_start else "open"
-    end = arguments.window_end.date().isoformat() if arguments.window_end else "open"
+    start = arguments.window_start.isoformat() if arguments.window_start else "open"
+    end = arguments.window_end.isoformat() if arguments.window_end else "open"
     return f"{arguments.source}:{mode.value}:{start}:{end}"
+
+
+def _incremental_window(moment: datetime) -> tuple[datetime, datetime]:
+    """The previous closed eight-hour UTC bucket, stable across workflow retries."""
+    boundary = moment.astimezone(UTC).replace(
+        hour=(moment.astimezone(UTC).hour // 8) * 8,
+        minute=0,
+        second=0,
+        microsecond=0,
+    )
+    return boundary - timedelta(hours=8), boundary
 
 
 if __name__ == "__main__":  # pragma: no cover - process entry point
@@ -368,7 +591,7 @@ def _backfill(session: Session, settings: Settings, arguments: argparse.Namespac
             arguments.source,
             AdapterContext(session=session, settings=settings, sources=sources, seeds=seeds),
         )
-    except UnknownSourceError:
+    except (UnknownSourceError, SourceDisabledError):
         logger.error("no adapter is registered for that source", extra={"source": arguments.source})
         return 2
 

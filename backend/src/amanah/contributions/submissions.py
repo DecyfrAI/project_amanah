@@ -41,6 +41,7 @@ from amanah.domain.enums import (
 )
 from amanah.ingestion.urls.safe_fetch import validate_syntax
 from amanah.jobs.runs import CollectionRunService, RunDispatch
+from amanah.observability.metrics import MetricName, record_metric
 
 logger = logging.getLogger(__name__)
 
@@ -157,6 +158,7 @@ class SubmissionService:
             "submission recorded",
             extra={"submission_id": str(submission.id), "status": status.value},
         )
+        record_metric(MetricName.contributions, action="submission", outcome=status.value)
 
         if status is SubmissionStatus.processing:
             self._enqueue(submission)

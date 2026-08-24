@@ -1,0 +1,29 @@
+name: Safe AI evals
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "backend/src/amanah/ml/**"
+      - "backend/tests/unit/test_*eval*.py"
+      - "backend/tests/unit/test_assistant.py"
+      - "evals/**"
+
+permissions:
+  contents: read
+
+jobs:
+  evals:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: astral-sh/setup-uv@v9
+      - run: uv sync --locked --project backend --all-groups
+      - name: Frozen synthetic and redacted evaluations
+        run: >-
+          uv run --project backend pytest
+          backend/tests/unit/test_classification_evals.py
+          backend/tests/unit/test_assistant.py
+          backend/tests/unit/test_gemini_client.py
+          backend/tests/unit/test_insights.py
+          backend/tests/unit/test_policy_matching.py

@@ -90,6 +90,9 @@ class Settings(BaseSettings):
     database_statement_timeout_ms: int = Field(default=5000, ge=100, le=60_000)
     database_pool_size: int = Field(default=5, ge=1, le=50)
 
+    api_rate_limit_requests: int = Field(default=300, ge=1, le=100_000)
+    api_rate_limit_window_seconds: int = Field(default=60, ge=1, le=3600)
+
     # Reviewed source and seed configuration. A directory rather than two paths,
     # because the two files are one reviewed artifact and must not drift apart.
     source_config_directory: Path | None = Field(

@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: amanah-api
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install uv==0.11.24 && uv sync --locked --no-dev
+    preDeployCommand: uv run alembic -c alembic.ini upgrade head
+    startCommand: uv run uvicorn amanah.main:create_app --factory --host 0.0.0.0 --port $PORT
+    healthCheckPath: /readyz
+    maxShutdownDelaySeconds: 30
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.13.5
+      - key: APP_ENV
+        value: production
+      - key: DATA_MODE
+        value: live
+      - key: APP_ORIGIN
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_JWT_SECRET
+        sync: false
+      - key: CONTENT_ENCRYPTION_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        sync: false

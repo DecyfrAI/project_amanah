@@ -51,6 +51,8 @@ from amanah.ingestion.contract import (
 from amanah.ingestion.urls.adapter import submission_id_from
 from amanah.jobs.runs import CollectionRunService
 from amanah.jobs.service import JobService, LeaseLostError
+from amanah.observability.metrics import MetricName, record_metric
+from amanah.observability.request_context import bind_operation_context
 
 logger = logging.getLogger(__name__)
 
@@ -124,43 +126,62 @@ class CollectionPipeline:
         decision. An `AdapterError` already carries that judgement; anything else
         is an internal fault and is neither retried nor described to the caller.
         """
-        try:
-            if job.stage is JobStage.discover:
-                counts = self._discover(job)
-            elif job.stage is JobStage.fetch:
-                counts = self._fetch(job)
+        with bind_operation_context(
+            run_id=job.collection_run_id,
+            job_id=job.id,
+            stage=job.stage.value,
+            source_key=self._adapter.source_key,
+        ):
+            try:
+                if job.stage is JobStage.discover:
+                    counts = self._discover(job)
+                elif job.stage is JobStage.fetch:
+                    counts = self._fetch(job)
+                else:
+                    counts = self._normalize(job)
+            except PayloadDecodeError:
+                logger.exception("stage payload could not be decoded")
+                self._jobs.fail(
+                    job,
+                    owner=self._worker_id,
+                    safe_error_code=MALFORMED_PAYLOAD_CODE,
+                    retryable=False,
+                )
+                outcome = StageOutcome(stage=job.stage, state=JobState.failed, counts={})
+            except AdapterError as exc:
+                if exc.is_policy_block:
+                    self._jobs.block(job, owner=self._worker_id, safe_error_code=exc.safe_code)
+                    outcome = StageOutcome(
+                        stage=job.stage, state=JobState.policy_blocked, counts={}
+                    )
+                else:
+                    state = self._jobs.fail(
+                        job,
+                        owner=self._worker_id,
+                        safe_error_code=exc.safe_code,
+                        retryable=exc.is_retryable,
+                    )
+                    outcome = StageOutcome(stage=job.stage, state=state, counts={})
+            except LeaseLostError:
+                logger.warning("job lease was lost mid-stage")
+                outcome = StageOutcome(stage=job.stage, state=JobState.queued, counts={})
+            except Exception:
+                logger.exception("stage failed")
+                self._jobs.fail(
+                    job,
+                    owner=self._worker_id,
+                    safe_error_code=INTERNAL_STAGE_CODE,
+                    retryable=False,
+                )
+                outcome = StageOutcome(stage=job.stage, state=JobState.failed, counts={})
             else:
-                counts = self._normalize(job)
-        except PayloadDecodeError:
-            logger.exception("stage payload could not be decoded", extra={"job_id": str(job.id)})
-            self._jobs.fail(
-                job, owner=self._worker_id, safe_error_code=MALFORMED_PAYLOAD_CODE, retryable=False
+                outcome = StageOutcome(stage=job.stage, state=JobState.succeeded, counts=counts)
+            record_metric(
+                MetricName.jobs,
+                stage=job.stage.value,
+                state=outcome.state.value,
             )
-            return StageOutcome(stage=job.stage, state=JobState.failed, counts={})
-        except AdapterError as exc:
-            if exc.is_policy_block:
-                self._jobs.block(job, owner=self._worker_id, safe_error_code=exc.safe_code)
-                return StageOutcome(stage=job.stage, state=JobState.policy_blocked, counts={})
-            state = self._jobs.fail(
-                job,
-                owner=self._worker_id,
-                safe_error_code=exc.safe_code,
-                retryable=exc.is_retryable,
-            )
-            return StageOutcome(stage=job.stage, state=state, counts={})
-        except LeaseLostError:
-            # Someone else owns this job now. Dropping the work is correct:
-            # retrying the write would overwrite whatever they did with it.
-            logger.warning("job lease was lost mid-stage", extra={"job_id": str(job.id)})
-            return StageOutcome(stage=job.stage, state=JobState.queued, counts={})
-        except Exception:
-            logger.exception("stage failed", extra={"job_id": str(job.id)})
-            self._jobs.fail(
-                job, owner=self._worker_id, safe_error_code=INTERNAL_STAGE_CODE, retryable=False
-            )
-            return StageOutcome(stage=job.stage, state=JobState.failed, counts={})
-
-        return StageOutcome(stage=job.stage, state=JobState.succeeded, counts=counts)
+            return outcome
 
     # -- the stages -------------------------------------------------------
 

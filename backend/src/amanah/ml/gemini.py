@@ -58,6 +58,7 @@ from amanah.ml.results import (
     describe,
 )
 from amanah.ml.versions import INFERENCE_VERSION, TAXONOMY_VERSION
+from amanah.observability.metrics import MetricName, record_metric
 from amanah.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -183,6 +184,7 @@ class GeminiClient:
 
         gate = self._gate(request, prompt)
         if gate is not None:
+            record_metric(MetricName.gemini_outcomes, outcome=gate.status.value)
             return gate
 
         key = inference_cache_key(
@@ -195,6 +197,7 @@ class GeminiClient:
         )
         cached = self._cache.get(key)
         if isinstance(cached, response_model):
+            record_metric(MetricName.gemini_outcomes, outcome="cached")
             return InferenceSuccess(
                 payload=cached,
                 model_name=self.model_name,
@@ -212,12 +215,14 @@ class GeminiClient:
         grant = self._budget.request(estimated)
         if not grant.is_granted:
             logger.info("inference deferred", extra={"reason": grant.reason})
+            record_metric(MetricName.gemini_outcomes, outcome=grant.reason or "deferred")
             return InferenceDeferred(reason=grant.reason or "budget_exhausted")
 
         result = self._call_with_retries(prompt, body, response_model, estimated)
         if isinstance(result, InferenceSuccess):
             self._cache.set(key, result.payload)
         logger.info("inference completed", extra=describe(result))
+        record_metric(MetricName.gemini_outcomes, outcome=result.status.value)
         return result
 
     def _gate(self, request: InferenceRequest, prompt: PromptDefinition) -> InferenceFailure | None:
