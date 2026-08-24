@@ -119,22 +119,24 @@ export function ProfilePage() {
               <Avatar displayName={displayName} imageSrc={avatarDataUrl} size="large" />
 
               <div className={styles.pictureActions}>
-                <label className={styles.fileLabel} htmlFor="avatar">
-                  Choose a picture
-                </label>
-                <input
-                  className={styles.fileInput}
-                  id="avatar"
-                  name="avatar"
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp"
-                  onChange={handleAvatarChange}
-                  aria-describedby="avatar-hint"
-                />
-                <p className={styles.hint} id="avatar-hint">
-                  PNG, JPEG or WebP, up to {Math.round(AVATAR_MAX_BYTES / 1024)} KB. Stored in this
-                  tab only. Without one, your initials are shown.
-                </p>
+                <div className={styles.dropzone}>
+                  <label className={styles.fileLabel} htmlFor="avatar">
+                    Choose a picture
+                  </label>
+                  <p className={styles.hint} id="avatar-hint">
+                    PNG, JPEG or WebP, up to {Math.round(AVATAR_MAX_BYTES / 1024)} KB. Stored in
+                    this tab only. Without one, your initials are shown.
+                  </p>
+                  <input
+                    className={styles.fileInput}
+                    id="avatar"
+                    name="avatar"
+                    type="file"
+                    accept="image/png,image/jpeg,image/webp"
+                    onChange={handleAvatarChange}
+                    aria-describedby="avatar-hint"
+                  />
+                </div>
                 {avatarDataUrl !== null && (
                   <Button variant="secondary" onClick={handleRemoveAvatar}>
                     Remove picture

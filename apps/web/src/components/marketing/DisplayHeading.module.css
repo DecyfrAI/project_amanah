@@ -5,7 +5,7 @@
  */
 .heading {
   font-family: var(--font-editorial);
-  font-weight: var(--weight-semibold);
+  font-weight: var(--weight-regular);
   line-height: var(--leading-display);
   letter-spacing: var(--tracking-tight);
   text-wrap: balance;
