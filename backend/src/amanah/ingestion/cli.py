@@ -42,7 +42,7 @@ from amanah.ingestion.configuration import (
 )
 from amanah.ingestion.contract import AdapterError, DiscoveryRequest, SourceAdapter
 from amanah.ingestion.pipeline import CollectionPipeline, utc_now
-from amanah.ingestion.registry import UnknownSourceError, build_default_registry
+from amanah.ingestion.registry import AdapterContext, UnknownSourceError, build_default_registry
 from amanah.jobs.runs import CollectionRunService, RunDispatch, RunValidationError
 from amanah.ml.batch import DEFAULT_BATCH_SIZE, analyze
 from amanah.ml.budgets import TokenBudget
@@ -50,6 +50,7 @@ from amanah.ml.catalog import build_registry
 from amanah.ml.classification import ClassificationService
 from amanah.ml.gemini import GeminiClient
 from amanah.observability.logging import configure_logging
+from amanah.reporting.policies import load_policy_catalogue, project_policies
 from amanah.settings import ConfigurationError, Settings, load_settings
 
 logger = logging.getLogger("amanah.etl")
@@ -58,9 +59,7 @@ logger = logging.getLogger("amanah.etl")
 #: the next invocation from its checkpoint rather than looping without bound.
 MAXIMUM_STAGES_PER_INVOCATION = 5_000
 
-#: Window `analyze` covers when the caller names none. Wide enough to pick up a
-#: backlog left by a failed run, narrow enough that a scheduled invocation does
-#: not rescan the whole corpus every eight hours.
+#: Window `analyze` covers when the caller names none.
 DEFAULT_ANALYSIS_WINDOW_DAYS = 7
 
 
@@ -116,13 +115,13 @@ def build_parser() -> argparse.ArgumentParser:
         help="Windows to dispatch in this invocation; the rest wait for the next.",
     )
 
-    analyze = subcommands.add_parser(
+    analyze_command = subcommands.add_parser(
         "analyze",
         help="Classify collected items and rebuild the deterministic metric buckets.",
     )
-    analyze.add_argument("--from", dest="window_start", type=_parse_date, default=None)
-    analyze.add_argument("--to", dest="window_end", type=_parse_date, default=None)
-    analyze.add_argument(
+    analyze_command.add_argument("--from", dest="window_start", type=_parse_date, default=None)
+    analyze_command.add_argument("--to", dest="window_end", type=_parse_date, default=None)
+    analyze_command.add_argument(
         "--batch-size",
         type=int,
         default=DEFAULT_BATCH_SIZE,
@@ -130,7 +129,8 @@ def build_parser() -> argparse.ArgumentParser:
     )
 
     configure = subcommands.add_parser(
-        "sync-config", help="Project the reviewed source and seed catalogue into the database."
+        "sync-config",
+        help="Project the reviewed source, seed, and platform-policy catalogue.",
     )
     configure.add_argument("--directory", default=None)
     return parser
@@ -179,31 +179,30 @@ def _sync_config(session: Session, directory: str | None) -> int:
             extra={"sources": sources.config_version, "seeds": seeds.config_version},
         )
         return 2
+    policies = load_policy_catalogue(path)
     written_sources = project_sources(session, sources)
     written_seeds = project_seeds(session, seeds)
+    # The platform-policy catalogue is versioned on its own: a rule is
+    # re-reviewed on the platform's schedule, not on the collection catalogue's,
+    # so its `config_version` is deliberately not compared with the other two.
+    written_policies = project_policies(session, policies)
     logger.info(
         "configuration synchronised",
-        extra={"sources": written_sources, "approved_seeds": written_seeds},
+        extra={
+            "sources": written_sources,
+            "approved_seeds": written_seeds,
+            "platform_policies": written_policies,
+        },
     )
     return 0
 
 
 def _analyze(session: Session, settings: Settings, arguments: argparse.Namespace) -> int:
-    """Classify what has been collected, then recompute the buckets over it.
-
-    Runs whether or not Gemini is configured. With no key every item defers and
-    the aggregation still writes true observed counts and an honest coverage
-    score, which is what keeps the dashboard useful without AI.
-
-    The token budget is per invocation. That is the run boundary `spec.md`
-    section 11.2 describes, and it means a scheduled analysis cannot spend more
-    than its share however large the backlog is.
-    """
+    """Classify what has been collected, then recompute its metric buckets."""
     window_end = arguments.window_end or utc_now()
     window_start = arguments.window_start or window_end - timedelta(
         days=DEFAULT_ANALYSIS_WINDOW_DAYS
     )
-
     client = GeminiClient(
         settings=settings,
         registry=build_registry(),
@@ -213,10 +212,7 @@ def _analyze(session: Session, settings: Settings, arguments: argparse.Namespace
         ),
     )
     if not client.is_configured:
-        logger.warning(
-            "classification is disabled",
-            extra={"reason": "gemini_not_configured"},
-        )
+        logger.warning("classification is disabled", extra={"reason": "gemini_not_configured"})
 
     result = analyze(
         session,
@@ -226,7 +222,6 @@ def _analyze(session: Session, settings: Settings, arguments: argparse.Namespace
         batch_size=arguments.batch_size,
     )
     session.commit()
-
     logger.info(
         "analysis complete",
         extra={
@@ -245,7 +240,10 @@ def _run(session: Session, settings: Settings, arguments: argparse.Namespace) ->
     registry = build_default_registry(sources)
 
     try:
-        adapter = registry.build(arguments.source, settings=settings, sources=sources, seeds=seeds)
+        adapter = registry.build(
+            arguments.source,
+            AdapterContext(session=session, settings=settings, sources=sources, seeds=seeds),
+        )
     except UnknownSourceError:
         logger.error("no adapter is registered for that source", extra={"source": arguments.source})
         return 2
@@ -366,7 +364,10 @@ def _backfill(session: Session, settings: Settings, arguments: argparse.Namespac
     seeds = load_seed_configuration(settings.source_config_directory)
     registry = build_default_registry(sources)
     try:
-        adapter = registry.build(arguments.source, settings=settings, sources=sources, seeds=seeds)
+        adapter = registry.build(
+            arguments.source,
+            AdapterContext(session=session, settings=settings, sources=sources, seeds=seeds),
+        )
     except UnknownSourceError:
         logger.error("no adapter is registered for that source", extra={"source": arguments.source})
         return 2

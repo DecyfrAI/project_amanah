@@ -709,6 +709,13 @@ nothing above changes meaning.
 | GET | `/v1/image-examples` | Authenticated image-evidence catalog with manifest provenance and short-lived signed URLs (ADR 0007) |
 | POST | `/v1/image-classifications` | Server-side staged classification of a catalog or uploaded image; pixels never cross the browser API boundary |
 
+The following row was added in v2.3 (23 August 2026) while implementing B-S16. It
+is additive: nothing above changes meaning.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/v1/me/contributions/{id}/events` | The append-only, user-safe timeline of one of the caller's own contributions. `contribution_event` already exists in section 14.3 and FR-SUBMIT-007 / FR-DISPUTE-005 require the user to see each transition; without a read the rows are unreachable. Returns an empty list for an identifier the caller does not own, so the response cannot confirm that someone else's record exists. |
+
 ### 13.3 Reviewer/admin endpoints
 
 | Method | Path | Purpose |

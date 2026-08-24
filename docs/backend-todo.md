@@ -163,44 +163,44 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
 
 ### Milestone 5 — Authenticated contributions and human review
 
-- [ ] **B-S16 — Implement URL submissions and contribution history**
-  - [ ] **B-S16.1** Add authenticated one-public-URL submission with server-side validation.
-  - [ ] **B-S16.2** Enforce idempotency and link canonical duplicates rather than reprocessing.
-  - [ ] **B-S16.3** Persist Processing before enqueueing safe retrieval/canonical processing.
-  - [ ] **B-S16.4** Append user-safe contribution events for every status transition.
-  - [ ] **B-S16.5** Support processing, analyzed, duplicate, unsupported, inaccessible, rejected, and failed.
-  - [ ] **B-S16.6** Return cursor-paginated contributions owned by the authenticated user only.
-  - [ ] **B-S16.7** Rate-limit submissions and test auth, ownership, idempotency, transition, and enqueue behavior.
+- [x] **B-S16 — Implement URL submissions and contribution history**
+  - [x] **B-S16.1** Add authenticated one-public-URL submission with server-side validation.
+  - [x] **B-S16.2** Enforce idempotency and link canonical duplicates rather than reprocessing.
+  - [x] **B-S16.3** Persist Processing before enqueueing safe retrieval/canonical processing.
+  - [x] **B-S16.4** Append user-safe contribution events for every status transition.
+  - [x] **B-S16.5** Support processing, analyzed, duplicate, unsupported, inaccessible, rejected, and failed.
+  - [x] **B-S16.6** Return cursor-paginated contributions owned by the authenticated user only.
+  - [x] **B-S16.7** Rate-limit submissions and test auth, ownership, idempotency, transition, and enqueue behavior. *(Limits are counted from the rows each action already writes, so two API instances cannot each allow a full quota.)*
 
-- [ ] **B-S17 — Implement disputes and reviewer decisions**
-  - [ ] **B-S17.1** Enforce one open dispute per user/item.
-  - [ ] **B-S17.2** Return/link the existing dispute on an idempotent duplicate request.
-  - [ ] **B-S17.3** Create prioritized review tasks without changing the original prediction.
-  - [ ] **B-S17.4** Implement reviewer claim, append-only decision, and history endpoints with leases and roles.
-  - [ ] **B-S17.5** Update effective-label projections from review events while preserving history.
-  - [ ] **B-S17.6** Append a user-safe resolution to the user’s contribution timeline.
-  - [ ] **B-S17.7** Quarantine approved corrections as training candidates; never auto-train.
-  - [ ] **B-S17.8** Test concurrent claims, invalid decisions, ownership, immutability, duplicate disputes, and final outcomes.
+- [x] **B-S17 — Implement disputes and reviewer decisions**
+  - [x] **B-S17.1** Enforce one open dispute per user/item.
+  - [x] **B-S17.2** Return/link the existing dispute on an idempotent duplicate request.
+  - [x] **B-S17.3** Create prioritized review tasks without changing the original prediction.
+  - [x] **B-S17.4** Implement reviewer claim, append-only decision, and history endpoints with leases and roles.
+  - [x] **B-S17.5** Update effective-label projections from review events while preserving history.
+  - [x] **B-S17.6** Append a user-safe resolution to the user’s contribution timeline.
+  - [x] **B-S17.7** Quarantine approved corrections as training candidates; never auto-train. *(`review_events.is_training_candidate` has no consumer anywhere in the service; the absence of one is the quarantine.)*
+  - [x] **B-S17.8** Test concurrent claims, invalid decisions, ownership, immutability, duplicate disputes, and final outcomes.
 
-- [ ] **B-S18 — Implement platform-policy assistance and prepared reports**
-  - [ ] **B-S18.1** Add at least one reviewer-approved official platform-policy fixture/catalog entry with version and review date.
-  - [ ] **B-S18.2** Return constrained candidate policy matches with uncertainty and official links.
-  - [ ] **B-S18.3** Require explicit user-selected/confirmed policy ID and version before saving.
-  - [ ] **B-S18.4** Persist evidence summary, suggested wording, item, platform, policy version, user, and creation time.
-  - [ ] **B-S18.5** Implement prepared/submitted/outcome state transitions without claiming platform receipt.
-  - [ ] **B-S18.6** Prohibit platform reporting API calls, arbitrary destinations, and automatic submission.
-  - [ ] **B-S18.7** Add per-user/item abuse controls and anti-brigading limits.
-  - [ ] **B-S18.8** Test stale policies, low confidence, confirmation, ownership, outcomes, and absence of external side effects.
-  - [ ] **B-S18.9** Use the policy-catalog flow for platforms with an official reporting form; for a platform without one, produce an email-style draft (subject, body, evidence summary) addressed only to a reviewer-approved allow-listed address, never auto-sent (FR-TOS-010, spec v2.2; matches the frontend `ReportDraft` contract's `to_kind` split).
+- [x] **B-S18 — Implement platform-policy assistance and prepared reports**
+  - [x] **B-S18.1** Add at least one reviewer-approved official platform-policy fixture/catalog entry with version and review date.
+  - [x] **B-S18.2** Return constrained candidate policy matches with uncertainty and official links. *(Deterministic matching behind a `PolicyMatcher` seam. Milestone 4 is not implemented, so no Gemini ranking yet; a model-backed ranker implements the same contract when B-S13 lands and the routes do not change.)*
+  - [x] **B-S18.3** Require explicit user-selected/confirmed policy ID and version before saving.
+  - [x] **B-S18.4** Persist evidence summary, suggested wording, item, platform, policy version, user, and creation time.
+  - [x] **B-S18.5** Implement prepared/submitted/outcome state transitions without claiming platform receipt.
+  - [x] **B-S18.6** Prohibit platform reporting API calls, arbitrary destinations, and automatic submission.
+  - [x] **B-S18.7** Add per-user/item abuse controls and anti-brigading limits.
+  - [x] **B-S18.8** Test stale policies, low confidence, confirmation, ownership, outcomes, and absence of external side effects.
+  - [x] **B-S18.9** Use the policy-catalog flow for platforms with an official reporting form; for a platform without one, produce an email-style draft (subject, body, evidence summary) addressed only to a reviewer-approved allow-listed address, never auto-sent (FR-TOS-010, spec v2.2; matches the frontend `ReportDraft` contract's `to_kind` split).
 
-- [ ] **B-S27 — Implement insight snapshots, discussion, captures, and profile persistence (ADR 0004)**
-  - [ ] **B-S27.1** Implement `PATCH /v1/me` for profile/onboarding persistence (spec §13.2 already lists it; reconciliation G10). Pull this sub-item forward if frontend onboarding needs it before the rest of the step.
+- [x] **B-S27 — Implement insight snapshots, discussion, captures, and profile persistence (ADR 0004)**
+  - [x] **B-S27.1** Implement `PATCH /v1/me` for profile/onboarding persistence (spec §13.2 already lists it; reconciliation G10). Pull this sub-item forward if frontend onboarding needs it before the rest of the step.
   - [x] **B-S27.2** Land the additive `spec.md` §13 amendment for insights/discussion/captures/viewer-post routes (reconciliation G6). *(Done 23 Aug 2026: spec v2.2.)*
-  - [ ] **B-S27.3** Implement `GET/POST /v1/insights` and `GET /v1/insights/{id}` over the existing `insight_snapshots` table: a snapshot freezes claim, numerator/denominator, metric, window, coverage, and the Explorer filter state at capture time.
-  - [ ] **B-S27.4** Implement discussion (`GET /v1/insights/{id}/discussion`, `POST …/discussion/posts`), reactions (`useful`/`needs_context` counts only, never author ranking), and retraction that replaces the body and removes the capture while leaving the row.
-  - [ ] **B-S27.5** Implement `POST /v1/captures` for first-party dashboard figure captures (alt text, filter hash, Explorer deep link) and `GET /v1/me/posts` scoped to the caller.
-  - [ ] **B-S27.6** Keep participation invite-only per ADR 0004, deny anonymous access everywhere, apply RLS ownership boundaries, and rate-limit posting.
-  - [ ] **B-S27.7** Test snapshot immutability, retraction semantics, reaction idempotency, ownership and anonymous denial, and that no person-level ranking or free-floating board exists.
+  - [x] **B-S27.3** Implement `GET/POST /v1/insights` and `GET /v1/insights/{id}`: a snapshot freezes claim, numerator/denominator, metric, window, coverage, and the Explorer filter state at capture time. *(Built on a new `snapshot_insights` table, not `insight_snapshots` — the latter is the AI narrative cache keyed by filter/model/prompt version and holds no claim. Counts come from the client per ADR 0004, so this needed no B-S15.)*
+  - [x] **B-S27.4** Implement discussion (`GET /v1/insights/{id}/discussion`, `POST …/discussion/posts`), reactions (`useful`/`needs_context` counts only, never author ranking), and retraction that replaces the body and removes the capture while leaving the row.
+  - [x] **B-S27.5** Implement `POST /v1/captures` for first-party dashboard figure captures (alt text, filter hash, Explorer deep link) and `GET /v1/me/posts` scoped to the caller.
+  - [x] **B-S27.6** Keep participation invite-only per ADR 0004, deny anonymous access everywhere, apply RLS ownership boundaries, and rate-limit posting.
+  - [x] **B-S27.7** Test snapshot immutability, retraction semantics, reaction idempotency, ownership and anonymous denial, and that no person-level ranking or free-floating board exists.
 
 ### Milestone 6 — Research reports and curated resources
 

@@ -25,6 +25,7 @@ class ErrorCode(StrEnum):
     authentication_required = "AUTHENTICATION_REQUIRED"
     permission_denied = "PERMISSION_DENIED"
     resource_not_found = "RESOURCE_NOT_FOUND"
+    resource_conflict = "RESOURCE_CONFLICT"
     method_not_allowed = "METHOD_NOT_ALLOWED"
     rate_limited = "RATE_LIMITED"
     service_unavailable = "SERVICE_UNAVAILABLE"

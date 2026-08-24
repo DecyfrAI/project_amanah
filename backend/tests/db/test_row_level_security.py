@@ -197,3 +197,105 @@ def test_only_published_resources_reach_a_base_role_reader(connection: Connectio
     )
 
     assert titles == ["Reviewed"]
+
+
+def test_a_base_role_reader_cannot_reach_the_review_queue(connection: Connection) -> None:
+    """The queue is reviewer-only, and the projection says so on its own rather
+    than relying on the route dependency alone (B-S17.4)."""
+    source_id = factories.insert_source(connection)
+    item_id = factories.insert_content_item(connection, source_id=source_id)
+    prediction_id = factories.insert_prediction(connection, content_item_id=item_id)
+    factories.insert_review_task(connection, content_item_id=item_id, prediction_id=prediction_id)
+
+    act_as(connection, "authenticated", claims_for(uuid4()))
+    rows = connection.execute(
+        text("SELECT count(*) FROM public.authenticated_review_tasks")
+    ).scalar_one()
+
+    assert rows == 0
+
+
+def test_a_reviewer_reaches_the_review_queue(connection: Connection) -> None:
+    source_id = factories.insert_source(connection)
+    item_id = factories.insert_content_item(connection, source_id=source_id)
+    prediction_id = factories.insert_prediction(connection, content_item_id=item_id)
+    factories.insert_review_task(connection, content_item_id=item_id, prediction_id=prediction_id)
+
+    act_as(connection, "authenticated", claims_for(uuid4(), Role.reviewer))
+    rows = connection.execute(
+        text("SELECT count(*) FROM public.authenticated_review_tasks")
+    ).scalar_one()
+
+    assert rows == 1
+
+
+def test_a_snapshot_insight_is_readable_by_any_verified_reader(
+    connection: Connection,
+) -> None:
+    """ADR 0004 makes a thread something colleagues can follow, so the insight
+    itself is not owner-scoped even though only its author created it."""
+    author = uuid4()
+    factories.insert_snapshot_insight(connection, user_id=author)
+
+    act_as(connection, "authenticated", claims_for(uuid4()))
+    rows = connection.execute(
+        text("SELECT count(*) FROM public.authenticated_snapshot_insights")
+    ).scalar_one()
+
+    assert rows == 1
+
+
+def test_an_unverified_session_sees_no_snapshot_insight(connection: Connection) -> None:
+    factories.insert_snapshot_insight(connection, user_id=uuid4())
+
+    act_as(connection, "authenticated", None)
+    rows = connection.execute(
+        text("SELECT count(*) FROM public.authenticated_snapshot_insights")
+    ).scalar_one()
+
+    assert rows == 0
+
+
+def test_a_participant_reads_only_their_own_invitation(connection: Connection) -> None:
+    """An invitation list is not something a participant gets to read."""
+    mine = uuid4()
+    theirs = uuid4()
+    factories.insert_discussion_participant(connection, user_id=mine)
+    factories.insert_discussion_participant(connection, user_id=theirs)
+
+    act_as(connection, "authenticated", claims_for(mine))
+    rows = connection.execute(
+        text("SELECT user_id FROM public.authenticated_discussion_participation")
+    ).scalars()
+
+    assert [str(row) for row in rows] == [str(mine)]
+
+
+def test_the_reaction_projection_never_names_another_reader(
+    connection: Connection,
+) -> None:
+    """Counts are per post; the only per-person value is the caller's own."""
+    author = uuid4()
+    reader = uuid4()
+    insight_id = factories.insert_snapshot_insight(connection, user_id=author)
+    post_id = factories.insert_discussion_post(
+        connection, snapshot_insight_id=insight_id, user_id=author
+    )
+    connection.execute(
+        text(
+            "INSERT INTO public.post_reactions (discussion_post_id, user_id, kind) "
+            "VALUES (:post, :user, 'useful')"
+        ),
+        {"post": post_id, "user": author},
+    )
+
+    act_as(connection, "authenticated", claims_for(reader))
+    row = (
+        connection.execute(text("SELECT * FROM public.authenticated_post_reactions"))
+        .mappings()
+        .one()
+    )
+
+    assert row["useful_count"] == 1
+    assert row["viewer_reaction"] is None
+    assert str(author) not in str(dict(row))

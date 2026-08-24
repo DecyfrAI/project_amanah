@@ -39,7 +39,7 @@ from amanah.domain.enums import (
 )
 
 #: Re-exported so a test can name a controlled value without a second import.
-__all__ = ["InferenceStatus", "PublicPlatform", "SourceKind"]
+__all__ = ["InferenceStatus", "PublicPlatform", "PublicationStatus", "SourceKind"]
 
 BASE_TIME = datetime(2026, 6, 1, 12, 0, tzinfo=UTC)
 
@@ -379,6 +379,137 @@ def insert_user_profile(
         {"user_id": user_id, "display_name": "Synthetic user", "role": role},
     )
     return user_id
+
+
+def insert_platform_policy(
+    connection: Connection,
+    *,
+    platform: str = "youtube",
+    policy_key: str = "hate_speech",
+    version: str = "2026.08.23",
+    status: PublicationStatus = PublicationStatus.published,
+    recipient_kind: str = "official_form",
+    official_report_url: str | None = "https://example.test/report",
+    report_email: str | None = None,
+) -> UUID:
+    reviewed = status is PublicationStatus.published
+    return _insert(
+        connection,
+        "platform_policies",
+        {
+            "platform": platform,
+            "policy_key": policy_key,
+            "title": "Synthetic platform rule",
+            "official_url": f"https://example.test/policy/{policy_key}",
+            "summary": "Synthetic summary of a reviewed platform rule.",
+            "version": version,
+            "last_reviewed_at": BASE_TIME if reviewed else None,
+            "status": status.value,
+            "reviewed_by": "test-reviewer" if reviewed else None,
+            "recipient_kind": recipient_kind,
+            "official_report_url": official_report_url,
+            "report_email": report_email,
+        },
+    )
+
+
+def insert_review_task(
+    connection: Connection,
+    *,
+    content_item_id: UUID,
+    prediction_id: UUID,
+    task_type: str = "dispute",
+    status: str = "open",
+    priority: int = 100,
+    assigned_to: UUID | None = None,
+) -> UUID:
+    return _insert(
+        connection,
+        "review_tasks",
+        {
+            "content_item_id": content_item_id,
+            "prediction_id": prediction_id,
+            "task_type": task_type,
+            "reason": "Synthetic reason for review.",
+            "priority": priority,
+            "status": status,
+            "assigned_to": assigned_to,
+        },
+    )
+
+
+def insert_snapshot_insight(
+    connection: Connection,
+    *,
+    user_id: UUID,
+    title: str = "Synthetic snapshot",
+    numerator: int = 12,
+    denominator: int = 400,
+    created_at: datetime | None = None,
+) -> UUID:
+    values: dict[str, Any] = {
+        "user_id": user_id,
+        "title": title,
+        "claim": "12 of 400 monitored items were classified likely anti-Muslim.",
+        "metric": "likely_anti_muslim_rate",
+        "numerator": numerator,
+        "denominator": denominator,
+        "window_start": BASE_TIME,
+        "window_end": BASE_TIME + timedelta(days=7),
+        "figure_label": "Daily rate",
+        "filter_hash": "a1b2c3d4e5f60718",
+        "explorer_href": "/app/explorer?from=2026-06-01",
+        "source_keys": ["fixtures"],
+        "items_observed": 400,
+        "items_relevant": 120,
+    }
+    if created_at is not None:
+        values["created_at"] = created_at
+    return _insert(connection, "snapshot_insights", values)
+
+
+def insert_dashboard_capture(connection: Connection, *, user_id: UUID) -> UUID:
+    return _insert(
+        connection,
+        "dashboard_captures",
+        {
+            "user_id": user_id,
+            "alt_text": "Synthetic figure showing a daily rate.",
+            "image_source": "/media/figures/synthetic.png",
+            "filter_hash": "a1b2c3d4e5f60718",
+            "explorer_href": "/app/explorer?from=2026-06-01",
+        },
+    )
+
+
+def insert_discussion_participant(
+    connection: Connection, *, user_id: UUID, granted_by: UUID | None = None
+) -> UUID:
+    return _insert(
+        connection,
+        "discussion_participants",
+        {"user_id": user_id, "granted_by": granted_by or uuid4()},
+    )
+
+
+def insert_discussion_post(
+    connection: Connection,
+    *,
+    snapshot_insight_id: UUID,
+    user_id: UUID,
+    body: str = "Synthetic note about a figure.",
+    dashboard_capture_id: UUID | None = None,
+) -> UUID:
+    return _insert(
+        connection,
+        "discussion_posts",
+        {
+            "snapshot_insight_id": snapshot_insight_id,
+            "user_id": user_id,
+            "body": body,
+            "dashboard_capture_id": dashboard_capture_id,
+        },
+    )
 
 
 def insert_image_example(

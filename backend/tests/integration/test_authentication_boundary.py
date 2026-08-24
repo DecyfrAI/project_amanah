@@ -102,18 +102,24 @@ def test_token_from_another_issuer_is_denied(client: TestClient, settings: Setti
     assert response.status_code == 401
 
 
-def test_valid_session_receives_the_verified_identity(
+def test_a_valid_session_passes_the_authentication_boundary(
     client: TestClient, settings: Settings
 ) -> None:
-    user_id = uuid4()
-    token = make_access_token(settings, user_id=user_id, role=Role.reviewer)
+    """A verified token is not rejected.
+
+    These settings point at a database that is not there, so the read behind
+    `/v1/me` cannot complete — `503` is the honest answer, and it is emphatically
+    not `401`. What this asserts is the boundary itself: the request got past
+    authentication. The identity payload is asserted against a real database in
+    `tests/db/test_insights_api.py`.
+    """
+    token = make_access_token(settings, user_id=uuid4(), role=Role.reviewer)
 
     response = client.get(PRODUCT_ROUTE, headers={"Authorization": f"Bearer {token}"})
 
-    assert response.status_code == 200
-    body = response.json()
-    assert body["profile"] == {"user_id": str(user_id), "role": "reviewer"}
-    assert body["meta"]["request_id"] == response.headers["X-Request-Id"]
+    assert response.status_code == 503
+    assert response.json()["error"]["code"] == "SERVICE_UNAVAILABLE"
+    assert response.json()["error"]["request_id"] == response.headers["X-Request-Id"]
 
 
 def test_response_echoes_a_generated_request_id(client: TestClient) -> None:
@@ -185,7 +191,9 @@ def test_successful_authentication_is_logged_without_the_token(
     response = client.get(PRODUCT_ROUTE, headers={"Authorization": f"Bearer {token}"})
     logged = "\n".join(captured_logs.lines)
 
-    assert response.status_code == 200
+    # Past the boundary: the read behind this route needs a database these
+    # settings do not have, which is a different failure from being refused.
+    assert response.status_code != 401
     # The outcome is recorded, so removing the log line fails this test.
     assert "authentication succeeded" in logged
     assert str(user_id) in logged

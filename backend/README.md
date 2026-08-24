@@ -61,13 +61,6 @@ checkout.
 | ETL fixture run (no network) | `uv run --project backend --env-file backend/.env amanah-etl run --source fixtures --mode fixture` |
 | ETL dry run | the same command with `--dry-run` |
 | Historical backfill | `uv run --project backend --env-file backend/.env amanah-etl backfill --source fixtures --from 2021-08-23 --to 2026-08-23` |
-| Classify and aggregate | `uv run --project backend --env-file backend/.env amanah-etl analyze` |
-
-`analyze` classifies collected items and then recomputes the deterministic metric
-buckets over them, in that order — aggregation counts predictions, so reversing
-it would produce buckets describing the previous run's labels. It runs whether or
-not Gemini is configured: with no key every item defers, and the aggregation still
-writes true observed counts and an honest coverage score.
 
 The import/startup check reads the environment, so give it configuration:
 `uv run --project backend --env-file backend/.env python -c ...`.
@@ -103,12 +96,9 @@ application. Every variable is documented in
 | `DATABASE_CONNECT_TIMEOUT_SECONDS`, `DATABASE_STATEMENT_TIMEOUT_MS`, `DATABASE_POOL_SIZE` | no | Explicit connection and query bounds, and pool size |
 | `APP_ENV`, `LOG_LEVEL`, `DATA_MODE` | no | Environment name, log level, fixture/live/fallback mode |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | no | Enables the Gemini connector when both are set |
-| `GEMINI_TIMEOUT_SECONDS`, `GEMINI_MAX_RETRIES` | no | Explicit bounds on every model call; neither can be disabled |
-| `GEMINI_MAX_INPUT_CHARACTERS`, `GEMINI_MAX_OUTPUT_TOKENS` | no | Input and output caps, so one oversized item cannot spend a run's budget |
-| `GEMINI_PER_RUN_TOKEN_BUDGET`, `GEMINI_DAILY_TOKEN_BUDGET` | no | Spend ceilings; exhausting either defers remaining items rather than failing the run |
 | `YOUTUBE_API_KEY`, `NEWS_API_KEY` | no | Enable their connectors |
 | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | no | Reserved; Reddit stays disabled pending approval |
-| `CONTENT_ENCRYPTION_KEY` | no | Base64 of 32 bytes. Encrypts permitted original text at rest; absent means the original is not retained at all, never stored as plaintext. Also signs the short-lived image-catalog URLs, so `GET /v1/image-examples` reports itself unavailable without it |
+| `CONTENT_ENCRYPTION_KEY` | no | Base64 of 32 bytes. Encrypts permitted original text at rest; absent means the original is not retained at all, never stored as plaintext |
 | `SOURCE_CONFIG_DIRECTORY` | no | Reviewed source and seed YAML; defaults to `config/` in the repository |
 | `HTTP_CONNECT_TIMEOUT_SECONDS`, `HTTP_READ_TIMEOUT_SECONDS`, `HTTP_TOTAL_TIMEOUT_SECONDS` | no | Explicit bounds on every outbound provider call |
 | `HTTP_MAX_RESPONSE_BYTES`, `HTTP_MAX_REDIRECTS` | no | Byte budget and redirect limit for provider and user-URL retrieval |
@@ -133,7 +123,8 @@ curl http://127.0.0.1:8000/openapi.json -o openapi.json
 |---|---|---|
 | `GET /healthz` | none | Process liveness; checks no dependencies |
 | `GET /readyz` | none | Dependency readiness; `503` when degraded |
-| `GET /v1/me` | bearer | The caller's verified identity and role |
+| `GET /v1/me` | bearer | The caller's verified identity, role, and stored profile |
+| `PATCH /v1/me` | bearer | Persist display name, onboarding state, safety preferences |
 | `GET /v1/dashboard` | bearer | Coverage, deterministic metrics, trend, headlines |
 | `GET /v1/items` | bearer | Filtered, sorted, cursor-paginated items |
 | `GET /v1/items/{id}` | bearer | One item with its model disclosure and limitations |
@@ -148,16 +139,48 @@ curl http://127.0.0.1:8000/openapi.json -o openapi.json
 | `POST /v1/assistant/query` | bearer | Grounded question about the current filtered window |
 | `GET /v1/image-examples` | bearer | Image-evidence catalog with short-lived signed URLs |
 | `POST /v1/image-classifications` | bearer | Server-side staged classification of one catalogued image |
+| `POST /v1/submissions` | bearer | Submit one public URL; `200` on a resubmission |
+| `GET /v1/submissions/{id}` | bearer, owner | Own submission status |
+| `GET /v1/me/contributions` | bearer, owner | Unified history across every contribution type |
+| `GET /v1/me/contributions/{id}/events` | bearer, owner | The appended timeline of one contribution |
+| `POST /v1/items/{id}/disputes` | bearer | Dispute a classification; `200` on an open duplicate |
+| `GET /v1/disputes/{id}` | bearer, owner | Own dispute status and resolution |
+| `POST /v1/items/{id}/policy-analysis` | bearer | Possible platform-policy matches, never findings |
+| `POST /v1/prepared-reports` | bearer | Save a prepared report against a confirmed policy version |
+| `PATCH /v1/prepared-reports/{id}` | bearer, owner | Record that you filed it, and the outcome you saw |
+| `GET /v1/insights` | bearer | Snapshot insights, newest first |
+| `POST /v1/insights` | bearer | Freeze a figure with the counts behind it |
+| `GET /v1/insights/{id}` | bearer | One snapshot insight |
+| `GET /v1/insights/{id}/discussion` | bearer | The thread on one insight |
+| `POST /v1/insights/{id}/discussion/posts` | bearer, invited | Add a note |
+| `POST /v1/posts/{id}/reactions` | bearer, invited | React `useful`/`needs_context`; idempotent |
+| `POST /v1/posts/{id}/retract` | bearer, owner | Withdraw your note; the row stays |
+| `POST /v1/captures` | bearer, invited | Store a first-party capture of an Amanah figure |
+| `GET /v1/me/posts` | bearer, owner | Your own discussion notes |
+| `GET /v1/review/tasks` | bearer, reviewer | The review queue, highest priority and oldest first |
+| `GET /v1/review/tasks/{id}` | bearer, reviewer | One task and every decision appended to it |
+| `POST /v1/review/tasks/{id}/claim` | bearer, reviewer | Take a task under a lease |
+| `POST /v1/review/tasks/{id}/decisions` | bearer, reviewer | Append a decision; never edits the prediction |
 
 `POST /v1/assistant/query` answers only from stored fact bundles and methodology
 text. Every quantitative claim is verified against the bundle server-side before
-the reply is returned; a question the figures cannot answer gets `grounded_in:
-none` and a plain refusal rather than a plausible sentence. Causal phrasing is
-rejected deterministically, and the endpoint is rate-limited per user.
+the reply is returned; an unsupported question gets a grounded refusal. The
+image routes never carry pixels in their JSON contracts: the catalog returns an
+expiring signed URL and classification reads catalogued bytes server-side.
 
-The image routes never carry pixels. The catalog returns a signed URL that
-expires; classification takes an example id and reads the bytes server-side. No
-response and no log contains image data (ADR 0007).
+The reporting routes never contact a platform. `policy-analysis` returns
+*possible* matches from the reviewed catalogue in `config/platform-policies.yml`
+with their official links and last-reviewed dates; a user has to confirm a rule
+and its version before a prepared report exists; and `submitted_at` records what
+the user said they did, never a platform acknowledgement. A platform with no
+reporting form gets an email-style draft addressed only to a reviewer-approved
+allow-listed address, and nothing sends it (FR-TOS-010).
+
+Discussion is attached to an insight and is invite-only (ADR 0004). Reading a
+thread needs a verified session; posting, capturing, and reacting need a live
+`discussion_participants` row. Reactions count on a post and never rank an
+author, and retracting a note replaces its body and drops its capture while the
+row stays in the thread.
 
 `/v1/news` is deliberately not an item projection. An ingested article coincides
 with the monitoring window; it is not an Amanah finding, so the response carries
@@ -203,13 +226,16 @@ src/amanah/
 │   ├── datapacks/  # manifest-validated importer, never a crawler
 │   └── urls/       # SSRF-safe retrieval of user-submitted URLs
 ├── canonical/      # normalization, context, hashing, dedupe, encrypted storage
+├── contributions/  # submissions, disputes, review decisions, timelines, rate limits
+├── reporting/      # reviewed policy catalogue, deterministic matching, prepared drafts
+├── discussion/     # snapshot insights, invite-only notes, captures, reactions
 ├── metrics/        # deterministic aggregates, coverage, and their disclosures
 ├── resources/      # curated resources and the published methodology
 ├── observability/  # request correlation and structured logging
 ├── settings.py     # validated configuration
 └── main.py         # application factory
 migrations/         # Alembic revisions; a separate one-off process
-config/             # reviewed source and seed catalogue (repository root)
+config/             # reviewed source, seed, and platform-policy catalogue (repo root)
 tests/{unit,integration,contract,db}/
 ```
 

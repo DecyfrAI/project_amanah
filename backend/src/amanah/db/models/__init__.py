@@ -15,6 +15,13 @@ from amanah.db.models.community import (
 )
 from amanah.db.models.content import CollectionRun, ContentItem
 from amanah.db.models.datasets import DatasetImportRun, DatasetPackage
+from amanah.db.models.discussion import (
+    DashboardCapture,
+    DiscussionParticipant,
+    DiscussionPost,
+    PostReaction,
+    SnapshotInsight,
+)
 from amanah.db.models.images import ImageClassification, ImageExample
 from amanah.db.models.jobs import BackgroundJob
 from amanah.db.models.metrics import InsightSnapshot, MetricBucket, NewsEventLink
@@ -30,8 +37,11 @@ __all__ = [
     "ContentItem",
     "ContentSubmission",
     "ContributionEvent",
+    "DashboardCapture",
     "DatasetImportRun",
     "DatasetPackage",
+    "DiscussionParticipant",
+    "DiscussionPost",
     "ImageClassification",
     "ImageExample",
     "InsightSnapshot",
@@ -39,12 +49,14 @@ __all__ = [
     "NewsEventLink",
     "PlatformPolicy",
     "PolicyMatch",
+    "PostReaction",
     "Prediction",
     "PreparedPlatformReport",
     "ResearchReport",
     "ResourceEntry",
     "ReviewEvent",
     "ReviewTask",
+    "SnapshotInsight",
     "Source",
     "SourceSeedEntry",
     "UserProfile",

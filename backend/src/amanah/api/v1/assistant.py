@@ -8,13 +8,12 @@ from fastapi import APIRouter, Depends
 
 from amanah.api.ai import GeminiDependency, get_assistant_limiter
 from amanah.api.dependencies import CurrentUser, DatabaseSession, build_response_meta, get_settings
-from amanah.api.errors import RETRY_AFTER_DETAIL, ApiError
+from amanah.api.errors import RateLimitedError
 from amanah.api.schemas.assistant import (
     AssistantCitationOut,
     AssistantQueryRequest,
     AssistantQueryResponse,
 )
-from amanah.api.schemas.errors import ErrorCode
 from amanah.metrics.facts import build_fact_bundle
 from amanah.ml.assistant import AssistantService
 from amanah.ml.rate_limits import FixedWindowRateLimiter
@@ -40,11 +39,9 @@ def ask_assistant(
     """
     decision = limiter.check(user.user_id)
     if not decision.is_allowed:
-        raise ApiError(
-            code=ErrorCode.rate_limited,
-            status_code=429,
+        raise RateLimitedError(
+            retry_after_seconds=decision.retry_after_seconds,
             message="Too many assistant questions. Try again shortly.",
-            details={RETRY_AFTER_DETAIL: decision.retry_after_seconds},
         )
 
     bundle = build_fact_bundle(session, filters=body.filters, data_mode=settings.data_mode)
