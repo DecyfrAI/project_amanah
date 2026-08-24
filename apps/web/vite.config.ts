@@ -37,6 +37,36 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
   },
+  build: {
+    rollupOptions: {
+      output: {
+        /*
+         * Keep the entry chunk under Vite's 500 kB warning (F-S21.6). The
+         * heavyweights are stable third-party code that caches well on its
+         * own: React and the router, TanStack Query, Zod, and the Supabase
+         * client. Route-level views are already lazy.
+         */
+        manualChunks(id: string): string | undefined {
+          if (!id.includes('node_modules')) {
+            return undefined;
+          }
+          if (/[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id)) {
+            return 'react';
+          }
+          if (id.includes('@tanstack')) {
+            return 'query';
+          }
+          if (/[\\/]zod[\\/]/.test(id)) {
+            return 'zod';
+          }
+          if (id.includes('@supabase')) {
+            return 'supabase';
+          }
+          return undefined;
+        },
+      },
+    },
+  },
   test: {
     environment: 'jsdom',
     globals: true,

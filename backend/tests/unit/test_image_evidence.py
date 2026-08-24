@@ -22,6 +22,7 @@ import pytest
 
 from amanah.api.schemas.images import ImageExampleEntry, ImageExampleListResponse
 from amanah.db.views import FORBIDDEN_PROJECTION_COLUMNS, authenticated_image_examples
+from amanah.ingestion.contract import AdapterError
 from amanah.ml.budgets import TokenBudget
 from amanah.ml.catalog import CLASSIFY_IMAGE_PROMPT, build_registry
 from amanah.ml.gemini import GeminiClient
@@ -30,99 +31,161 @@ from amanah.ml.image_classification import (
     ImageClassificationService,
     ImageToClassify,
 )
-from amanah.storage.signed_urls import (
-    DEFAULT_URL_LIFETIME,
-    ObjectUrlSigner,
-    SigningUnavailableError,
-)
+from amanah.storage.object_store import build_object_reader
+from amanah.storage.signed_urls import ObjectUrlSigner, SigningUnavailableError
 from tests.conftest import make_settings
 
 # 32 bytes, base64-encoded: the shape the content-encryption key setting takes.
 TEST_SIGNING_KEY = base64.b64encode(b"x" * 32).decode("ascii")
 
+#: Stands in for the service-role JWT. Never a real credential.
+TEST_STORAGE_SECRET_KEY = "test-service-role-key"
+
 IMAGE_BYTES = b"\x89PNG\r\n\x1a\n synthetic test bytes"
 
 
-def _signer() -> ObjectUrlSigner:
-    return ObjectUrlSigner.from_settings(make_settings(content_encryption_key=TEST_SIGNING_KEY))
-
-
 # --- Signed URLs -----------------------------------------------------------
+#
+# Signing is a call to Supabase's own endpoint. An earlier implementation minted
+# its own HMAC with the content-encryption key and returned a URL Supabase would
+# have rejected: internally consistent, and useless. These tests therefore assert
+# what crosses the wire and what comes back, not the shape of a homemade digest.
 
 
-def test_a_minted_url_carries_an_expiry_and_a_signature() -> None:
-    signed = _signer().sign("image-examples/abc/def.png")
+def _signing_settings() -> Any:
+    return make_settings(
+        supabase_storage_secret_key=TEST_STORAGE_SECRET_KEY,
+        supabase_storage_bucket="research-images",
+    )
 
+
+def _signer(handler: Callable[[httpx2.Request], httpx2.Response]) -> ObjectUrlSigner:
+    return ObjectUrlSigner.from_settings(_signing_settings(), client_factory=_factory(handler))
+
+
+def _signing_response(signed_path: str = "/object/sign/research-images/a/b.png?token=abc") -> Any:
+    def handler(_request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, json={"signedURL": signed_path})
+
+    return handler
+
+
+def test_signing_calls_the_provider_endpoint_for_the_configured_bucket() -> None:
+    seen: dict[str, Any] = {}
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        seen["url"] = str(request.url)
+        seen["method"] = request.method
+        seen["body"] = json.loads(request.content)
+        return httpx2.Response(
+            200, json={"signedURL": "/object/sign/research-images/a/b.png?token=t"}
+        )
+
+    _signer(handler).sign("a/b.png")
+
+    assert seen["method"] == "POST"
+    assert seen["url"].endswith("/storage/v1/object/sign/research-images/a/b.png")
+    assert seen["body"] == {"expiresIn": 300}
+
+
+def test_the_service_credential_travels_in_a_header_never_in_the_url() -> None:
+    """A credential in a query string is captured by every proxy log in between."""
+    seen: dict[str, Any] = {}
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        seen["url"] = str(request.url)
+        seen["authorization"] = request.headers.get("authorization")
+        return httpx2.Response(
+            200, json={"signedURL": "/object/sign/research-images/a/b.png?token=t"}
+        )
+
+    _signer(handler).sign("a/b.png")
+
+    assert seen["authorization"] == f"Bearer {TEST_STORAGE_SECRET_KEY}"
+    assert TEST_STORAGE_SECRET_KEY not in seen["url"]
+
+
+def test_a_minted_url_is_the_providers_token_under_the_project_url() -> None:
+    signed = _signer(_signing_response()).sign("a/b.png")
+
+    assert signed.url.endswith("/storage/v1/object/sign/research-images/a/b.png?token=abc")
     query = parse_qs(urlsplit(signed.url).query)
-    assert query["expires"]
-    assert len(query["signature"][0]) == 64
+    assert query["token"] == ["abc"]
 
 
-def test_a_minted_url_expires_within_the_documented_lifetime() -> None:
+def test_a_minted_url_expires_within_the_configured_lifetime() -> None:
     before = datetime.now(UTC)
 
-    signed = _signer().sign("image-examples/abc/def.png")
+    signed = _signer(_signing_response()).sign("a/b.png")
 
-    assert signed.expires_at <= before + DEFAULT_URL_LIFETIME + timedelta(seconds=1)
-
-
-def test_a_valid_signature_verifies() -> None:
-    signer = _signer()
-    signed = signer.sign("image-examples/abc/def.png")
-    query = parse_qs(urlsplit(signed.url).query)
-
-    assert signer.verify(
-        "image-examples/abc/def.png",
-        expiry=int(query["expires"][0]),
-        signature=query["signature"][0],
-        now=datetime.now(UTC),
-    )
+    assert signed.expires_at <= before + timedelta(seconds=300) + timedelta(seconds=1)
 
 
-def test_an_expired_signature_is_refused() -> None:
-    signer = _signer()
-    signed = signer.sign("image-examples/abc/def.png", lifetime=timedelta(seconds=1))
-    query = parse_qs(urlsplit(signed.url).query)
+def test_a_provider_refusal_raises_rather_than_returning_an_unsigned_link() -> None:
+    def handler(_request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(403, json={"message": "denied"})
 
-    assert not signer.verify(
-        "image-examples/abc/def.png",
-        expiry=int(query["expires"][0]),
-        signature=query["signature"][0],
-        now=datetime.now(UTC) + timedelta(minutes=5),
-    )
+    with pytest.raises(AdapterError):
+        _signer(handler).sign("a/b.png")
 
 
-def test_a_signature_does_not_transfer_to_another_path() -> None:
-    """The path is signed, so a valid signature is not a key to the bucket."""
-    signer = _signer()
-    signed = signer.sign("image-examples/abc/def.png")
-    query = parse_qs(urlsplit(signed.url).query)
+def test_a_provider_answer_without_a_url_is_refused() -> None:
+    def handler(_request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, json={"unexpected": "shape"})
 
-    assert not signer.verify(
-        "image-examples/someone-elses/file.png",
-        expiry=int(query["expires"][0]),
-        signature=query["signature"][0],
-        now=datetime.now(UTC),
-    )
+    with pytest.raises(AdapterError):
+        _signer(handler).sign("a/b.png")
 
 
-def test_a_forged_expiry_invalidates_the_signature() -> None:
-    """The expiry is signed alongside the path, so extending it breaks the HMAC."""
-    signer = _signer()
-    signed = signer.sign("image-examples/abc/def.png")
-    query = parse_qs(urlsplit(signed.url).query)
-
-    assert not signer.verify(
-        "image-examples/abc/def.png",
-        expiry=int(query["expires"][0]) + 86_400,
-        signature=query["signature"][0],
-        now=datetime.now(UTC),
-    )
-
-
-def test_no_signing_key_refuses_rather_than_serving_an_unsigned_link() -> None:
+def test_no_storage_credential_refuses_rather_than_serving_an_unsigned_link() -> None:
     with pytest.raises(SigningUnavailableError):
         ObjectUrlSigner.from_settings(make_settings())
+
+
+def test_the_jwt_verification_secret_is_not_accepted_as_a_storage_credential() -> None:
+    """The two are different things, and conflating them authenticates nothing.
+
+    `SUPABASE_JWT_SECRET` verifies inbound access tokens. Presenting it to
+    Storage would be presenting a signing secret where an access token is
+    required, so its presence must not make the catalogue look configured.
+    """
+    settings = make_settings(supabase_jwt_secret="x" * 40, content_encryption_key=TEST_SIGNING_KEY)
+
+    with pytest.raises(SigningUnavailableError):
+        ObjectUrlSigner.from_settings(settings)
+
+
+# --- Reading private objects -----------------------------------------------
+
+
+def test_reading_an_object_uses_the_service_credential_and_the_bucket() -> None:
+    seen: dict[str, Any] = {}
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        seen["url"] = str(request.url)
+        seen["authorization"] = request.headers.get("authorization")
+        return httpx2.Response(200, content=IMAGE_BYTES)
+
+    read = build_object_reader(_signing_settings(), client_factory=_factory(handler))
+
+    assert read("a/b.png") == IMAGE_BYTES
+    assert "/storage/v1/object/research-images/a/b.png" in seen["url"]
+    assert seen["authorization"] == f"Bearer {TEST_STORAGE_SECRET_KEY}"
+
+
+def test_reading_without_a_storage_credential_refuses() -> None:
+    with pytest.raises(SigningUnavailableError):
+        build_object_reader(make_settings())
+
+
+def test_an_empty_object_is_a_fault_rather_than_something_to_classify() -> None:
+    def handler(_request: httpx2.Request) -> httpx2.Response:
+        return httpx2.Response(200, content=b"")
+
+    read = build_object_reader(_signing_settings(), client_factory=_factory(handler))
+
+    with pytest.raises(AdapterError):
+        read("a/b.png")
 
 
 # --- Projection safety -----------------------------------------------------

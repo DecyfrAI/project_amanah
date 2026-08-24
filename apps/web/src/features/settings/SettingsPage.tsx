@@ -4,6 +4,7 @@ import { MockupNotice } from '@/components/ui/MockupNotice';
 import { requestWorkspaceTour } from '@/features/tour/tour-storage';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
+import { useMediaPreference } from './media-preference';
 import { DENSITY_OPTIONS, SAMPLE_ROWS, type TableDensity } from './mock';
 
 import styles from './SettingsPage.module.css';
@@ -11,21 +12,24 @@ import styles from './SettingsPage.module.css';
 /**
  * Per-person preferences, not administrative controls.
  *
- * Every control here is real: it changes this page's own state and the sample
- * table below reflects it immediately. What none of them does is persist, or
- * reach the Explorer, because there is no preferences endpoint and no shared
- * store to write to. Each section says so, since a toggle that appears to save
- * and does not is worse than one that admits it.
+ * The media-display preference is real and persisted: it is stored on the
+ * authenticated profile and applies across Explorer, Reports, and every other
+ * approved image surface (PA-01). Table density is still page-local and says
+ * so, since a toggle that appears to save and does not is worse than one that
+ * admits it.
  */
 export function SettingsPage() {
   usePageTitle('Settings');
 
-  const [blurMedia, setBlurMedia] = useState(true);
+  const { blurMedia, setBlurMedia, isSaving, saveError } = useMediaPreference();
   const [density, setDensity] = useState<TableDensity>('comfortable');
 
-  const handleBlurChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
-    setBlurMedia(event.currentTarget.checked);
-  }, []);
+  const handleBlurChange = useCallback(
+    (event: ChangeEvent<HTMLInputElement>): void => {
+      setBlurMedia(event.currentTarget.checked);
+    },
+    [setBlurMedia],
+  );
 
   const handleDensityChange = useCallback((event: ChangeEvent<HTMLInputElement>): void => {
     setDensity(event.currentTarget.value as TableDensity);
@@ -42,7 +46,15 @@ export function SettingsPage() {
         </p>
       </header>
 
-      <MockupNotice detail="The controls below work, but only for this page and only until you leave it." />
+      {/*
+       * Scoped deliberately. The media preference below is real and persisted,
+       * so a blanket "nothing here is live" notice would now be the misleading
+       * claim. Only the density sample table is an illustration.
+       */}
+      <MockupNotice
+        detail="The sample table under Table density is written from local constants to show row height."
+        controlsNote="Content safety, above, is a real preference saved to your profile."
+      />
 
       <div className={styles.layout}>
         <div className={styles.primary}>
@@ -61,27 +73,39 @@ export function SettingsPage() {
                   type="checkbox"
                   checked={blurMedia}
                   onChange={handleBlurChange}
+                  disabled={isSaving}
                   aria-describedby="blur-media-hint"
                 />
                 <div className={styles.checkText}>
                   <label className={styles.checkLabel} htmlFor="blur-media">
-                    Blur media until I choose to view it
+                    Blur media by default
                   </label>
                   <p className={styles.hint} id="blur-media-hint">
-                    On by default. Thumbnails and images stay blurred behind a deliberate reveal.
-                    Comment text is not blurred.
+                    Off by default: images are shown. Turn this on and images stay blurred behind a
+                    deliberate reveal. Every image keeps its own Show and Hide control either way.
+                    Text is never blurred by this setting.
                   </p>
                 </div>
               </div>
             </fieldset>
 
             <output className={styles.summary} aria-live="polite">
-              {blurMedia ? 'Media stays blurred until revealed.' : 'Media appears unblurred.'}
+              {blurMedia
+                ? 'Media stays blurred until you show it.'
+                : 'Media appears without blurring.'}
             </output>
 
+            {saveError !== null && (
+              <p className={styles.error} role="alert">
+                {saveError}
+              </p>
+            )}
+
             <p className={styles.pending}>
-              This choice applies to this page only. It is not saved between visits and does not yet
-              reach the review queue, because there is no preferences endpoint to store it in.
+              This choice is saved to your profile, so it survives a refresh and a new session, and
+              applies immediately across Explorer, Review, Insights, and Reports. It changes how
+              images are displayed only: it never changes who may read an item, and it does not
+              affect text redaction.
             </p>
           </section>
 

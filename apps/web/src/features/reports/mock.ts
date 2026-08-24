@@ -1,59 +1,15 @@
-/**
- * Local constants behind the Reports mockup.
+﻿/**
+ * Editorial copy describing what a research report contains, plus the
+ * illustrative snapshot list at the foot of the page.
  *
- * The snapshots below describe reports nobody prepared. They exist so the layout
- * of a snapshot list can be reviewed, and they are labelled as illustrations on
- * screen. Report creation belongs to `POST /v1/research-reports`, which this
- * frontend cannot call yet, so nothing here implies a report exists to open.
+ * Neither is data. Report creation and reading go through
+ * `/v1/research-reports` in `ResearchReportPanel`; the inert scope form that
+ * used to live here was removed when that flow was connected, and the snapshot
+ * rows below are labelled on screen as illustrations of reports nobody
+ * prepared.
  */
 
 import type { StatusIndicator } from '@/components/ui/StatusPill';
-
-export interface ScopeField {
-  readonly id: string;
-  readonly label: string;
-  /** The value the control shows while it is inert. */
-  readonly value: string;
-  readonly options: readonly string[];
-}
-
-export const SCOPE_FIELDS: readonly ScopeField[] = [
-  {
-    id: 'platform',
-    label: 'Platform',
-    value: 'All configured platforms',
-    options: [
-      'All configured platforms',
-      'YouTube',
-      'Reddit',
-      'Bluesky',
-      'Mastodon (single instance)',
-      'Open datapack (source shown as N/A)',
-    ],
-  },
-  {
-    id: 'severity',
-    label: 'Severity band',
-    value: 'Any band, 0 to 3',
-    options: ['Any band, 0 to 3', '1 and above', '2 and above', '3 only'],
-  },
-  {
-    id: 'review-state',
-    label: 'Review state',
-    value: 'Model classification and human review',
-    options: [
-      'Model classification and human review',
-      'Reviewed by a person only',
-      'Awaiting review only',
-      'Corrected by a reviewer only',
-    ],
-  },
-];
-
-export const SCOPE_DATE_RANGE = {
-  from: '2026-08-09',
-  to: '2026-08-22',
-} as const;
 
 export interface ReportSection {
   readonly id: string;
@@ -119,6 +75,13 @@ export const REPORT_SECTIONS: readonly ReportSection[] = [
   },
 ];
 
+/**
+ * Illustrative snapshots for the list at the foot of Reports.
+ *
+ * These describe reports nobody prepared, and the page labels them as such.
+ * Real snapshots are created by `ResearchReportPanel` through
+ * `POST /v1/research-reports`; this list is layout, not data.
+ */
 export interface ReportSnapshot {
   readonly id: string;
   readonly title: string;

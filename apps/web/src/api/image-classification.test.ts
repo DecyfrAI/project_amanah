@@ -16,7 +16,7 @@ describe('research image datapack', () => {
     const list = loadImageExampleList('fixture');
 
     expect(list.items).toHaveLength(42);
-    expect(list.manifest.dataset_name).toBe('research-islamophobia-image-corpus');
+    expect(list.manifest?.dataset_name).toBe('research-islamophobia-image-corpus');
     expect(list.data_mode).toBe('fixture');
   });
 

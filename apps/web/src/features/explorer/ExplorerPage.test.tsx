@@ -81,7 +81,7 @@ describe('ExplorerPage', () => {
     expect(screen.queryByRole('row', { name: /item itm_9b52/i })).toBeNull();
   });
 
-  it('shows image metadata on an image row, blurred until revealed', async () => {
+  it('shows image metadata on an image row, visible by default with a hide control (PA-01)', async () => {
     const user = userEvent.setup();
     renderExplorer('/app/explorer?q=img-ex-01');
 
@@ -89,10 +89,16 @@ describe('ExplorerPage', () => {
     expect(within(row).getByText(/keep-calm style poster/i)).toBeVisible();
     expect(within(row).getByText(/img-ex-01.png/i)).toBeVisible();
     expect(within(row).getByText(/70,182 bytes/i)).toBeVisible();
-    const reveal = within(row).getByRole('button', { name: 'Reveal image' });
-    expect(reveal).toHaveAttribute('aria-expanded', 'false');
-    await user.click(reveal);
-    expect(reveal).toHaveAttribute('aria-expanded', 'true');
+
+    // Visible by default; the per-image control overrides for this one image
+    // without touching the stored preference.
+    const toggle = within(row).getByRole('button', { name: 'Hide image' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
+    await user.click(toggle);
+    expect(within(row).getByRole('button', { name: 'Show image' })).toHaveAttribute(
+      'aria-expanded',
+      'false',
+    );
   });
 
   it('states that an empty result is not a quiet day', async () => {

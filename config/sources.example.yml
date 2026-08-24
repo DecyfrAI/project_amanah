@@ -10,7 +10,7 @@
 # rejected -- Reuters, AP, the old CTV path -- are deliberately absent, and
 # replacing them with a guess is prohibited.
 
-config_version: "2026.08.24"
+config_version: "2026.08.24.1"
 
 sources:
   - source_key: fixtures
@@ -29,7 +29,7 @@ sources:
     name: "YouTube"
     purpose: "Bounded video and comment collection from approved seeds and queries through the official Data API."
     retention_policy: limited_by_terms
-    is_enabled: false
+    is_enabled: true
     homepage_url: https://www.youtube.com
     policy_url: https://www.youtube.com/t/terms
 

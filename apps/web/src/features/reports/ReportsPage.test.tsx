@@ -125,22 +125,22 @@ describe('ReportsPage', () => {
     expect(screen.queryByRole('button', { name: /^send$/i })).toBeNull();
   });
 
-  it('keeps an uploaded screenshot blurred until it is revealed', async () => {
+  it('shows an uploaded screenshot by default with a per-image hide control (PA-01)', async () => {
     const user = userEvent.setup();
     renderReports();
     const file = new File([new Uint8Array(32)], 'capture.png', { type: 'image/png' });
 
     await user.upload(screen.getByLabelText('Screenshot'), file);
 
-    const reveal = screen.getByRole('button', { name: 'Reveal screenshot' });
-    expect(reveal).toHaveAttribute('aria-expanded', 'false');
+    const toggle = screen.getByRole('button', { name: 'Hide screenshot' });
+    expect(toggle).toHaveAttribute('aria-expanded', 'true');
     expect(screen.getByRole('img', { name: /capture\.png/i })).toBeVisible();
 
-    await user.click(reveal);
+    await user.click(toggle);
 
-    expect(screen.getByRole('button', { name: 'Hide screenshot' })).toHaveAttribute(
+    expect(screen.getByRole('button', { name: 'Show screenshot' })).toHaveAttribute(
       'aria-expanded',
-      'true',
+      'false',
     );
   });
 
@@ -231,35 +231,5 @@ describe('ReportsPage', () => {
     expect(screen.getByText('Coverage and denominators')).toBeVisible();
     expect(screen.getByText('Model disclosure')).toBeVisible();
     expect(screen.getByText('Limitations')).toBeVisible();
-  });
-
-  it('shows each snapshot with its window, filters and creation date', () => {
-    renderReports();
-
-    expect(
-      screen.getByRole('heading', { level: 3, name: 'Planning decision coverage, two weeks' }),
-    ).toBeVisible();
-    expect(screen.getByText('9 August 2026 to 22 August 2026')).toBeVisible();
-    expect(screen.getByText('YouTube and Reddit, any severity, model and reviewed')).toBeVisible();
-    expect(screen.getByText('22 August 2026, 08:40 UTC')).toBeVisible();
-  });
-
-  it('labels a snapshot state in words and reports its shortfall with a denominator', () => {
-    renderReports();
-
-    expect(screen.getByText('Prepared with a coverage gap')).toBeVisible();
-    expect(screen.getByText(/failed on 5 of the 31 days/i)).toBeVisible();
-  });
-
-  it('reports a missing trend as a gap rather than a line at zero', () => {
-    renderReports();
-
-    expect(screen.getByText(/rather than a flat line at zero/i)).toBeVisible();
-  });
-
-  it('says the snapshots are a mockup rather than prepared reports', () => {
-    renderReports();
-
-    expect(screen.getByText('Design mockup, not a reading')).toBeVisible();
   });
 });

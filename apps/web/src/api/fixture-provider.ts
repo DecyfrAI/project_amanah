@@ -1,11 +1,28 @@
 import { replyFromOverview } from '@/features/ask/ask-reply';
 import { readFixtureSession } from '@/features/auth/session';
 import { buildResearchReport } from '@/features/reports/build-research-report';
+import { validateEvidenceFile } from '@/features/reports/evidence-file';
 import { prepareReportDraft as buildReportDraft } from '@/features/reports/prepare-report-draft';
 import { renderAggregateCsv } from '@/features/reports/research-report-csv';
 import { classifyEvidenceFixture, loadImageExampleList } from './image-classification';
 
-import { FIXTURE_VIEWER, type ApiClient, type NewsFilters, type OverviewFilters } from './client';
+import {
+  FIXTURE_VIEWER,
+  type ApiClient,
+  type ItemSearchFilters,
+  type NewsFilters,
+  type OverviewFilters,
+  type PrepareReportInput,
+  type ReportOutcomeInput,
+  type UpdateProfileInput,
+} from './client';
+import type {
+  WireContributionsPage,
+  WirePolicyAnalysis,
+  WirePolicyCandidate,
+  WirePreparedReport,
+  WireProfile,
+} from './wire';
 import { itemMatchesQuery } from './item-search';
 import {
   AssistantAskInputSchema,
@@ -14,6 +31,7 @@ import {
   CreateInsightInputSchema,
   CreatePostInputSchema,
   DiscussionCatalogSchema,
+  ExplorerItemDetailSchema,
   ExplorerItemSchema,
   ExplorerPageSchema,
   FilterOptionsSchema,
@@ -25,6 +43,7 @@ import {
   EvidenceClassifyRequestSchema,
   ImageClassificationSchema,
   ImageExampleListSchema,
+  ImageUploadSchema,
   ReportDraftRequestSchema,
   ReportDraftSchema,
   CreateResearchReportRequestSchema,
@@ -43,6 +62,7 @@ import {
   type DashboardCapture,
   type Discussion,
   type ExplorerItem,
+  type ExplorerItemDetail,
   type ExplorerPage,
   type FilterOptions,
   type Insight,
@@ -54,6 +74,7 @@ import {
   type EvidenceClassifyRequest,
   type ImageClassification,
   type ImageExampleList,
+  type ImageUpload,
   type ReportDraft,
   type ReportDraftRequest,
   type CreateResearchReportRequest,
@@ -103,8 +124,47 @@ const orderedItems = explorerItems.toSorted((left, right) =>
 );
 
 const EXPLORER_PAGE_SIZE = 25;
+
+/**
+ * What the fixture sample does and does not represent. Mirrors the sentence the
+ * live service attaches to every item detail, so the two providers cannot make
+ * different claims about the same screen.
+ */
+const FIXTURE_SAMPLING_DISCLOSURE =
+  'These figures describe a monitored sample of reviewed sources, not a platform, a country, or a group of people. They do not support a prevalence claim.';
 let discussionCatalog: Discussion[] = [];
 const captures = new Map<string, DashboardCapture>();
+
+/**
+ * Fixture profile preferences (PA-01). Tab-scoped like the fixture session, so
+ * a refresh keeps the choice and closing the tab clears it. The live provider
+ * persists the same shape through `PATCH /v1/me`.
+ */
+const PREFERENCES_KEY = 'amanah.fixture-preferences';
+
+function readFixturePreferences(): Record<string, boolean> {
+  try {
+    const stored = sessionStorage.getItem(PREFERENCES_KEY);
+    if (stored === null) {
+      return {};
+    }
+    const parsed: unknown = JSON.parse(stored);
+    if (typeof parsed !== 'object' || parsed === null) {
+      return {};
+    }
+    const preferences: Record<string, boolean> = {};
+    for (const [key, value] of Object.entries(parsed)) {
+      if (typeof value === 'boolean') {
+        preferences[key] = value;
+      }
+    }
+    return preferences;
+  } catch {
+    return {};
+  }
+}
+
+let preparedReports: WirePreparedReport[] = [];
 
 /** Same lease window the service uses, so the two behave alike. */
 const CLAIM_LEASE_MINUTES = 30;
@@ -182,6 +242,8 @@ export function resetFixtureProvider(): void {
   seedInsights();
   seedCatalog();
   seedReviewQueue();
+  preparedReports = [];
+  sessionStorage.removeItem(PREFERENCES_KEY);
 }
 
 function viewerAuthor(): { id: string; displayName: string } {
@@ -265,14 +327,16 @@ export const fixtureProvider: ApiClient = {
     const window = resolveWindow(collection, { from: filters.from, to: filters.to });
     const matched = newsCatalog
       .filter((item) => {
-        const day = item.published_at.slice(0, 10);
+        // An article whose feed stated no publication time cannot be placed in
+        // a calendar window; the retrieval time stands in for ordering only.
+        const day = (item.published_at ?? item.retrieved_at).slice(0, 10);
         return day >= window.from && day <= window.to;
       })
-      .toSorted((left, right) =>
-        left.published_at === right.published_at
-          ? left.id.localeCompare(right.id)
-          : right.published_at.localeCompare(left.published_at),
-      );
+      .toSorted((left, right) => {
+        const leftAt = left.published_at ?? left.retrieved_at;
+        const rightAt = right.published_at ?? right.retrieved_at;
+        return leftAt === rightAt ? left.id.localeCompare(right.id) : rightAt.localeCompare(leftAt);
+      });
 
     const sources = [...new Set(matched.map((item) => item.source_name))].toSorted();
 
@@ -304,18 +368,46 @@ export const fixtureProvider: ApiClient = {
    * whole collection, and `matched` is the count of examples rather than a claim
    * about the corpus.
    */
-  async searchItems(filters: OverviewFilters): Promise<ExplorerPage> {
+  async searchItems(filters: ItemSearchFilters): Promise<ExplorerPage> {
     const applied = appliedFilters(collection, filters);
     const matched = orderedItems.filter(
       (item) => matchesFilters(item, applied) && itemMatchesQuery(item, filters.q),
     );
-    const page = matched.slice(0, EXPLORER_PAGE_SIZE);
+    const offset = filters.cursor === undefined ? 0 : Number.parseInt(filters.cursor, 10) || 0;
+    const page = matched.slice(offset, offset + EXPLORER_PAGE_SIZE);
+    const nextOffset = offset + EXPLORER_PAGE_SIZE;
 
     return ExplorerPageSchema.parse({
       applied,
       matched: matched.length,
       returned: page.length,
+      nextCursor: nextOffset < matched.length ? String(nextOffset) : null,
       items: structuredClone(page),
+    });
+  },
+
+  async getItem(itemId: string): Promise<ExplorerItemDetail> {
+    const item = orderedItems.find((entry) => entry.id === itemId);
+    if (item === undefined) {
+      throw new ApiRequestError('That item could not be found.', 404);
+    }
+    return ExplorerItemDetailSchema.parse({
+      ...structuredClone(item),
+      modelName: item.modelScore === null ? null : 'amanah-classifier-fixture',
+      modelVersion: item.modelScore === null ? null : 'fixture-0.1',
+      promptVersion: item.modelScore === null ? null : 'fixture-prompt-1',
+      taxonomyVersion: item.modelScore === null ? null : 'taxonomy-v2-spec-9.5',
+      inferredAt: item.modelScore === null ? null : `${item.date}T12:00:00Z`,
+      rationale:
+        item.modelScore === null
+          ? null
+          : 'Synthetic fixture rationale. A score is a model score, not a measure of certainty.',
+      narrativeTags: [],
+      limitations: [
+        'This item comes from a monitored sample, not a census of any platform.',
+        'A classification is a proposal for human review, never a finding.',
+      ],
+      samplingDisclosure: FIXTURE_SAMPLING_DISCLOSURE,
     });
   },
 
@@ -640,6 +732,24 @@ export const fixtureProvider: ApiClient = {
     return ImageExampleListSchema.parse(loadImageExampleList('fixture'));
   },
 
+  async uploadImage(file: File): Promise<ImageUpload> {
+    // The rehearsal path. Nothing leaves the tab: the preview is an object URL,
+    // and the identifier is local. Its shape matches the live response so the
+    // screens above cannot tell which provider answered.
+    const validated = validateEvidenceFile(file);
+    return ImageUploadSchema.parse({
+      uploadId: `upl_${crypto.randomUUID()}`,
+      mimeType: validated.type,
+      byteSize: validated.size,
+      pixelWidth: 800,
+      pixelHeight: 600,
+      isNew: true,
+      imageSrc: URL.createObjectURL(validated),
+      retentionExpiresAt: null,
+      disclosure: 'Fixture upload. The file stayed in this tab and no bytes were transmitted.',
+    });
+  },
+
   async classifyEvidence(input: EvidenceClassifyRequest): Promise<ImageClassification> {
     const parsed = EvidenceClassifyRequestSchema.parse(input);
     return ImageClassificationSchema.parse(
@@ -649,4 +759,205 @@ export const fixtureProvider: ApiClient = {
       }),
     );
   },
+
+  async getCurrentUser(): Promise<WireProfile> {
+    const session = readFixtureSession();
+    return {
+      user_id: FIXTURE_VIEWER.id,
+      role: 'registered_user',
+      display_name: session?.displayName ?? FIXTURE_VIEWER.displayName,
+      onboarding_status: 'completed',
+      content_safety_preferences: readFixturePreferences(),
+    };
+  },
+
+  async updateProfile(input: UpdateProfileInput): Promise<WireProfile> {
+    if (input.contentSafetyPreferences !== undefined) {
+      sessionStorage.setItem(PREFERENCES_KEY, JSON.stringify(input.contentSafetyPreferences));
+    }
+    const session = readFixtureSession();
+    return {
+      user_id: FIXTURE_VIEWER.id,
+      role: 'registered_user',
+      display_name: input.displayName ?? session?.displayName ?? FIXTURE_VIEWER.displayName,
+      onboarding_status: input.onboardingStatus ?? 'completed',
+      content_safety_preferences: readFixturePreferences(),
+    };
+  },
+
+  async analyzePolicies(contentItemId: string): Promise<WirePolicyAnalysis> {
+    const item = orderedItems.find((entry) => entry.id === contentItemId);
+    if (item === undefined) {
+      throw new ApiRequestError('This item was not found.', 404);
+    }
+    if (item.classification !== 'likely_hate') {
+      return {
+        content_item_id: contentItemId,
+        candidates: [],
+        matcher_version: 'fixture-matcher-1',
+        disclosure:
+          'These are possible policy matches, not findings. Read the platform’s own rule and decide for yourself before preparing a report. Amanah never submits one.',
+        meta: fixtureMeta(),
+      };
+    }
+    return {
+      content_item_id: contentItemId,
+      candidates: fixturePolicyCandidates(item.platform),
+      matcher_version: 'fixture-matcher-1',
+      disclosure:
+        'These are possible policy matches, not findings. Read the platform’s own rule and decide for yourself before preparing a report. Amanah never submits one.',
+      meta: fixtureMeta(),
+    };
+  },
+
+  async savePreparedReport(input: PrepareReportInput): Promise<WirePreparedReport> {
+    const candidate = FIXTURE_POLICIES.find(
+      (policy) => policy.platform_policy_id === input.platformPolicyId,
+    );
+    if (candidate === undefined) {
+      throw new ApiRequestError('That policy is not in the reviewed catalogue.', 422);
+    }
+    if (candidate.version !== input.policyVersion) {
+      throw new ApiRequestError(
+        'The policy catalogue changed since you read this rule. Review the current version and confirm it again.',
+        409,
+      );
+    }
+    const now = new Date().toISOString();
+    const report: WirePreparedReport = {
+      id: `rep_${crypto.randomUUID()}`,
+      content_item_id: input.contentItemId,
+      platform: candidate.platform,
+      platform_policy_id: candidate.platform_policy_id,
+      policy_version: candidate.version,
+      evidence_summary: input.evidenceSummary,
+      suggested_text: input.suggestedText,
+      status: 'prepared',
+      recipient_kind: candidate.recipient_kind,
+      recipient_address: candidate.recipient_kind === 'allowlist_email' ? REVIEW_INBOX : null,
+      draft_subject: input.draftSubject ?? null,
+      submitted_at: null,
+      outcome: null,
+      outcome_note: null,
+      created_at: now,
+      updated_at: now,
+    };
+    preparedReports = [report, ...preparedReports];
+    return structuredClone(report);
+  },
+
+  async recordReportOutcome(
+    reportId: string,
+    input: ReportOutcomeInput,
+  ): Promise<WirePreparedReport> {
+    const report = preparedReports.find((entry) => entry.id === reportId);
+    if (report === undefined) {
+      throw new ApiRequestError('This prepared report was not found.', 404);
+    }
+    if (input.status === 'closed' && input.outcome === undefined) {
+      throw new ApiRequestError('Closing a report needs the outcome you saw.', 422);
+    }
+    const now = new Date().toISOString();
+    const updated: WirePreparedReport = {
+      ...report,
+      status: input.status,
+      submitted_at: input.status === 'submitted' ? now : report.submitted_at,
+      outcome: input.status === 'closed' ? (input.outcome ?? null) : report.outcome,
+      outcome_note: input.outcomeNote ?? report.outcome_note,
+      updated_at: now,
+    };
+    preparedReports = preparedReports.map((entry) => (entry.id === reportId ? updated : entry));
+    return structuredClone(updated);
+  },
+
+  async listContributions(): Promise<WireContributionsPage> {
+    return {
+      items: preparedReports.map((report) => ({
+        id: report.id,
+        contribution_type: 'prepared_platform_report' as const,
+        label: report.platform,
+        status: report.status,
+        created_at: report.created_at,
+        updated_at: report.updated_at,
+        destination_item_id: report.content_item_id,
+      })),
+      page: { next_cursor: null, limit: 25 },
+      meta: fixtureMeta(),
+    };
+  },
 };
+
+const REVIEW_INBOX = 'trust-and-safety-review@amanah.example';
+
+/**
+ * The reviewed fixture policy catalogue. Ids and versions are stable so a saved
+ * report can be checked against the rule the user confirmed, exactly as the
+ * live catalogue does.
+ */
+const FIXTURE_POLICIES: readonly WirePolicyCandidate[] = [
+  {
+    platform_policy_id: '4a1f4a1f-0000-4000-8000-000000000001',
+    platform: 'youtube',
+    policy_key: 'youtube_hate_speech',
+    title: 'Hate speech policy',
+    summary:
+      'Content promoting hatred against individuals or groups based on protected attributes, including religion, is not allowed.',
+    official_url: 'https://support.google.com/youtube/answer/2801939',
+    version: '2026-05',
+    last_reviewed_at: '2026-08-01T00:00:00Z',
+    recipient_kind: 'official_form',
+    official_report_url: 'https://support.google.com/youtube/answer/2802027',
+    score: 0.82,
+    confidence_tier: 'high',
+    rationale:
+      'The classification indicates targeted derogation of a religious group, which this rule covers.',
+  },
+  {
+    platform_policy_id: '4a1f4a1f-0000-4000-8000-000000000002',
+    platform: 'youtube',
+    policy_key: 'youtube_harassment',
+    title: 'Harassment and cyberbullying policy',
+    summary: 'Content that threatens individuals or targets someone with prolonged abuse.',
+    official_url: 'https://support.google.com/youtube/answer/2802268',
+    version: '2026-03',
+    last_reviewed_at: '2026-08-01T00:00:00Z',
+    recipient_kind: 'official_form',
+    official_report_url: 'https://support.google.com/youtube/answer/2802027',
+    score: 0.44,
+    confidence_tier: 'medium',
+    rationale: 'Possible match when the item targets an individual rather than a group.',
+  },
+  {
+    platform_policy_id: '4a1f4a1f-0000-4000-8000-000000000003',
+    platform: 'reddit',
+    policy_key: 'reddit_rule_1',
+    title: 'Rule 1: Remember the human',
+    summary:
+      'Communities and users that incite violence or promote hate based on identity or vulnerability are banned.',
+    official_url: 'https://www.redditinc.com/policies/content-policy',
+    version: '2026-01',
+    last_reviewed_at: '2026-08-01T00:00:00Z',
+    recipient_kind: 'official_form',
+    official_report_url: 'https://www.reddit.com/report',
+    score: 0.78,
+    confidence_tier: 'high',
+    rationale: 'The classification indicates identity-based hate, which Rule 1 covers.',
+  },
+];
+
+function fixturePolicyCandidates(platform: string): WirePolicyCandidate[] {
+  const matched = FIXTURE_POLICIES.filter((policy) => policy.platform === platform);
+  return structuredClone(
+    matched.length > 0 ? matched : [...FIXTURE_POLICIES],
+  ) as WirePolicyCandidate[];
+}
+
+function fixtureMeta() {
+  return {
+    request_id: `req_${crypto.randomUUID()}`,
+    generated_at: new Date().toISOString(),
+    data_mode: 'fixture' as const,
+    is_stale: false,
+    warnings: [],
+  };
+}

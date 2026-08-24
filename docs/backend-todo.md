@@ -132,6 +132,7 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [x] **B-S10.9** Project only approved registry seed/query entries into runtime configuration and persist their stable provenance.
   - [x] **B-S10.10** Keep enriched, boundary/control, and ordinary-monitoring strata separate and enforce the English-only MVP language gate.
   - [x] **B-S10.11** Test unknown/unapproved registry keys, unavailable seeds as coverage gaps, cap enforcement, and stratum provenance.
+  - [x] **B-S10.12** Activate the product-owner-approved five-video hackathon shortlist after official-API preflight, with four enriched seeds, one counterspeech/control seed, 100-item per-seed caps, stable runtime keys, and explicit non-prevalence provenance.
 
 - [x] **B-S11 — Implement safe user-URL retrieval**
   - [x] **B-S11.1** Accept and normalize only public HTTP(S) URLs.
@@ -279,6 +280,7 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [x] **B-S25.7** Test citation fidelity, causal refusal, injection resistance, insufficient-data abstention, filter fidelity, budget exhaustion, and Gemini-unavailable degradation.
 
 - [x] **B-S26 — Implement the image-evidence catalog and classification (ADR 0007)**
+  - **Scope correction (24 Aug 2026):** B-S26 covers classification of an image *already in the reviewed catalogue*. Authenticated **user upload is not implemented**: no route accepts a multipart file, so the frontend picker has no live path and refuses visibly rather than pretending. Tracked as B-S28 below; see completion guide step 8.
   - [x] **B-S26.1** Land the additive `spec.md` §13 amendment for the image routes (reconciliation G8). *(Done 23 Aug 2026: spec v2.2 adds `GET /v1/image-examples` and `POST /v1/image-classifications`.)*
   - [x] **B-S26.2** Store image bytes in object storage only; Postgres holds path, sha256, mime, byte size, dataset annotation JSON, and prediction JSON. Never base64 in the database and never pixels across the browser API boundary.
   - [x] **B-S26.3** Serve the authenticated image-example catalog with manifest provenance and short-lived signed URLs.
@@ -286,6 +288,20 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [x] **B-S26.5** Keep live image *ingestion* gated: Reddit stays disabled/fixture until Reddit-for-Researchers approval and credentials exist (spec §10.2), and any YouTube thumbnail/frame capture is a separate reviewed decision. Until then the corpus is the reviewed research datapack plus user-submitted URLs. *(No image ingestion path exists; the catalog is populated only from a reviewed dataset package.)*
   - [x] **B-S26.6** Enforce the ADR 0007 safeguards: authenticated surfaces only, blur-by-default projections, no person indexing/search/ranking, and the corpus never leaves the private repo or first-party storage. *(`form_note` and `alt_text` support blur-by-default; the image prompt forbids identifying anyone; no search or ranking endpoint exists.)*
   - [x] **B-S26.7** Test signed-URL expiry, annotation/prediction separation, classification schema validity, anonymous denial, and absence of image bytes in API responses and logs.
+  - [x] **B-S26.6 amendment (24 Aug 2026)** Blur-by-default is superseded by ADR 0010: images are visible by default to an authenticated viewer, blurring is a persisted profile preference, and every image keeps a Show/Hide control. Authentication, signed URLs, private storage, safe alt text, and the no-person-indexing rule are unchanged.
+
+- [ ] **B-S28 — Implement authenticated multipart image upload (completion guide step 8)**
+  - [ ] **B-S28.1** Define the upload contract and update `spec.md` §13, OpenAPI, contract tests, and the frontend schemas together.
+  - [ ] **B-S28.2** Accept one bounded JPEG/PNG/WebP; document exact byte and dimension limits.
+  - [ ] **B-S28.3** Validate MIME from bytes; reject malformed, polyglot, and decompression-bomb files; never trust the filename.
+  - [ ] **B-S28.4** Strip EXIF and other unnecessary personal metadata before storage.
+  - [ ] **B-S28.5** Compute SHA-256 and enforce a documented duplicate policy.
+  - [ ] **B-S28.6** Write bytes to the private first-party bucket; store owner, path, hash, MIME, size, timestamps, retention state, and classification references in PostgreSQL. Never base64 in the database.
+  - [ ] **B-S28.7** Replace the Supabase JWT signing secret used as a Storage credential with a dedicated server-only provider credential, and replace custom HMAC URLs with official Storage API signed URLs or an authenticated backend stream.
+  - [ ] **B-S28.8** Fetch stored bytes server-side and classify through the controlled Gemini boundary; keep upload, dataset annotation, model prediction, and human review as separate concepts.
+  - [ ] **B-S28.9** Obtain explicit migration authorization before adding any schema the upload needs.
+  - [ ] **B-S28.10** Define demo retention and deletion for user uploads.
+  - [ ] **B-S28.11** Rate limit, and test anonymous denial, ownership, wrong MIME, oversized body, malformed image, metadata stripping, duplicate hash, missing object, signed-URL expiry, Gemini failure, logging redaction, and deletion.
 
 ## TRACK: devops
 
@@ -317,6 +333,69 @@ Use this checklist in Step ID order even though it is grouped by track. Respect 
   - [ ] **B-S23.10** Run all gates and freeze scope after acceptance blockers are resolved. *(Local verification passed except for 401 PostgreSQL-backed tests skipped without `AMANAH_TEST_DATABASE_URL`; CI now provisions PostgreSQL. The deployed smoke also requires the target URL and short-lived demo token.)*
 
 ## Cross-cutting gates
+
+### Gate evidence recorded 24 August 2026
+
+Run from the repository root on Windows 11 / PowerShell against this checkout.
+A gate below stays unchecked where its evidence is still missing; nothing here is
+checked because a test file exists.
+
+| Command | Result |
+|---|---|
+| `uv run --project backend pytest backend/tests` with `AMANAH_TEST_DATABASE_URL` set to a disposable Postgres 16 container | **937 passed, 0 skipped**, three consecutive runs. The previously-skipped 401 database, migration, constraint, and RLS tests now execute. Closing `BE-GATE-TEST-02` required fixing four real defects — see *Defects found by running the database gate* below. |
+| `uv run --project backend pytest backend/tests` with no database configured | 556 passed, 418 skipped after YouTube catalogue activation and provider-side cap tests. The skip is still reported rather than passing silently. |
+| `uv run --project backend ruff check backend/src backend/tests backend/migrations` | All checks passed. |
+| `uv run --project backend ruff format --check backend/src backend/tests backend/migrations` | 247 files already formatted. |
+| `uv run --project backend mypy backend/src backend/tests` | Success: no issues found in 236 source files. |
+| `uv run --project backend --env-file backend/.env python -c "from amanah.main import create_app; create_app()"` | Starts; reports `disabled_connectors: [news]`. Local YouTube and Gemini credentials are detected; connector detection is not evidence of a successful Gemini generation. |
+| Read-only official YouTube API preflight through the configured adapter | Connector health `ok`; all five reviewed video IDs expose comment threads. A one-item discovery returned exactly one video without unnecessary comment pagination; a fuller comment check correctly reported omitted replies as a lower-bound coverage warning. No provider content was stored or printed. |
+| OpenAPI enumeration from `create_app().openapi()` | 45 paths; `/healthz` and `/readyz` are the only unauthenticated ones. Every path the frontend live provider calls exists. |
+| `npm --prefix apps/web run verify` | Format check, lint, type check, **345 tests passed**. |
+| `npm --prefix apps/web run build` | Built clean; largest chunk 252 kB, under Vite's 500 kB warning. |
+| Running service, `GET /readyz` | `{"status":"ready","checks":{"configuration":"ok","database":"ok"}}` — the configured Postgres is reachable. |
+| Running service, anonymous `GET` on `/v1/dashboard`, `/v1/news`, `/v1/items`, `/v1/filters`, `/v1/me`, `/v1/insights`, `/v1/image-examples`, `/v1/me/contributions`, `/v1/me/posts` | **401 on every route.** |
+| Running service, anonymous `POST` on `/v1/assistant/query`, `/v1/prepared-reports`, `/v1/research-reports`, `/v1/image-classifications`, `/v1/insights` | **401 on every route.** |
+| Running service, `GET /v1/me` with a malformed bearer token | 401 with the safe envelope `AUTHENTICATION_REQUIRED` and a `request_id`; no stack trace, no provider text. |
+| Response headers on `/healthz` | `Strict-Transport-Security`, `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, `Content-Security-Policy: default-src 'none'; frame-ancestors 'none'`, `Cache-Control: no-store`. |
+
+Still outstanding for the demo: production secret handoff and deployed-state
+inventory verification for `BE-GATE-DOC-09`, formal AI-eval acceptance for
+`BE-GATE-TEST-07`, and the deployed smoke run for `BE-GATE-TEST-09` /
+`B-S23.10`. The local YouTube credential and source preflight are no longer
+blockers; a successful live Gemini generation remains a separate provider check.
+
+### Defects found by running the database gate, 24 August 2026
+
+The 401 database tests had never executed anywhere, so they had never reported
+what they were built to catch. Running them surfaced four real defects:
+
+1. **The migration history had branched into three heads.** Milestones 4, 5, and
+   6 each added a revision whose parent was `0004_collection_pipeline`, so
+   `alembic upgrade head` refused to choose between them. Every *fresh* database
+   failed to migrate — including Render's `preDeployCommand`, which would have
+   broken the first real deployment. Fixed by `0007_merge_milestone_heads`, a
+   no-DDL merge revision.
+2. **Application and database clocks were compared against each other.** Five
+   sites wrote a timestamp from `datetime.now(UTC)` into a column whose partner
+   defaults to `now()` server-side, under a check constraint requiring one to
+   follow the other (`completion_after_start`, `retraction_after_creation`,
+   `resolution_after_creation`). Whenever the database clock ran even
+   microseconds ahead, settling a run, retracting a note, or resolving a dispute
+   raised an `IntegrityError`. The job queue had the same fault in reverse:
+   `claim_next` compared a server-defaulted `available_at` against this
+   process's clock, so a freshly enqueued job was invisible and **the queue
+   simply appeared empty**. All now use the database clock.
+3. **Arrays of Postgres enums deserialized into single characters.** psycopg
+   does not know a project-defined enum, so it returned `hate_type[]` as the raw
+   literal `'{derogation}'`; SQLAlchemy then treated that string as the iterable
+   it expected and produced `['{', 'd', 'e', …]`. `HateType('{')` would have
+   raised on the image catalogue as soon as Storage was configured. Fixed by
+   registering the enum type on every pooled connection, in both the application
+   engine and the test engine so the two cannot diverge again.
+4. **The test harness never created the Supabase roles** (`anon`,
+   `authenticated`) that the RLS policies grant to, so the suite could not run
+   on any plain Postgres — which is why it had always been skipped rather than
+   failing.
 
 ### Security review
 

@@ -100,7 +100,7 @@ application. Every variable is documented in
 | `API_RATE_LIMIT_REQUESTS`, `API_RATE_LIMIT_WINDOW_SECONDS` | no | Per-instance IP ceiling; user mutations also have durable database-backed per-user limits |
 | `APP_ENV`, `LOG_LEVEL`, `DATA_MODE` | no | Environment name, log level, fixture/live/fallback mode |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | no | Enables the Gemini connector when both are set |
-| `YOUTUBE_API_KEY`, `NEWS_API_KEY` | no | Enable their connectors |
+| `YOUTUBE_API_KEY`, `NEWS_API_KEY` | no | Enable their connectors within the reviewed source/seed catalogue; the YouTube key currently permits only the five approved, capped demo seeds |
 | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | no | Reserved; Reddit stays disabled pending approval |
 | `CONTENT_ENCRYPTION_KEY` | no | Base64 of 32 bytes. Encrypts permitted original text at rest; absent means the original is not retained at all, never stored as plaintext |
 | `SOURCE_CONFIG_DIRECTORY` | no | Reviewed source and seed YAML; defaults to `config/` in the repository |

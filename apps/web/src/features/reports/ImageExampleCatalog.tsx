@@ -1,6 +1,5 @@
-import { useCallback, useState } from 'react';
-
 import { ApiRequestError, hateTypeLabel, type ImageExample } from '@/api';
+import { SafeImage } from '@/components/ui/SafeImage';
 
 import { useImageExamples } from './useImageExamples';
 
@@ -14,15 +13,12 @@ function errorMessage(error: unknown): string {
 }
 
 /**
- * Research corpus of sourced memes. Harmful media stays blurred until a
- * person reveals it. Dataset annotations stay labeled as annotations.
+ * Research corpus of sourced memes. Images follow the viewer's own display
+ * preference (PA-01) and keep a per-image Show/Hide control. Dataset
+ * annotations stay labeled as annotations, never as Amanah findings.
  */
 export function ImageExampleCatalog() {
   const catalog = useImageExamples();
-  const [revealedId, setRevealedId] = useState<string | null>(null);
-  const handleToggle = useCallback((id: string) => {
-    setRevealedId((current) => (current === id ? null : id));
-  }, []);
 
   return (
     <section className={styles.card} aria-labelledby="image-examples-heading">
@@ -31,8 +27,8 @@ export function ImageExampleCatalog() {
       </h2>
       <p className={styles.lead}>
         Sourced public memes used as a research corpus. Each row keeps a dataset annotation separate
-        from the fixture prediction. Images stay blurred until you reveal them. A later importer can
-        seed these files into object storage and Postgres. They are not for redistribution.
+        from the prediction. Images follow your display preference in Settings, and each one has its
+        own Show and Hide control. They are not for redistribution.
       </p>
       {catalog.isPending && <p className={styles.lead}>Loading the example catalog.</p>}
       {catalog.isError && (
@@ -44,7 +40,7 @@ export function ImageExampleCatalog() {
         <ul className={styles.grid}>
           {catalog.data.items.map((item) => (
             <li key={item.id}>
-              <ExampleCard item={item} revealed={revealedId === item.id} onToggle={handleToggle} />
+              <ExampleCard item={item} />
             </li>
           ))}
         </ul>
@@ -55,14 +51,15 @@ export function ImageExampleCatalog() {
 
 interface ExampleCardProps {
   readonly item: ImageExample;
-  readonly revealed: boolean;
-  readonly onToggle: (id: string) => void;
 }
 
-function ExampleCard({ item, revealed, onToggle }: ExampleCardProps) {
-  const handleClick = useCallback(() => {
-    onToggle(item.id);
-  }, [item.id, onToggle]);
+function ExampleCard({ item }: ExampleCardProps) {
+  const annotation = item.dataset_annotation;
+  const types = annotation.hate_types.map(hateTypeLabel).join(', ');
+  const severity =
+    annotation.severity === null
+      ? 'no severity recorded'
+      : `severity ${String(annotation.severity)}`;
 
   return (
     <article className={styles.example} aria-labelledby={`${item.id}-title`}>
@@ -70,25 +67,10 @@ function ExampleCard({ item, revealed, onToggle }: ExampleCardProps) {
         {item.title}
       </h3>
       <p className={styles.meta}>
-        {item.dataset_annotation.hate_types.map(hateTypeLabel).join(', ')} · severity{' '}
-        {item.dataset_annotation.severity}
+        {types === '' ? 'No dataset hate type' : types} · {severity}
       </p>
       <p className={styles.note}>{item.form_note}</p>
-      <button
-        type="button"
-        className={styles.reveal}
-        aria-expanded={revealed}
-        aria-controls={`${item.id}-image`}
-        onClick={handleClick}
-      >
-        {revealed ? 'Hide example' : 'Reveal example'}
-      </button>
-      <img
-        id={`${item.id}-image`}
-        className={revealed ? styles.image : `${styles.image} ${styles.imageBlurred}`}
-        src={item.image_src}
-        alt={item.alt_text}
-      />
+      <SafeImage src={item.image_src} alt={item.alt_text} subject="example" />
     </article>
   );
 }

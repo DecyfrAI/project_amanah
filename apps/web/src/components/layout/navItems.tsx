@@ -23,6 +23,7 @@ export const WORKSPACE_NAV: readonly WorkspaceNavItem[] = [
   { to: '/app/lessons', label: 'Lessons', icon: <LessonIcon /> },
   { to: '/app/review', label: 'Review', icon: <ReviewIcon /> },
   { to: '/app/reports', label: 'Reports', icon: <ReportIcon /> },
+  { to: '/app/contributions', label: 'Contributions', icon: <ContributionIcon /> },
   { to: '/app/connections', label: 'Connections', icon: <ConnectionIcon /> },
   { to: '/app/settings', label: 'Settings', icon: <SettingsIcon /> },
 ];
@@ -77,6 +78,15 @@ function ReportIcon() {
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
       <path d="M6 3h8l4 4v14H6Z" />
       <path d="M14 3v4h4M9.5 12v5M12.5 10v7M15.5 14v3" />
+    </svg>
+  );
+}
+
+function ContributionIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" aria-hidden="true">
+      <path d="M4 19.5V6a2 2 0 0 1 2-2h9l5 5v10.5" />
+      <path d="M14 4v5h5M8 13h8M8 16.5h5" />
     </svg>
   );
 }

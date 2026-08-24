@@ -13,6 +13,8 @@ import { useReviewQueue } from './useReviewQueue';
 
 import styles from './ReviewPage.module.css';
 
+const EMPTY_DECISIONS: readonly ReviewDecisionEntry[] = [];
+
 function errorMessage(error: unknown): string {
   if (error instanceof ApiRequestError) {
     return error.message;
@@ -142,7 +144,7 @@ export function ReviewPage() {
               <QueueRow
                 key={task.id}
                 task={claimed[task.id] ?? task}
-                decisions={decisions[task.id] ?? []}
+                decisions={decisions[task.id] ?? EMPTY_DECISIONS}
                 onDecided={handleDecided}
               />
             ))}

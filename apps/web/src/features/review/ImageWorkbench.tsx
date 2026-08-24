@@ -39,7 +39,7 @@ export function ImageWorkbench() {
       <fieldset className={styles.paths}>
         <legend className={styles.pathsLegend}>What do you want to do?</legend>
 
-        <label className={styles.path} htmlFor="image-path-label">
+        <label className={styles.path} htmlFor="image-path-label" aria-label="Label an image">
           <input
             id="image-path-label"
             type="radio"
@@ -56,7 +56,7 @@ export function ImageWorkbench() {
           </span>
         </label>
 
-        <label className={styles.path} htmlFor="image-path-test">
+        <label className={styles.path} htmlFor="image-path-test" aria-label="Test the model">
           <input
             id="image-path-test"
             type="radio"

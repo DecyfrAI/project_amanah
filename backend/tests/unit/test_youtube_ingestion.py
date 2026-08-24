@@ -321,7 +321,9 @@ def test_pagination_stops_at_the_comment_cap() -> None:
             )
         return _standard()(request)
 
-    result = _adapter(handler).discover(DiscoveryRequest(item_cap=10_000))
+    result = _adapter(handler, seeds=(_seed(item_cap=10_000),)).discover(
+        DiscoveryRequest(item_cap=10_000)
+    )
 
     comments = [
         reference
@@ -330,6 +332,33 @@ def test_pagination_stops_at_the_comment_cap() -> None:
     ]
     assert len(comments) <= MAXIMUM_COMMENTS_PER_VIDEO
     assert len(pages) > 1
+
+
+def test_seed_item_cap_is_applied_before_comment_pagination() -> None:
+    paths: list[str] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        paths.append(request.url.path)
+        return _standard([_thread("c1", "A comment.")])(request)
+
+    result = _adapter(handler, seeds=(_seed(item_cap=1),)).discover(DiscoveryRequest(item_cap=50))
+
+    assert len(result.references) == 1
+    assert result.references[0].content_kind is ContentKind.social_post
+    assert not any(path.endswith("/commentThreads") for path in paths)
+
+
+def test_remaining_run_cap_is_applied_before_comment_pagination() -> None:
+    paths: list[str] = []
+
+    def handler(request: httpx2.Request) -> httpx2.Response:
+        paths.append(request.url.path)
+        return _standard([_thread("c1", "A comment.")])(request)
+
+    result = _adapter(handler, seeds=(_seed(item_cap=100),)).discover(DiscoveryRequest(item_cap=1))
+
+    assert len(result.references) == 1
+    assert not any(path.endswith("/commentThreads") for path in paths)
 
 
 def test_a_resumed_run_skips_the_seed_it_already_covered() -> None:

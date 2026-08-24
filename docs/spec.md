@@ -1033,8 +1033,10 @@ All job transitions MUST be valid, idempotent, and auditable.
 - Do not infer religion, location, race, or real-world identity.
 - Do not log raw hateful text, OCR, tokens, signed URLs, or provider payloads.
 - Treat prompts and retrieved content as hostile input.
-- Redact slurs and blur harmful media by default.
-- Include a content warning and deliberate reveal control.
+- Redact slurs by default.
+- Media display is controlled by the authenticated viewer (ADR 0010, product-owner decision recorded as `PA-01`, 24 August 2026). Images are shown by default on authenticated image surfaces; a viewer MAY enable "Blur media by default", and that preference MUST persist on their profile through `PATCH /v1/me` and apply to every approved image surface immediately. This supersedes the previous blur-harmful-media-by-default rule for images; text redaction is unchanged.
+- Include a content warning and an accessible per-image Show/Hide control on every image surface, whichever way the viewer's preference is set.
+- Media display preference is a display treatment only. It MUST NOT change authorization, ownership checks, row-level security, or signed-URL handling.
 - Reporting assistance MUST avoid brigading and repeated coordinated reporting.
 - High-severity threats MAY be routed for internal review, but no external escalation is automatic.
 - All user-facing metrics MUST disclose sampling limitations.
@@ -1288,7 +1290,7 @@ Optional variables MUST not be injected when a connector is not approved. Startu
 | API quota or outage | Stale/incomplete data | Eight-hour bounded runs, checkpoints, cache, stale warnings, manual dispatch |
 | Gemini cost/limit | Deferred analysis | Cache, caps, budgets, deterministic metrics, graceful `ai_deferred` state |
 | Gemini hallucination | False insights or policy claims | Structured fact bundle, schema validation, citations, official policy catalog, human confirmation |
-| Harmful-content exposure | User/reviewer wellbeing | Redaction, blur, warnings, deliberate reveal, no gratuitous repetition |
+| Harmful-content exposure | User/reviewer wellbeing | Authentication before any image surface, text redaction, warnings, a persisted viewer blur preference and per-image Show/Hide (ADR 0010), no gratuitous repetition |
 | Coordinated reporting abuse | Brigading | Authentication, rate limits, one-user records, no automatic submission, anti-brigading copy |
 | Copyright/terms violation | Legal/platform risk | Metadata/excerpt storage, official APIs, source-specific retention, no full article copies |
 | Indefinite retention conflicts | Compliance risk | Per-source policy overrides and mandatory deletion when required |

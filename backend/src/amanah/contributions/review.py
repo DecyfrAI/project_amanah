@@ -29,7 +29,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from amanah.contributions.timeline import ContributionTimeline
@@ -183,7 +183,10 @@ class ReviewService:
         self._session.flush()
 
         task.status = ReviewTaskStatus.completed
-        task.completed_at = datetime.now(UTC)
+        # The database clock, matching the server-side default on `created_at`,
+        # so a task completed within microseconds of creation cannot appear to
+        # have finished before it began.
+        task.completed_at = func.now()
         task.claim_expires_at = None
         self._session.execute(
             update(ContentItem)
@@ -215,7 +218,11 @@ class ReviewService:
         a contribution history is per person.
         """
         status, message = _DECISION_TO_DISPUTE[decision]
-        resolved_at = datetime.now(UTC)
+        # The database clock, matching the server-side default on `created_at`.
+        # `resolution_after_creation` compares the two, so resolving a dispute
+        # raised moments earlier fails whenever this process's clock trails the
+        # database's.
+        resolved_at = func.now()
         disputes = (
             self._session.execute(
                 select(ClassificationDispute).where(

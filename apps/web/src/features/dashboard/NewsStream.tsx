@@ -122,9 +122,13 @@ function NewsArticle({ item }: NewsArticleProps) {
     <article className={styles.item} aria-labelledby={headingId}>
       <p className={styles.meta}>
         <span className={styles.outlet}>{item.source_name}</span>
-        <time dateTime={item.published_at}>
-          {published.absolute} ({published.relative})
-        </time>
+        {item.published_at === null ? (
+          <span>{published.absolute}</span>
+        ) : (
+          <time dateTime={item.published_at}>
+            {published.absolute} ({published.relative})
+          </time>
+        )}
       </p>
       <h3 id={headingId} className={styles.headline}>
         <a

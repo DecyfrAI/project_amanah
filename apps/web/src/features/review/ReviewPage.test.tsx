@@ -176,13 +176,15 @@ describe('ReviewPage', () => {
     expect(screen.getByText('Drop a research image here')).toBeVisible();
   });
 
-  it('lists research examples blurred until a person reveals one', async () => {
+  it('shows research examples unblurred by default, each with its own hide control (PA-01)', async () => {
     renderReview();
 
     expect(await screen.findByRole('heading', { name: 'Research image examples' })).toBeVisible();
-    const reveals = await screen.findAllByRole('button', { name: 'Reveal example' });
-    expect(reveals.length).toBe(42);
-    expect(reveals[0]).toHaveAttribute('aria-expanded', 'false');
+    // Images are visible by default now, so every card offers to *hide* rather
+    // than to reveal, and reports itself as expanded.
+    const toggles = await screen.findAllByRole('button', { name: 'Hide example' });
+    expect(toggles.length).toBe(42);
+    expect(toggles[0]).toHaveAttribute('aria-expanded', 'true');
   });
 
   it('routes Prepare a report to Reports instead of opening a form here', async () => {

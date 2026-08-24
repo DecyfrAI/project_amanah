@@ -36,10 +36,17 @@ describe('InsightsListPage', () => {
     expect(within(card).getByText('Machine-generated')).toBeVisible();
   });
 
-  it('does not carry the image evidence list', async () => {
+  it('contains no unrelated image feed (PA-02)', async () => {
     renderList();
 
-    await screen.findByRole('heading', { name: 'Insights' });
+    expect(await screen.findByRole('heading', { name: 'Insights', level: 1 })).toBeVisible();
+    // The unscoped Image Evidence section queried an unfiltered Explorer page
+    // for anything with an image; it was removed because those images were not
+    // tied to any insight. Media may appear only inside the discussion it
+    // belongs to.
     expect(screen.queryByRole('heading', { name: 'Image evidence' })).toBeNull();
+    // Named for the controls `SafeImage` actually renders (PA-01). Asserting on
+    // the old 'Reveal image' label would pass whether or not a feed came back.
+    expect(screen.queryByRole('button', { name: /^(Show|Hide) image$/ })).toBeNull();
   });
 });

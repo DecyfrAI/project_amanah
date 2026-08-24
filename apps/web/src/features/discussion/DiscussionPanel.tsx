@@ -97,8 +97,8 @@ export function DiscussionPanel({ insightId }: DiscussionPanelProps) {
         Discussion
       </h2>
       <p className={styles.lede}>
-        Notes stay attached to this insight. React with Useful or Needs context. There is no ranking
-        of people.
+        Notes stay attached to this insight, whether it was captured by a person or generated from
+        the figures. React with Useful or Needs context. There is no ranking of people.
       </p>
       <ul className={styles.list}>
         {discussion.posts.map((post) => (
@@ -115,7 +115,20 @@ export function DiscussionPanel({ insightId }: DiscussionPanelProps) {
           {errorMessage(createPost.error)}
         </p>
       ) : null}
-      <Composer isSubmitting={createPost.isPending} onSubmit={handleCompose} />
+      {/*
+       * ADR 0004 makes discussion invite-only. The server decides, and reports
+       * that decision as `can_participate`; hiding the composer without an
+       * invitation avoids offering a control whose every use would be refused.
+       * Absent means yes, so the fixture provider keeps working unchanged.
+       */}
+      {discussion.canParticipate === false ? (
+        <p className={styles.lede}>
+          You can read this discussion but not post to it. Notes are limited to the people invited
+          to this insight.
+        </p>
+      ) : (
+        <Composer isSubmitting={createPost.isPending} onSubmit={handleCompose} />
+      )}
     </section>
   );
 }

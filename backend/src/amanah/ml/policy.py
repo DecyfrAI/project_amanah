@@ -48,6 +48,11 @@ class DataClass(StrEnum):
     collected_text = "collected_text"
     #: Text reached through a URL a signed-in person submitted themselves.
     user_submitted_text = "user_submitted_text"
+    #: Pixels a signed-in person uploaded from their own device (B-S28).
+    #: Separate from `user_submitted_text` because nobody reviewed these bytes
+    #: before they arrived: an upload can contain a face, a document, or a
+    #: screenshot of a private conversation, and no source licence covers it.
+    user_submitted_media = "user_submitted_media"
 
 
 #: Platforms whose terms do not permit sending their content to a third-party
@@ -67,6 +72,12 @@ _SOURCE_TEXT_CLASSES: frozenset[DataClass] = frozenset(
     {DataClass.permitted_excerpt, DataClass.collected_text, DataClass.user_submitted_text}
 )
 
+#: Classes that require an explicit deployment opt-in before they may leave the
+#: service at all. Uploaded pixels are unreviewed material belonging to the
+#: person who sent them, so the default is refusal and the operator turns it on
+#: knowingly rather than discovering it was already on.
+_OPT_IN_CLASSES: frozenset[DataClass] = frozenset({DataClass.user_submitted_media})
+
 
 @dataclass(frozen=True, slots=True)
 class TransferRequest:
@@ -76,6 +87,9 @@ class TransferRequest:
     platform: PublicPlatform
     retention_policy: RetentionPolicy
     is_fixture: bool = False
+    #: Whether this deployment has opted in to sending unreviewed user-supplied
+    #: media to the provider. Ignored for every other data class.
+    allow_third_party_content_inference: bool = False
 
 
 @dataclass(frozen=True, slots=True)
@@ -98,6 +112,16 @@ def authorize_transfer(request: TransferRequest) -> TransferDecision:
     product's own material, and refusing them would leave the offline pipeline
     unable to prove that the online one works.
     """
+    # Checked before the fixture shortcut: an uploaded file is never this
+    # product's own material, whatever a caller labels it, so the opt-in governs
+    # it even in a fixture deployment.
+    if request.data_class in _OPT_IN_CLASSES:
+        if not request.allow_third_party_content_inference:
+            return TransferDecision(
+                is_permitted=False, reason="third_party_content_inference_disabled"
+            )
+        return TransferDecision(is_permitted=True)
+
     if request.is_fixture:
         return TransferDecision(is_permitted=True)
 

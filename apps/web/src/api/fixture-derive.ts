@@ -77,6 +77,10 @@ const HATE_TYPE_LABELS: Record<string, string> = {
 const PLATFORM_LABELS: Record<string, string> = {
   youtube: 'YouTube',
   reddit: 'Reddit',
+  bluesky: 'Bluesky',
+  news_web: 'News (web)',
+  user_submitted: 'User submitted',
+  not_applicable: 'N/A (open dataset)',
 };
 
 const SEVERITY_LABELS: Record<string, string> = {
@@ -87,9 +91,15 @@ const SEVERITY_LABELS: Record<string, string> = {
 };
 
 const REVIEW_LABELS: Record<string, string> = {
+  // Fixture vocabulary.
   pending: 'Awaiting review',
   confirmed: 'Confirmed by a reviewer',
   corrected: 'Corrected by a reviewer',
+  // Live service vocabulary (backend `ReviewState`).
+  model_only: 'Model only, not yet reviewed',
+  pending_review: 'Awaiting review',
+  disputed: 'Disputed by a user',
+  needs_context: 'Needs context',
 };
 
 export function platformLabel(platform: string): string {

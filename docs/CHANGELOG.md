@@ -1,10 +1,140 @@
-# Changelog
+﻿# Changelog
 
 All notable project changes are documented here using the Keep a Changelog structure.
 
 ## [Unreleased]
 
 ### Added
+
+- **Live YouTube demo catalogue activation (B-S10).** Five product-owner-approved
+  video IDs from the project seed registry now run through the official Data API:
+  four enriched discussion seeds and one counterspeech/control seed. Every seed
+  was live-preflighted, is capped at 100 items, carries stable sampling
+  provenance, and remains disabled at runtime when `YOUTUBE_API_KEY` is missing.
+  The adapter applies the remaining run cap and the per-seed cap before comment
+  pagination, preventing a small dry run from spending quota on discarded rows.
+  Adding a key does not authorize arbitrary videos, queries, or scraping, and
+  this purposive hackathon sample cannot support YouTube-wide prevalence claims.
+
+- **Authenticated image upload (B-S28).** `POST /v1/image-uploads` takes one multipart image,
+  and `POST /v1/image-classifications` now accepts either a catalogue `example_id` or an
+  `upload_id` — exactly one, enforced by a check constraint so "whose image is this?" always
+  has an answer. Splitting upload from classification means a model failure never costs the
+  person their file.
+  - Nothing the client sends is trusted: the 5 MB cap is enforced while reading rather than
+    from the declared length, the format is decided by decoding the bytes rather than from the
+    filename or content type, and the stored object is a **re-encode**, so EXIF, GPS, XMP, and
+    any trailing non-image payload do not survive. A file that is both a valid PNG and a valid
+    script stops being the second one.
+  - The storage key is generated server-side (`user-images/<owner>/<uuid>.<ext>`); nothing the
+    caller sent contributes to it. PostgreSQL holds owner, path, digest, MIME, size,
+    dimensions, and retention — never bytes, and never the original filename.
+  - Migration `0008_user_image_uploads` adds `image_uploads` with RLS forced: anonymous reaches
+    nothing, an upload is readable by its owner alone (not by reviewers — a colleague's private
+    file is not their remit), and an administrator may read and delete so retention is operable.
+    The projection carries no storage path.
+  - Uploaded pixels are a new transfer class, `user_submitted_media`, refused unless
+    `ALLOW_THIRD_PARTY_CONTENT_INFERENCE` is set. The fixture flag cannot bypass it: a caller
+    must not be able to relabel someone's upload as this product's own material.
+
+### Removed
+
+- **PA-05 discussion attachments are descoped** by product-owner decision. Text notes and
+  first-party chart captures remain on both viewer snapshots and machine-generated insights.
+  Arbitrary uploads into a shared thread were excluded for safety rather than time — they
+  would need malware scanning, safe download handling, and per-attachment authorization, and
+  ADR 0004 refused a screenshot board because it would redistribute the material this product
+  exists to measure. Recorded in `completion-guide.md`, `apps/web/todo.md`, and the README so
+  the absence reads as a decision.
+
+### Fixed
+
+- **The migration history had branched into three heads,** so `alembic upgrade head`
+  refused to run against any fresh database — including Render's pre-deploy step, which
+  would have failed on the first real deployment. `0007_merge_milestone_heads` rejoins the
+  three branches that grew out of `0004`; it carries no DDL, only graph bookkeeping.
+- **Application and database clocks are no longer compared against each other.** Five
+  sites wrote `datetime.now(UTC)` into a column whose partner defaults to `now()`
+  server-side under a check constraint requiring one to follow the other, so settling a
+  collection run, retracting a discussion note, or resolving a dispute raised an
+  `IntegrityError` whenever the database clock ran microseconds ahead. `JobService.claim_next`
+  had the same fault in reverse — it compared a server-defaulted `available_at` against this
+  process's clock, so a freshly enqueued job was invisible and the queue appeared empty.
+- **Arrays of Postgres enums no longer deserialize into single characters.** psycopg
+  returned `hate_type[]` as the raw literal `'{derogation}'`, which SQLAlchemy then split
+  per character, so `HateType('{')` would have raised on the image catalogue the moment
+  Storage was configured. The enum type is now registered on every pooled connection, in
+  the application engine and the test engine alike.
+- **Supabase Storage is reached through the provider's own API.** Signed URLs were minted
+  from a homegrown HMAC over the content-encryption key and pointed at Supabase's
+  `authenticated` route, which understands neither that signature nor query-string
+  credentials; object reads presented `SUPABASE_JWT_SECRET`, a token-*verification* secret,
+  as though it were an access token. Both are replaced by the official signing endpoint and
+  a dedicated server-only `SUPABASE_STORAGE_SECRET_KEY`. Absent that key, the catalogue reports
+  itself unavailable instead of serving links that would fail.
+
+### Added
+
+- **Real news ingestion.** 32 articles from four reviewed publishers (BBC News, The
+  Guardian, Al Jazeera English, Tell MAMA) are ingested through the canonical pipeline.
+  The topical filter rejected 53 off-topic items on the first BBC run, and repeating a run
+  deduplicated 5 of 12 discovered items rather than storing them twice.
+- Item detail (`F-S8`) at `/app/explorer/:itemId`: the full model disclosure — score, model,
+  prompt and taxonomy versions, inference time, rationale — beside the sampling limitation,
+  with dataset provenance for datapack rows and no person-level field anywhere.
+- Contributions history (`F-S11`) at `/app/contributions`: one owner-scoped view across URL
+  submissions, disputes, and prepared reports. A prepared report reads as *prepared* until
+  the owner records that they filed it themselves.
+- The database test suite creates the Supabase roles (`anon`, `authenticated`) its RLS
+  policies grant to, so it runs on any plain Postgres. The 401 tests that had always been
+  skipped now execute: **937 pass, none skipped.**
+
+- **Frontend/backend integration — the demo is wired end to end.** Supabase Auth
+  replaces the fixture session: `SessionProvider` restores a real session before any
+  protected route renders, every `live-provider.ts` request carries the access token as
+  a bearer header, a `401` clears the spent session so the guard returns to login, and a
+  `403` stays a permission denial without signing the person out. A new `demo` data mode
+  routes product data to the live API with no catch-and-fallback, so a live failure stays
+  a visible failure and never becomes fixture data.
+- `apps/web/src/api/wire.ts`: Zod schemas mirroring the backend Pydantic contracts. Live
+  responses are validated against those before being mapped into view models, which
+  closes reconciliation gaps G1–G5, G7, G10, and the read half of G8.
+- Assisted platform reporting through the reviewed policy catalogue (`PolicyReportFlow`):
+  candidates with their official links, versions, and last-reviewed dates; explicit
+  policy-version confirmation before saving; persistence through `POST /v1/prepared-reports`;
+  and outcome recording through `PATCH`. Nothing in the flow can submit a report.
+- Research-report snapshots (`ResearchReportPanel`): real creation through
+  `POST /v1/research-reports`, the stored snapshot rendered with its scope, coverage,
+  figures, citations, methodology version, and limitations, aggregate CSV download, and
+  print styles for Save as PDF. The inert scope form and illustrative snapshot list are gone.
+- Vendor bundle splitting: the entry chunk is ~252 kB, under Vite's 500 kB warning (F-S21.6).
+- Security headers and immutable asset caching in `netlify.toml`.
+- A reviewer-focused root `README.md` (PA-06).
+- Backend `B-S28`: authenticated multipart image upload, recorded as **not implemented**.
+
+### Changed
+
+- **Media display is now controlled by the viewer (ADR 0010, amending ADR 0007).** Images
+  are visible by default on authenticated surfaces; "Blur media by default" is an opt-in
+  preference persisted on the profile through `PATCH /v1/me`, applied across Explorer,
+  Review, Insights, and Reports at once and immediately, with an accessible per-image
+  Show/Hide override on every image. Blur is a display treatment only — it changes no
+  authorization, ownership check, RLS rule, or signed-URL handling, and text redaction is
+  untouched. `spec.md` §18 updated.
+- The nine-second post-login hold is gone. Navigation follows the real authentication and
+  request lifecycle, with a bounded 60-second request timeout so a dead API ends in a
+  retryable error rather than an infinite loader (PA-03).
+- Insight detail pages carry a `View all insights` action and a success notice after
+  creation, and a second click while the create is in flight no longer writes a duplicate
+  (PA-04).
+- The discussion composer respects the server's `can_participate`, so an uninvited reader
+  is not offered a control whose every use would be refused (ADR 0004).
+
+### Removed
+
+- The unscoped Image Evidence section on the Insights list, with its hook and component.
+  It requested an unfiltered Explorer page and showed every image it found, none of which
+  was tied to the insights on the page (PA-02).
 
 - **Milestone 7 — scheduling, resilience, observability, CI, and deployment readiness
   (B-S21–B-S23).** Scheduled and manual eight-hour collection now share the validated,
@@ -302,4 +432,3 @@ All notable project changes are documented here using the Keep a Changelog struc
   connection string is configured, so a configured-but-unreachable database is caught by
   readiness rather than by the first product request.
 - Limited anonymous product access to the marketing and authentication-entry surfaces. Dashboard, content, methodology, resources, reports, contributions, reviewer/admin views, and all `/v1` product endpoints now require authentication in the governing specification and implementation plans.
-

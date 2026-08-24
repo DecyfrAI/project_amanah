@@ -1,48 +1,85 @@
-import { render, screen } from '@testing-library/react';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
+import { resetFixtureProvider } from '@/api/fixture-provider';
+
+import { MediaPreferenceProvider } from './media-preference';
 import { SettingsPage } from './SettingsPage';
+
+/**
+ * Settings reads and writes the media preference through the profile API, so
+ * the page needs both the query client and the preference provider — the same
+ * pair `AppShell` mounts around every authenticated route.
+ */
+function renderSettings() {
+  const client = new QueryClient({
+    defaultOptions: { queries: { retry: 0 }, mutations: { retry: 0 } },
+  });
+
+  return render(
+    <QueryClientProvider client={client}>
+      <MediaPreferenceProvider>
+        <SettingsPage />
+      </MediaPreferenceProvider>
+    </QueryClientProvider>,
+  );
+}
+
+afterEach(() => {
+  sessionStorage.clear();
+  resetFixtureProvider();
+});
 
 describe('SettingsPage', () => {
   it('names the view in a single top-level heading', () => {
-    render(<SettingsPage />);
+    renderSettings();
 
     expect(screen.getByRole('heading', { level: 1, name: 'Settings' })).toBeVisible();
   });
 
   it('groups the safety controls under a legend', () => {
-    render(<SettingsPage />);
+    renderSettings();
 
     expect(screen.getByRole('group', { name: 'What you see by default' })).toBeVisible();
     expect(screen.getByRole('group', { name: 'Row height in research tables' })).toBeVisible();
   });
 
-  it('starts with media blurring on, and does not offer text redaction', () => {
-    render(<SettingsPage />);
+  it('starts with media visible and does not offer text redaction (PA-01)', async () => {
+    renderSettings();
 
-    expect(
-      screen.getByRole('checkbox', { name: 'Blur media until I choose to view it' }),
-    ).toBeChecked();
-    expect(screen.getByText(/Media stays blurred until revealed/)).toBeVisible();
+    const blur = screen.getByRole('checkbox', { name: 'Blur media by default' });
+    await waitFor(() => {
+      expect(blur).not.toBeChecked();
+    });
+    expect(screen.getByText(/Media appears without blurring/i)).toBeVisible();
     expect(screen.queryByRole('checkbox', { name: /redact slurs/i })).toBeNull();
     expect(screen.getByText(/comment wording is shown in full/i)).toBeVisible();
   });
 
-  it('turning the media blur off is reflected in the summary', async () => {
+  it('opting in to blur is reflected in the summary and saved to the profile', async () => {
     const user = userEvent.setup();
-    render(<SettingsPage />);
+    renderSettings();
 
-    await user.click(
-      screen.getByRole('checkbox', { name: 'Blur media until I choose to view it' }),
-    );
+    await user.click(screen.getByRole('checkbox', { name: 'Blur media by default' }));
 
-    expect(screen.getByText(/Media appears unblurred/i)).toBeVisible();
+    await waitFor(() => {
+      expect(screen.getByText(/Media stays blurred until you show it/i)).toBeVisible();
+    });
+    expect(screen.getByRole('checkbox', { name: 'Blur media by default' })).toBeChecked();
+  });
+
+  it('says the media preference is saved while density is not', () => {
+    renderSettings();
+
+    expect(screen.getAllByText(/saved to your profile/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/not saved between visits/i)).toBeVisible();
   });
 
   it('starts at comfortable density and changes the sample table when compact is chosen', async () => {
     const user = userEvent.setup();
-    render(<SettingsPage />);
+    renderSettings();
 
     const comfortable = screen.getByRole('radio', { name: 'Comfortable' });
     const compact = screen.getByRole('radio', { name: 'Compact' });
@@ -57,21 +94,15 @@ describe('SettingsPage', () => {
   });
 
   it('shows the model score as a score rather than as a proportion', () => {
-    render(<SettingsPage />);
+    renderSettings();
 
     const row = screen.getByRole('row', { name: /itm_7fb2c9/ });
     expect(row).toHaveTextContent('0.58');
     expect(row).not.toHaveTextContent('%');
   });
 
-  it('says plainly that none of these choices is saved', () => {
-    render(<SettingsPage />);
-
-    expect(screen.getAllByText(/not saved between visits/i)).toHaveLength(2);
-  });
-
   it('points at the sidebar for the theme rather than repeating the control', () => {
-    render(<SettingsPage />);
+    renderSettings();
 
     expect(screen.getByRole('heading', { level: 2, name: 'Theme' })).toBeVisible();
     expect(screen.getByText(/toggle lives at the foot of the sidebar/i)).toBeVisible();

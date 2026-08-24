@@ -15,7 +15,7 @@ from datetime import UTC, datetime, timedelta
 from typing import Any
 from uuid import UUID
 
-from sqlalchemy import select, update
+from sqlalchemy import func, select, update
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -203,7 +203,12 @@ class CollectionRunService:
         landed yet — the state on which "is this a gap or a zero?" depends.
         """
         assert_transition(run.status, status)
-        now = datetime.now(UTC)
+        # The database clock, not this process's. `started_at` defaults to
+        # `now()` server-side, and the `completion_after_start` check compares
+        # the two: taking one from the application clock makes a fast run fail
+        # to settle whenever the database is a few microseconds ahead. Source
+        # freshness below uses the same value for the same reason.
+        now = func.now()
         values: dict[str, Any] = {
             "status": status,
             "lease_owner": None,

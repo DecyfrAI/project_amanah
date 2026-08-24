@@ -38,6 +38,16 @@ const ExplorerPage = lazy(async () => {
   return { default: module.ExplorerPage };
 });
 
+const ItemDetailPage = lazy(async () => {
+  const module = await import('@/features/explorer/ItemDetailPage');
+  return { default: module.ItemDetailPage };
+});
+
+const ContributionsPage = lazy(async () => {
+  const module = await import('@/features/contributions/ContributionsPage');
+  return { default: module.ContributionsPage };
+});
+
 const ReviewPage = lazy(async () => {
   const module = await import('@/features/review/ReviewPage');
   return { default: module.ReviewPage };
@@ -102,6 +112,8 @@ export function AppRouter() {
           <Route element={<AppShell />}>
             <Route index element={<OverviewPage />} />
             <Route path="explorer" element={<ExplorerPage />} />
+            <Route path="explorer/:itemId" element={<ItemDetailPage />} />
+            <Route path="contributions" element={<ContributionsPage />} />
             <Route path="insights" element={<InsightsListPage />} />
             <Route path="insights/:insightId" element={<InsightPage />} />
             <Route path="lessons" element={<LessonsPage />} />

@@ -1,9 +1,66 @@
-# Hackathon production demo completion checklist
+﻿# Hackathon production demo completion checklist
 
 **Document type:** How-to and completion reference  
-**Last reviewed:** 23 August 2026  
+**Last reviewed:** 24 August 2026  
 **Target:** Publicly reachable hackathon production demo  
 **Status:** Active — not yet accepted
+
+## Progress, 24 August 2026
+
+Work packages **1, 2, 6, 7, 9** and partner adjustments **PA-01 to PA-04** and
+**PA-06** are implemented in the working tree. Gate evidence is recorded in
+[`backend-todo.md`](./backend-todo.md) under *Gate evidence recorded 24 August
+2026*.
+
+What is implemented:
+
+- Supabase authentication, session restoration, bearer tokens on every live
+  request, `401` clearing the session, `403` kept distinct.
+- A `demo` data mode that routes product data to the live API with no
+  catch-and-fallback; remaining mocks are labelled in place.
+- The frontend live provider reconciled against the shipped backend contracts
+  (G1–G5, G7, G8 read paths), with wire schemas mirroring the Pydantic models.
+- Assisted platform reporting through the policy catalogue, and research-report
+  snapshot creation, CSV download, and print/PDF.
+- PA-01 media preference (ADR 0010), PA-02 removal, PA-03 request-driven
+  readiness, PA-04 return navigation, PA-06 root README.
+
+Work package **3 (News)** is complete: 32 articles are ingested from four
+reviewed publishers, with topical filtering and deduplication both verified
+against live feeds. The **database gate** (`BE-GATE-TEST-02`) is closed —
+**937 backend tests pass with none skipped**, across three consecutive runs.
+Closing it required fixing four real defects, recorded in
+[`backend-todo.md`](./backend-todo.md); one of them, a branched Alembic history,
+would have broken the first Render deployment.
+
+What still blocks a **go**, and needs the operator rather than more code:
+
+Work package **8 (image upload)** is complete as backend `B-S28`:
+`POST /v1/image-uploads` cleans and stores one image privately, and
+`POST /v1/image-classifications` accepts either a catalogue example or an upload.
+Storage is verified working against the real Supabase bucket. **PA-05 is formally
+descoped** — see its entry below.
+
+What still blocks a **go**, and needs the operator rather than more code:
+
+1. **Gemini credentials.** `GEMINI_API_KEY` and `GEMINI_MODEL` are still
+   placeholders, so classification and the assistant report themselves
+   unavailable. News is ingested but unclassified, which is the honest state.
+2. **The upload transfer opt-in.** `ALLOW_THIRD_PARTY_CONTENT_INFERENCE` is off
+   by default, so classifying an *upload* is refused until a deployment turns it
+   on deliberately. Upload and private storage work regardless.
+3. **Migrations applied to Supabase.** The project database sits at
+   `0006_policy_channel_checks` — one of the old branch heads — and is missing
+   `image_examples`, `image_classifications`, the two audit tables, and now
+   `image_uploads`. Review the SQL, then `alembic upgrade head`.
+4. **Catalogue objects uploaded** to the bucket at the paths stored in
+   `image_examples`; creating the bucket does not populate it.
+5. **One reviewed datapack imported** (work package 5). This needs a human to
+   choose a dataset and accept its licence; `config/datapacks.example.yml` is
+   still `packages: []` and must not be filled in without that review.
+6. **Automated E2E coverage.** None exists: there is no Playwright and no `e2e/`
+   directory, though `AGENTS.md` documents a command for one.
+7. **Deployment and the deployed smoke run** (work package 12).
 
 This document collects the work that remains for the hackathon demo. It does
 not replace the product specification, implementation plans, TODOs, ADRs, or
@@ -198,7 +255,32 @@ Acceptance:
 
 ### PA-05 — Add replies with image/file attachments to insight discussions
 
-**Status:** Text notes partly implemented; nested replies and uploaded attachments are not.
+**Status: DESCOPED from the hackathon demo, 24 August 2026, by product-owner
+decision.** Text discussion and first-party chart captures remain; uploaded
+attachments and nested replies are deliberately not built.
+
+Why, recorded so the absence reads as a decision rather than an omission:
+
+- The demo story B-S28 delivers — upload an image, store it privately, classify
+  it, show the result — is complete without it, and PA-05 adds little to it.
+- Arbitrary attachments would need malware scanning, safe forced-download
+  handling, attachment-specific authorization, retraction-driven deletion, and a
+  superseding ADR for `adr/0004-insight-discussion.md`. Each is a place to get a
+  security decision wrong under time pressure.
+- ADR 0004 refused a screenshot board on the grounds that it would redistribute
+  the material this product exists to measure. Nothing has changed that
+  reasoning; the partner asked us to revisit it, and the answer for this demo is
+  no.
+
+What remains true and demonstrable: text notes work on **both** viewer snapshots
+and machine-generated insights, the composer respects the server's invite-only
+`can_participate`, and first-party figure captures can still be attached.
+
+If it is picked up later, reuse B-S28's cleaned private `image_uploads` records
+rather than building a second upload path, restrict attachments to JPEG, PNG,
+and WebP, and write the superseding ADR before any code.
+
+The original request is preserved below for that future reader.
 
 Current behavior:
 

@@ -8,6 +8,12 @@ interface DateRangePickerProps {
   /** First and last day with collection behind it. Outside this, there is no data. */
   availableFrom: string;
   availableTo: string;
+  /**
+   * False when the bounds are a query limit rather than a reported collected
+   * range (the live service does not report one yet). Changes the limit copy
+   * so the calendar never claims data exists where that is unknown.
+   */
+  isAvailabilityKnown?: boolean;
   onChange: (from: string, to: string) => void;
 }
 
@@ -94,6 +100,7 @@ export function DateRangePicker({
   to,
   availableFrom,
   availableTo,
+  isAvailabilityKnown = true,
   onChange,
 }: DateRangePickerProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -236,8 +243,9 @@ export function DateRangePicker({
           </div>
 
           <p className={styles.limit}>
-            Collection runs from {availableFrom} to {availableTo}. Days outside that have no record
-            behind them, so they cannot be selected.
+            {isAvailabilityKnown
+              ? `Collection runs from ${availableFrom} to ${availableTo}. Days outside that have no record behind them, so they cannot be selected.`
+              : `Queries may span ${availableFrom} to ${availableTo}. A day inside that range may still hold no collected data; a gap renders as a gap, never a zero.`}
           </p>
         </div>
       )}

@@ -17,19 +17,11 @@ interface AppLoadingScreenProps {
   hold?: boolean;
 }
 
-/** Milliseconds the post-login hold lasts. Keep in step with `--duration-entry-hold`. */
-export const ENTRY_HOLD_MS = 9000;
-
 /** How often the headline and tip change. Keep in step with `--duration-tip-cycle`. */
 export const TIP_CYCLE_MS = 3000;
 
 function prefersReducedMotion(): boolean {
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-}
-
-/** How long to wait before leaving the entry splash. */
-export function entryHoldMs(): number {
-  return prefersReducedMotion() ? 0 : ENTRY_HOLD_MS;
 }
 
 /**

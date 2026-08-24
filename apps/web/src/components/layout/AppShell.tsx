@@ -9,7 +9,8 @@ import { FixtureBanner } from '@/components/ui/FixtureBanner';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { AskAmanah } from '@/features/ask/AskAmanah';
-import { endFixtureSession, readFixtureSession } from '@/features/auth/session';
+import { useSession } from '@/features/auth/SessionProvider';
+import { MediaPreferenceProvider } from '@/features/settings/media-preference';
 import { WorkspaceTour } from '@/features/tour/WorkspaceTour';
 
 import { WorkspaceNav } from './WorkspaceNav';
@@ -38,15 +39,14 @@ export function AppShell() {
   const dialogRef = useRef<HTMLDialogElement>(null);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
   const [isCollapsed, setIsCollapsed] = useState<boolean>(readCollapsed);
-  const session = readFixtureSession();
-  const displayName = session?.displayName ?? 'Demo reviewer';
+  const { session, signOut } = useSession();
+  const displayName = session?.displayName ?? 'Member';
   const { theme } = useTheme();
   const logoVariant = theme === 'dark' ? 'inverse' : 'default';
 
   const handleLogout = useCallback((): void => {
-    endFixtureSession();
-    void navigate('/');
-  }, [navigate]);
+    void signOut().then(() => navigate('/'));
+  }, [navigate, signOut]);
 
   const toggleCollapsed = useCallback((): void => {
     setIsCollapsed((current) => {
@@ -75,117 +75,126 @@ export function AppShell() {
   }, []);
 
   return (
-    <div className={styles.shell}>
-      <FixtureBanner />
+    // The media preference is read from the authenticated profile, so it is
+    // mounted here rather than at the app root: an anonymous marketing visitor
+    // must issue no product API call at all (spec FR-HOME-006).
+    <MediaPreferenceProvider>
+      <div className={styles.shell}>
+        <FixtureBanner />
 
-      <div className={styles.body}>
-        <aside
-          className={isCollapsed ? `${styles.sidebar} ${styles.sidebarNarrow}` : styles.sidebar}
-        >
-          <div className={styles.brand}>
-            <Logo variant={logoVariant} size="sidebar" lockup={isCollapsed ? 'mark' : 'stacked'} />
-          </div>
-
-          {/*
-           * Only the tab list scrolls. The brand above it and the identity block
-           * below it are pinned, so nothing shifts position as tabs are added or
-           * the viewport shortens.
-           */}
-          <nav className={styles.tabs} aria-label="Workspace">
-            <WorkspaceNav isCollapsed={isCollapsed} />
-          </nav>
-
-          <div className={styles.sidebarFooter}>
-            <Link className={styles.profileLink} to="/app/profile">
-              <Avatar displayName={displayName} imageSrc={session?.avatarDataUrl ?? null} />
-              <span className={isCollapsed ? 'visually-hidden' : styles.profileText}>
-                <span className={styles.profileName}>{displayName}</span>
-                <span className={styles.profileHint}>Profile and account</span>
-              </span>
-            </Link>
-
-            <ThemeToggle isCompact={isCollapsed} />
-
-            <button
-              type="button"
-              className={styles.collapseToggle}
-              onClick={toggleCollapsed}
-              aria-expanded={!isCollapsed}
-            >
-              <span className={styles.collapseIcon} aria-hidden="true">
-                {isCollapsed ? <ExpandIcon /> : <CollapseIcon />}
-              </span>
-              <span className={isCollapsed ? 'visually-hidden' : undefined}>
-                {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
-              </span>
-            </button>
-          </div>
-        </aside>
-
-        <div className={styles.content}>
-          <WorkspaceTour />
-          <header className={styles.topbar}>
-            <button
-              ref={menuToggleRef}
-              type="button"
-              className={styles.menuToggle}
-              onClick={openDrawer}
-            >
-              Menu
-            </button>
-
-            <Link className={styles.viewer} to="/app/profile">
-              <span className={styles.viewerText}>
-                <span className={styles.viewerLabel}>Signed in as</span>
-                <span className={styles.viewerName}>{displayName}</span>
-              </span>
-              <Avatar
-                displayName={displayName}
-                imageSrc={session?.avatarDataUrl ?? null}
-                size="small"
+        <div className={styles.body}>
+          <aside
+            className={isCollapsed ? `${styles.sidebar} ${styles.sidebarNarrow}` : styles.sidebar}
+          >
+            <div className={styles.brand}>
+              <Logo
+                variant={logoVariant}
+                size="sidebar"
+                lockup={isCollapsed ? 'mark' : 'stacked'}
               />
-            </Link>
+            </div>
 
-            <button type="button" className={styles.logout} onClick={handleLogout}>
-              Log out
+            {/*
+             * Only the tab list scrolls. The brand above it and the identity block
+             * below it are pinned, so nothing shifts position as tabs are added or
+             * the viewport shortens.
+             */}
+            <nav className={styles.tabs} aria-label="Workspace">
+              <WorkspaceNav isCollapsed={isCollapsed} />
+            </nav>
+
+            <div className={styles.sidebarFooter}>
+              <Link className={styles.profileLink} to="/app/profile">
+                <Avatar displayName={displayName} imageSrc={session?.avatarDataUrl ?? null} />
+                <span className={isCollapsed ? 'visually-hidden' : styles.profileText}>
+                  <span className={styles.profileName}>{displayName}</span>
+                  <span className={styles.profileHint}>Profile and account</span>
+                </span>
+              </Link>
+
+              <ThemeToggle isCompact={isCollapsed} />
+
+              <button
+                type="button"
+                className={styles.collapseToggle}
+                onClick={toggleCollapsed}
+                aria-expanded={!isCollapsed}
+              >
+                <span className={styles.collapseIcon} aria-hidden="true">
+                  {isCollapsed ? <ExpandIcon /> : <CollapseIcon />}
+                </span>
+                <span className={isCollapsed ? 'visually-hidden' : undefined}>
+                  {isCollapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+                </span>
+              </button>
+            </div>
+          </aside>
+
+          <div className={styles.content}>
+            <WorkspaceTour />
+            <header className={styles.topbar}>
+              <button
+                ref={menuToggleRef}
+                type="button"
+                className={styles.menuToggle}
+                onClick={openDrawer}
+              >
+                Menu
+              </button>
+
+              <Link className={styles.viewer} to="/app/profile">
+                <span className={styles.viewerText}>
+                  <span className={styles.viewerLabel}>Signed in as</span>
+                  <span className={styles.viewerName}>{displayName}</span>
+                </span>
+                <Avatar
+                  displayName={displayName}
+                  imageSrc={session?.avatarDataUrl ?? null}
+                  size="small"
+                />
+              </Link>
+
+              <button type="button" className={styles.logout} onClick={handleLogout}>
+                Log out
+              </button>
+            </header>
+
+            <main id="main" className={styles.main}>
+              <Suspense fallback={<PageSkeleton label="this view" />}>
+                <Outlet />
+              </Suspense>
+            </main>
+          </div>
+        </div>
+
+        <FabCluster ask={<AskAmanah />} />
+
+        <dialog
+          ref={dialogRef}
+          className={styles.drawer}
+          aria-label="Workspace"
+          onClose={restoreFocus}
+        >
+          <div className={styles.drawerHeader}>
+            <Logo variant={logoVariant} size="small" />
+            <button type="button" className={styles.menuToggle} onClick={closeDrawer}>
+              Close
             </button>
-          </header>
-
-          <main id="main" className={styles.main}>
-            <Suspense fallback={<PageSkeleton label="this view" />}>
-              <Outlet />
-            </Suspense>
-          </main>
-        </div>
+          </div>
+          <nav aria-label="Workspace sections">
+            <WorkspaceNav onNavigate={closeDrawer} />
+          </nav>
+          <Link className={styles.profileLink} to="/app/profile" onClick={closeDrawer}>
+            <Avatar displayName={displayName} imageSrc={session?.avatarDataUrl ?? null} />
+            <span className={styles.profileText}>
+              <span className={styles.profileName}>{displayName}</span>
+              <span className={styles.profileHint}>Profile and account</span>
+            </span>
+          </Link>
+          <ThemeToggle />
+        </dialog>
       </div>
-
-      <FabCluster ask={<AskAmanah />} />
-
-      <dialog
-        ref={dialogRef}
-        className={styles.drawer}
-        aria-label="Workspace"
-        onClose={restoreFocus}
-      >
-        <div className={styles.drawerHeader}>
-          <Logo variant={logoVariant} size="small" />
-          <button type="button" className={styles.menuToggle} onClick={closeDrawer}>
-            Close
-          </button>
-        </div>
-        <nav aria-label="Workspace sections">
-          <WorkspaceNav onNavigate={closeDrawer} />
-        </nav>
-        <Link className={styles.profileLink} to="/app/profile" onClick={closeDrawer}>
-          <Avatar displayName={displayName} imageSrc={session?.avatarDataUrl ?? null} />
-          <span className={styles.profileText}>
-            <span className={styles.profileName}>{displayName}</span>
-            <span className={styles.profileHint}>Profile and account</span>
-          </span>
-        </Link>
-        <ThemeToggle />
-      </dialog>
-    </div>
+    </MediaPreferenceProvider>
   );
 }
 

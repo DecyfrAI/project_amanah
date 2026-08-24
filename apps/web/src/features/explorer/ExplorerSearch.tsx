@@ -60,7 +60,7 @@ export function ExplorerSearch({ value, items, onQueryChange }: ExplorerSearchPr
               value={
                 item.image !== undefined && item.image !== null
                   ? item.image.formNote
-                  : item.containerTitle
+                  : (item.containerTitle ?? item.id)
               }
             >
               {item.date}

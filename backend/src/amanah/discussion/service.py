@@ -25,10 +25,10 @@ from __future__ import annotations
 
 import logging
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from uuid import UUID
 
-from sqlalchemy import select, text
+from sqlalchemy import func, select, text
 from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
@@ -254,7 +254,11 @@ class DiscussionService:
 
         post.body = RETRACTED_BODY
         post.dashboard_capture_id = None
-        post.retracted_at = datetime.now(UTC)
+        # The database clock, matching the server-side default on `created_at`.
+        # The `retraction_after_creation` check compares the two, so a note
+        # retracted moments after it was written fails to save whenever this
+        # process's clock trails the database's.
+        post.retracted_at = func.now()
         self._session.commit()
         logger.info("discussion note retracted", extra={"post_id": str(post.id)})
         return post

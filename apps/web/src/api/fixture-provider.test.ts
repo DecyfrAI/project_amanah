@@ -97,7 +97,7 @@ describe('fixtureProvider items', () => {
       page.items.every(
         (item) =>
           item.id === 'itm_img_01' ||
-          item.redactedExcerpt.toLowerCase().includes('poster') ||
+          (item.redactedExcerpt ?? '').toLowerCase().includes('poster') ||
           item.image?.formNote.toLowerCase().includes('poster'),
       ),
     ).toBe(true);

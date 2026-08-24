@@ -4,6 +4,7 @@ import { StatusPill } from '@/components/ui/StatusPill';
 import { usePageTitle } from '@/hooks/usePageTitle';
 
 import { PlatformReportDraft } from './PlatformReportDraft';
+import { PolicyReportFlow } from './PolicyReportFlow';
 import { ResearchReportPanel } from './ResearchReportPanel';
 import { REPORT_SECTIONS, REPORT_SNAPSHOTS } from './mock';
 
@@ -27,6 +28,8 @@ export function ReportsPage() {
       </header>
 
       <PlatformReportDraft />
+
+      <PolicyReportFlow />
 
       <ResearchReportPanel />
 

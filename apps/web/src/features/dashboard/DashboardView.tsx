@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+﻿import { useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 
 import {
@@ -80,6 +80,21 @@ export function DashboardView({ heading, lead, explorerPath }: DashboardViewProp
 
   const canReport = explorerPath !== null;
 
+  /**
+   * A second click while the create is in flight is dropped (PA-04): the first
+   * request will navigate to the stored insight, and repeating it would write a
+   * duplicate record rather than re-open the same one.
+   */
+  const startInsight = useCallback(
+    (finding: Parameters<typeof createInsight.mutate>[0]): void => {
+      if (createInsight.isPending) {
+        return;
+      }
+      createInsight.mutate(finding);
+    },
+    [createInsight],
+  );
+
   const handleReportDay = useCallback(
     (day: OverviewDay): void => {
       const overview = overviewQuery.data;
@@ -92,10 +107,10 @@ export function DashboardView({ heading, lead, explorerPath }: DashboardViewProp
         overview.coverage.sources,
       );
       if (finding !== null) {
-        createInsight.mutate(finding);
+        startInsight(finding);
       }
     },
-    [createInsight, explorerPath, overviewQuery.data, toSearch],
+    [explorerPath, overviewQuery.data, startInsight, toSearch],
   );
 
   const buildBreakdownHref = useCallback(
@@ -175,7 +190,7 @@ export function DashboardView({ heading, lead, explorerPath }: DashboardViewProp
                 itemsRelevant={overview.coverage.itemsRelevant}
                 explorerBase={explorerHref}
                 canReport={canReport}
-                onCreate={createInsight.mutate}
+                onCreate={startInsight}
               />
             ))}
           </div>
@@ -261,7 +276,7 @@ export function DashboardView({ heading, lead, explorerPath }: DashboardViewProp
               itemsObserved={overview.coverage.itemsObserved}
               itemsRelevant={overview.coverage.itemsRelevant}
               canReport={canReport}
-              onCreate={createInsight.mutate}
+              onCreate={startInsight}
             />
           ))}
         </div>

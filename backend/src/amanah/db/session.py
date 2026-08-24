@@ -18,12 +18,15 @@ import json
 import logging
 from collections.abc import Callable, Iterator
 from contextlib import contextmanager
+from enum import StrEnum
+from typing import Any
 
 from sqlalchemy import Connection, Engine, create_engine, event, text
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session, SessionTransaction, sessionmaker
 
 from amanah.auth.principal import AuthenticatedUser
+from amanah.domain.enums import HateType
 from amanah.settings import Settings
 
 logger = logging.getLogger(__name__)
@@ -31,6 +34,40 @@ logger = logging.getLogger(__name__)
 #: Session setting PostgREST populates from a verified token. Reusing the exact
 #: name means one predicate serves this service and a direct Supabase client.
 JWT_CLAIMS_SETTING = "request.jwt.claims"
+
+
+#: Postgres enum types this schema stores in *arrays*, mapped to the Python enum
+#: that mirrors each one.
+#:
+#: psycopg knows nothing about a project-defined enum, so it hands back the raw
+#: array literal (`'{derogation}'`) as a string. SQLAlchemy then treats that
+#: string as the iterable it was told to expect and yields one element per
+#: character, so `HateType(value)` is handed `'{'`. Registering the type makes
+#: the driver return a real list. A *scalar* enum column is unaffected — it
+#: arrives as text either way — so only the array-valued ones appear here.
+ARRAY_ENUM_TYPES: tuple[tuple[str, type[StrEnum]], ...] = (("hate_type", HateType),)
+
+
+def register_enum_types(engine: Engine) -> None:
+    """Teach the driver this schema's enum types, once per pooled connection.
+
+    Registration is per physical connection, so it hangs off the pool's connect
+    event rather than running once at startup. A type that is absent — an older
+    database, or a scratch one built before the enum existed — is skipped rather
+    than raising: failing the connection here would be a far more confusing
+    error than the one the caller would otherwise see.
+    """
+    import psycopg
+    from psycopg.types.enum import EnumInfo, register_enum
+
+    @event.listens_for(engine, "connect")
+    def _register(dbapi_connection: psycopg.Connection[Any], _record: object) -> None:
+        for type_name, python_enum in ARRAY_ENUM_TYPES:
+            info = EnumInfo.fetch(dbapi_connection, type_name)
+            if info is None:
+                logger.debug("enum type absent, not registered", extra={"type_name": type_name})
+                continue
+            register_enum(info, dbapi_connection, python_enum)
 
 
 class DatabaseNotConfiguredError(RuntimeError):
@@ -64,7 +101,7 @@ def create_database_engine(settings: Settings) -> Engine:
     if settings.database_url is None:
         raise DatabaseNotConfiguredError
 
-    return create_engine(
+    engine = create_engine(
         _psycopg_url(settings.database_url.get_secret_value()),
         pool_size=settings.database_pool_size,
         max_overflow=0,
@@ -75,6 +112,8 @@ def create_database_engine(settings: Settings) -> Engine:
             "options": f"-c statement_timeout={settings.database_statement_timeout_ms}",
         },
     )
+    register_enum_types(engine)
+    return engine
 
 
 class Database:

@@ -127,6 +127,12 @@
   line-height: var(--leading-relaxed);
 }
 
+.error {
+  color: var(--color-status-harm);
+  font-size: var(--text-sm);
+  line-height: var(--leading-relaxed);
+}
+
 .tourButton {
   align-self: flex-start;
   margin-top: var(--space-2);

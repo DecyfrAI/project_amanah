@@ -1,7 +1,7 @@
 import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 
 import { ThemeProvider } from '@/app/ThemeProvider';
 
@@ -12,15 +12,8 @@ import {
 } from '@/features/tour/tour-storage';
 
 import { endFixtureSession, readFixtureSession } from './session';
+import { SessionProvider } from './SessionProvider';
 import { SignUpPage } from './SignUpPage';
-
-vi.mock('@/components/ui/AppLoadingScreen', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('@/components/ui/AppLoadingScreen')>();
-  return {
-    ...actual,
-    entryHoldMs: () => 0,
-  };
-});
 
 afterEach(() => {
   endFixtureSession();
@@ -31,14 +24,16 @@ afterEach(() => {
 
 function renderSignUp() {
   return render(
-    <ThemeProvider>
-      <MemoryRouter initialEntries={['/signup']}>
-        <Routes>
-          <Route path="/signup" element={<SignUpPage />} />
-          <Route path="/app" element={<p>Overview</p>} />
-        </Routes>
-      </MemoryRouter>
-    </ThemeProvider>,
+    <SessionProvider>
+      <ThemeProvider>
+        <MemoryRouter initialEntries={['/signup']}>
+          <Routes>
+            <Route path="/signup" element={<SignUpPage />} />
+            <Route path="/app" element={<p>Overview</p>} />
+          </Routes>
+        </MemoryRouter>
+      </ThemeProvider>
+    </SessionProvider>,
   );
 }
 

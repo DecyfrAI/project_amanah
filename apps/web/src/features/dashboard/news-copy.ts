@@ -13,10 +13,17 @@ export function outboundCue(outlet: string): string {
   return `Opens article on ${outlet}`;
 }
 
+/**
+ * A feed that stated no publication time is reported as such: the retrieval
+ * time is never substituted for it (reconciliation G5).
+ */
 export function formatNewsPublishedAt(
-  iso: string,
+  iso: string | null,
   now: Date = new Date(),
 ): { absolute: string; relative: string } {
+  if (iso === null) {
+    return { absolute: 'Publication time not stated', relative: 'date unknown' };
+  }
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {
     return { absolute: iso, relative: 'date unknown' };

@@ -11,9 +11,90 @@
 # is on topic and nothing more: relevance and hate are separate, staged decisions,
 # and neutral reporting is deliberately in scope.
 
-config_version: "2026.08.24"
+config_version: "2026.08.24.1"
 
 seeds:
+  # Product-owner-approved hackathon shortlist from
+  # docs/planning/PROJECT_AMANAH_SOURCE_SEED_REGISTRY.md. These five IDs were
+  # preflighted through the official YouTube Data API on 24 August 2026. They
+  # form a purposive, enriched sample and MUST NOT support platform-prevalence
+  # claims. Video titles are intentionally neutral here: inclusion is sampling
+  # relevance, not an Amanah prediction or human-review decision.
+  - registry_key: youtube.seed.uk-islam-immigration-discussion-1
+    source_key: youtube
+    entry_kind: seed_video
+    display_name: "UK Islam and immigration discussion seed 1"
+    provider_reference: "kM6hqIGWgd4"
+    query_family: enriched_discussion_seed
+    query_purpose: "Purposive UK discussion seed about Islam, Muslims, immigration, and political influence; inclusion establishes sampling relevance only."
+    sampling_stratum: enriched
+    language: en
+    country_scope: GB
+    item_cap: 100
+    approval_status: approved
+    approved_by: "Project owner activation request, 24 August 2026; official API preflight passed."
+    last_reviewed_at: 2026-08-24T00:00:00Z
+
+  - registry_key: youtube.seed.uk-mosque-political-discussion
+    source_key: youtube
+    entry_kind: seed_video
+    display_name: "UK mosque and political discussion seed"
+    provider_reference: "Z_NV-xahGUk"
+    query_family: enriched_discussion_seed
+    query_purpose: "Purposive UK discussion seed about a mosque, Muslim communities, and political influence; inclusion establishes sampling relevance only."
+    sampling_stratum: enriched
+    language: en
+    country_scope: GB
+    item_cap: 100
+    approval_status: approved
+    approved_by: "Project owner activation request, 24 August 2026; official API preflight passed."
+    last_reviewed_at: 2026-08-24T00:00:00Z
+
+  - registry_key: youtube.seed.us-muslim-attitudes-extremism-discussion
+    source_key: youtube
+    entry_kind: seed_video
+    display_name: "US discussion seed about Muslim attitudes and extremism"
+    provider_reference: "6L2Jil03qmI"
+    query_family: enriched_discussion_seed
+    query_purpose: "Purposive US discussion seed about Muslims and extremism; inclusion establishes sampling relevance only."
+    sampling_stratum: enriched
+    language: en
+    country_scope: US
+    item_cap: 100
+    approval_status: approved
+    approved_by: "Project owner activation request, 24 August 2026; official API preflight passed."
+    last_reviewed_at: 2026-08-24T00:00:00Z
+
+  - registry_key: youtube.seed.immigration-islam-long-form-discussion
+    source_key: youtube
+    entry_kind: seed_video
+    display_name: "Long-form immigration and Islam discussion seed"
+    provider_reference: "KS1_cAdIQR4"
+    query_family: enriched_discussion_seed
+    query_purpose: "Purposive long-form discussion seed about immigration and Islam; inclusion establishes sampling relevance only."
+    sampling_stratum: enriched
+    language: en
+    country_scope: global
+    item_cap: 100
+    approval_status: approved
+    approved_by: "Project owner activation request, 24 August 2026; official API preflight passed."
+    last_reviewed_at: 2026-08-24T00:00:00Z
+
+  - registry_key: youtube.seed.counterspeech-response-control
+    source_key: youtube
+    entry_kind: seed_video
+    display_name: "Counterspeech response control seed"
+    provider_reference: "P5v-3BMRvHI"
+    query_family: counterspeech_control_seed
+    query_purpose: "Boundary/control response seed used to test counterspeech and quotation false positives; inclusion is not a hate label."
+    sampling_stratum: boundary_control
+    language: en
+    country_scope: global
+    item_cap: 100
+    approval_status: approved
+    approved_by: "Project owner activation request, 24 August 2026; official API preflight passed."
+    last_reviewed_at: 2026-08-24T00:00:00Z
+
   - registry_key: rss_bbc_news.headlines
     source_key: rss_bbc_news
     entry_kind: feed

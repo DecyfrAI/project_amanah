@@ -1,5 +1,5 @@
 import { useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 import { ApiRequestError, type Insight } from '@/api';
 import { InfoTip } from '@/components/ui/InfoTip';
@@ -22,9 +22,11 @@ function errorMessage(error: unknown): string {
 
 export function InsightPage() {
   const { insightId } = useParams<{ insightId: string }>();
+  const location = useLocation();
   const id = insightId ?? '';
   const insightQuery = useInsight(id);
   usePageTitle(insightQuery.data?.title ?? 'Insight');
+  const wasJustCreated = (location.state as { created?: unknown } | null)?.created === true;
 
   const handleRetry = useCallback((): void => {
     void insightQuery.refetch();
@@ -55,6 +57,14 @@ export function InsightPage() {
 
   return (
     <article className={styles.page}>
+      {wasJustCreated && (
+        <output className={styles.createdNotice} aria-live="polite">
+          Saved. This snapshot was added to Insights, where colleagues can find it and attach notes.
+        </output>
+      )}
+      <Link className={styles.backLink} to="/app/insights">
+        View all insights
+      </Link>
       <InsightHeader insight={insightQuery.data} />
       <CitedFigures insight={insightQuery.data} />
       <DiscussionPanel insightId={insightQuery.data.id} />
