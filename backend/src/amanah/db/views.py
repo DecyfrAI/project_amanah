@@ -135,6 +135,64 @@ authenticated_resources = Table(
     Column("last_reviewed_at", DateTime(timezone=True)),
 )
 
+authenticated_managed_resources = Table(
+    "authenticated_managed_resources",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("title", Text),
+    Column("organization", Text),
+    Column("url", Text),
+    Column("country_scope", Text),
+    _text_column("category"),
+    Column("summary", Text),
+    _text_column("status"),
+    Column("last_reviewed_at", DateTime(timezone=True)),
+    Column("reviewed_by", Text),
+    Column("created_at", DateTime(timezone=True)),
+    Column("updated_at", DateTime(timezone=True)),
+)
+
+authenticated_resource_audit_events = Table(
+    "authenticated_resource_audit_events",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("resource_entry_id", UUID(as_uuid=True)),
+    Column("actor_user_id", UUID(as_uuid=True)),
+    Column("action", Text),
+    Column("snapshot", JSONB),
+    Column("created_at", DateTime(timezone=True)),
+)
+
+authenticated_research_reports = Table(
+    "authenticated_research_reports",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("user_id", UUID(as_uuid=True)),
+    Column("filter_hash", Text),
+    Column("filters", JSONB),
+    Column("data_version", Text),
+    Column("coverage_snapshot", JSONB),
+    Column("sections", JSONB),
+    Column("citation_ids", ARRAY(Text)),
+    Column("methodology_version", Text),
+    _text_column("redaction_mode"),
+    _text_column("status"),
+    Column("safe_error_code", Text),
+    Column("created_at", DateTime(timezone=True)),
+    Column("completed_at", DateTime(timezone=True)),
+)
+
+authenticated_research_report_audit_events = Table(
+    "authenticated_research_report_audit_events",
+    projection_metadata,
+    Column("id", UUID(as_uuid=True), primary_key=True),
+    Column("research_report_id", UUID(as_uuid=True)),
+    Column("actor_user_id", UUID(as_uuid=True)),
+    Column("action", Text),
+    Column("request_id", Text),
+    Column("created_at", DateTime(timezone=True)),
+)
+
 authenticated_news = Table(
     "authenticated_news",
     projection_metadata,

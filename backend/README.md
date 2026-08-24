@@ -132,8 +132,16 @@ curl http://127.0.0.1:8000/openapi.json -o openapi.json
 | `GET /v1/admin/runs` | bearer, admin | Collection runs, newest dispatch first |
 | `POST /v1/admin/runs` | bearer, admin | Dispatch one bounded run; `200` on a redelivered key |
 | `GET /v1/admin/runs/{id}` | bearer, admin | One run and the stages beneath it |
+| `GET/POST /v1/admin/resources` | bearer, reviewer | List governed entries or create a draft |
+| `GET/PATCH /v1/admin/resources/{id}` | bearer, reviewer | Read or revise a governed entry |
+| `POST /v1/admin/resources/{id}/publish` | bearer, reviewer | Confirm human review and publish |
+| `POST /v1/admin/resources/{id}/archive` | bearer, reviewer | Archive an entry |
+| `GET /v1/admin/resources/{id}/audit` | bearer, reviewer | Append-only governance history |
 | `GET /v1/filters` | bearer | Filter values present in the data, plus query bounds |
 | `GET /v1/resources` | bearer | Reviewed, published education resources |
+| `POST /v1/research-reports` | bearer | Freeze a filter-scoped aggregate report under a new ID |
+| `GET /v1/research-reports/{id}` | bearer, owner/reviewer | Read an immutable report snapshot |
+| `GET /v1/research-reports/{id}/summary.csv` | bearer, owner/reviewer | Export stored aggregate rows when included at generation |
 | `GET /v1/methodology` | bearer | Sampling, taxonomy, model, coverage, and limitations |
 | `GET /v1/connections` | bearer | Safe connector state; never a key or a provider error |
 | `POST /v1/assistant/query` | bearer | Grounded question about the current filtered window |
@@ -191,6 +199,16 @@ Every rate carries its numerator, denominator, window, source scope, coverage,
 and data mode. A window with no computed bucket is returned as a gap with null
 counts — never as zero.
 
+Resource creation always produces a draft. Publication is a separate reviewer action that
+requires explicit confirmation, records the reviewer and review time, and appends an audit
+event. Changing published wording or links returns the entry to draft. No starter candidate is
+seeded without documented human review.
+
+Research reports contain only frozen aggregate metrics, deterministic findings, citation IDs,
+coverage, methodology, disclosures, and limitations. They contain no raw harmful text, author
+identifier, or item-level bulk data. A ready snapshot cannot be updated or deleted; regeneration
+creates a new ID, and CSV is rendered from the stored snapshot rather than from live queries.
+
 Every failing request returns the same envelope:
 
 ```json
@@ -231,6 +249,7 @@ src/amanah/
 ├── discussion/     # snapshot insights, invite-only notes, captures, reactions
 ├── metrics/        # deterministic aggregates, coverage, and their disclosures
 ├── resources/      # curated resources and the published methodology
+├── reporting/      # immutable aggregate report snapshots and CSV rendering
 ├── observability/  # request correlation and structured logging
 ├── settings.py     # validated configuration
 └── main.py         # application factory

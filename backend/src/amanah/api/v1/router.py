@@ -22,6 +22,8 @@ from amanah.api.v1 import (
     me,
     news,
     reporting,
+    research_reports,
+    resource_admin,
     review,
     submissions,
 )
@@ -48,3 +50,5 @@ v1_router.include_router(reporting.router)
 v1_router.include_router(insights.router)
 v1_router.include_router(review.router)
 v1_router.include_router(admin.router)
+v1_router.include_router(resource_admin.router)
+v1_router.include_router(research_reports.router)
