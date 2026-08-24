@@ -23,7 +23,7 @@ import argparse
 import logging
 import socket
 import sys
-from datetime import UTC, date, datetime, time
+from datetime import UTC, date, datetime, time, timedelta
 from os import getpid
 from uuid import uuid4
 
@@ -41,9 +41,14 @@ from amanah.ingestion.configuration import (
     project_sources,
 )
 from amanah.ingestion.contract import AdapterError, DiscoveryRequest, SourceAdapter
-from amanah.ingestion.pipeline import CollectionPipeline
+from amanah.ingestion.pipeline import CollectionPipeline, utc_now
 from amanah.ingestion.registry import UnknownSourceError, build_default_registry
 from amanah.jobs.runs import CollectionRunService, RunDispatch, RunValidationError
+from amanah.ml.batch import DEFAULT_BATCH_SIZE, analyze
+from amanah.ml.budgets import TokenBudget
+from amanah.ml.catalog import build_registry
+from amanah.ml.classification import ClassificationService
+from amanah.ml.gemini import GeminiClient
 from amanah.observability.logging import configure_logging
 from amanah.settings import ConfigurationError, Settings, load_settings
 
@@ -52,6 +57,11 @@ logger = logging.getLogger("amanah.etl")
 #: Cap on stages processed in one invocation. A run that needs more is resumed by
 #: the next invocation from its checkpoint rather than looping without bound.
 MAXIMUM_STAGES_PER_INVOCATION = 5_000
+
+#: Window `analyze` covers when the caller names none. Wide enough to pick up a
+#: backlog left by a failed run, narrow enough that a scheduled invocation does
+#: not rescan the whole corpus every eight hours.
+DEFAULT_ANALYSIS_WINDOW_DAYS = 7
 
 
 def _worker_id() -> str:
@@ -106,6 +116,19 @@ def build_parser() -> argparse.ArgumentParser:
         help="Windows to dispatch in this invocation; the rest wait for the next.",
     )
 
+    analyze = subcommands.add_parser(
+        "analyze",
+        help="Classify collected items and rebuild the deterministic metric buckets.",
+    )
+    analyze.add_argument("--from", dest="window_start", type=_parse_date, default=None)
+    analyze.add_argument("--to", dest="window_end", type=_parse_date, default=None)
+    analyze.add_argument(
+        "--batch-size",
+        type=int,
+        default=DEFAULT_BATCH_SIZE,
+        help="Items to classify in this invocation; the rest wait for the next.",
+    )
+
     configure = subcommands.add_parser(
         "sync-config", help="Project the reviewed source and seed catalogue into the database."
     )
@@ -135,6 +158,8 @@ def main(argv: list[str] | None = None) -> int:
                 return _sync_config(session, arguments.directory)
             if arguments.command == "backfill":
                 return _backfill(session, settings, arguments)
+            if arguments.command == "analyze":
+                return _analyze(session, settings, arguments)
             return _run(session, settings, arguments)
     finally:
         engine.dispose()
@@ -159,6 +184,57 @@ def _sync_config(session: Session, directory: str | None) -> int:
     logger.info(
         "configuration synchronised",
         extra={"sources": written_sources, "approved_seeds": written_seeds},
+    )
+    return 0
+
+
+def _analyze(session: Session, settings: Settings, arguments: argparse.Namespace) -> int:
+    """Classify what has been collected, then recompute the buckets over it.
+
+    Runs whether or not Gemini is configured. With no key every item defers and
+    the aggregation still writes true observed counts and an honest coverage
+    score, which is what keeps the dashboard useful without AI.
+
+    The token budget is per invocation. That is the run boundary `spec.md`
+    section 11.2 describes, and it means a scheduled analysis cannot spend more
+    than its share however large the backlog is.
+    """
+    window_end = arguments.window_end or utc_now()
+    window_start = arguments.window_start or window_end - timedelta(
+        days=DEFAULT_ANALYSIS_WINDOW_DAYS
+    )
+
+    client = GeminiClient(
+        settings=settings,
+        registry=build_registry(),
+        budget=TokenBudget(
+            per_run_tokens=settings.gemini_per_run_token_budget,
+            daily_tokens=settings.gemini_daily_token_budget,
+        ),
+    )
+    if not client.is_configured:
+        logger.warning(
+            "classification is disabled",
+            extra={"reason": "gemini_not_configured"},
+        )
+
+    result = analyze(
+        session,
+        classifier=ClassificationService(session, client=client),
+        window_start=window_start,
+        window_end=window_end,
+        batch_size=arguments.batch_size,
+    )
+    session.commit()
+
+    logger.info(
+        "analysis complete",
+        extra={
+            "classified": result.classified,
+            "deferred": result.deferred,
+            "buckets_written": result.aggregation.buckets_written,
+            "strata": [stratum.value for stratum in result.aggregation.strata],
+        },
     )
     return 0
 

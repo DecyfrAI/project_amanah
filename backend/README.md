@@ -61,6 +61,13 @@ checkout.
 | ETL fixture run (no network) | `uv run --project backend --env-file backend/.env amanah-etl run --source fixtures --mode fixture` |
 | ETL dry run | the same command with `--dry-run` |
 | Historical backfill | `uv run --project backend --env-file backend/.env amanah-etl backfill --source fixtures --from 2021-08-23 --to 2026-08-23` |
+| Classify and aggregate | `uv run --project backend --env-file backend/.env amanah-etl analyze` |
+
+`analyze` classifies collected items and then recomputes the deterministic metric
+buckets over them, in that order — aggregation counts predictions, so reversing
+it would produce buckets describing the previous run's labels. It runs whether or
+not Gemini is configured: with no key every item defers, and the aggregation still
+writes true observed counts and an honest coverage score.
 
 The import/startup check reads the environment, so give it configuration:
 `uv run --project backend --env-file backend/.env python -c ...`.
@@ -96,9 +103,12 @@ application. Every variable is documented in
 | `DATABASE_CONNECT_TIMEOUT_SECONDS`, `DATABASE_STATEMENT_TIMEOUT_MS`, `DATABASE_POOL_SIZE` | no | Explicit connection and query bounds, and pool size |
 | `APP_ENV`, `LOG_LEVEL`, `DATA_MODE` | no | Environment name, log level, fixture/live/fallback mode |
 | `GEMINI_API_KEY`, `GEMINI_MODEL` | no | Enables the Gemini connector when both are set |
+| `GEMINI_TIMEOUT_SECONDS`, `GEMINI_MAX_RETRIES` | no | Explicit bounds on every model call; neither can be disabled |
+| `GEMINI_MAX_INPUT_CHARACTERS`, `GEMINI_MAX_OUTPUT_TOKENS` | no | Input and output caps, so one oversized item cannot spend a run's budget |
+| `GEMINI_PER_RUN_TOKEN_BUDGET`, `GEMINI_DAILY_TOKEN_BUDGET` | no | Spend ceilings; exhausting either defers remaining items rather than failing the run |
 | `YOUTUBE_API_KEY`, `NEWS_API_KEY` | no | Enable their connectors |
 | `REDDIT_CLIENT_ID`, `REDDIT_CLIENT_SECRET` | no | Reserved; Reddit stays disabled pending approval |
-| `CONTENT_ENCRYPTION_KEY` | no | Base64 of 32 bytes. Encrypts permitted original text at rest; absent means the original is not retained at all, never stored as plaintext |
+| `CONTENT_ENCRYPTION_KEY` | no | Base64 of 32 bytes. Encrypts permitted original text at rest; absent means the original is not retained at all, never stored as plaintext. Also signs the short-lived image-catalog URLs, so `GET /v1/image-examples` reports itself unavailable without it |
 | `SOURCE_CONFIG_DIRECTORY` | no | Reviewed source and seed YAML; defaults to `config/` in the repository |
 | `HTTP_CONNECT_TIMEOUT_SECONDS`, `HTTP_READ_TIMEOUT_SECONDS`, `HTTP_TOTAL_TIMEOUT_SECONDS` | no | Explicit bounds on every outbound provider call |
 | `HTTP_MAX_RESPONSE_BYTES`, `HTTP_MAX_REDIRECTS` | no | Byte budget and redirect limit for provider and user-URL retrieval |
@@ -135,6 +145,19 @@ curl http://127.0.0.1:8000/openapi.json -o openapi.json
 | `GET /v1/resources` | bearer | Reviewed, published education resources |
 | `GET /v1/methodology` | bearer | Sampling, taxonomy, model, coverage, and limitations |
 | `GET /v1/connections` | bearer | Safe connector state; never a key or a provider error |
+| `POST /v1/assistant/query` | bearer | Grounded question about the current filtered window |
+| `GET /v1/image-examples` | bearer | Image-evidence catalog with short-lived signed URLs |
+| `POST /v1/image-classifications` | bearer | Server-side staged classification of one catalogued image |
+
+`POST /v1/assistant/query` answers only from stored fact bundles and methodology
+text. Every quantitative claim is verified against the bundle server-side before
+the reply is returned; a question the figures cannot answer gets `grounded_in:
+none` and a plain refusal rather than a plausible sentence. Causal phrasing is
+rejected deterministically, and the endpoint is rate-limited per user.
+
+The image routes never carry pixels. The catalog returns a signed URL that
+expires; classification takes an example id and reads the bytes server-side. No
+response and no log contains image data (ADR 0007).
 
 `/v1/news` is deliberately not an item projection. An ingested article coincides
 with the monitoring window; it is not an Amanah finding, so the response carries
